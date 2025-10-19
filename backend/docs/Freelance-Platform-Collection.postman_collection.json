@@ -1,0 +1,2283 @@
+{
+	"info": {
+		"_postman_id": "freelance-platform-complete",
+		"name": "Freelance Platform - Complete API Collection",
+		"description": "Comprehensive collection of all API endpoints for the Freelance Platform. This collection covers Authentication, User Management, Projects, Proposals, Contracts, Payments, Messages, Notifications, Analytics, Settings, Reviews, Reports, Files, Help, Content, and Health Check.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"description": "All authentication-related endpoints including registration, login, token refresh, and logout.",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"userType\": \"CLIENT\",\n  \"phone\": \"+1234567890\",\n  \"country\": \"United States\",\n  \"city\": \"New York\",\n  \"timezone\": \"America/New_York\",\n  \"language\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/register",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "Register a new user as CLIENT. Users can later be granted FREELANCER role through admin panel or by contacting support."
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"ACCESS_TOKEN\", jsonData.accessToken);",
+									"    pm.environment.set(\"REFRESH_TOKEN\", jsonData.refreshToken);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/login",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login with email and password. Returns access token and refresh token."
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/refresh?refreshToken={{REFRESH_TOKEN}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "refresh"],
+							"query": [
+								{
+									"key": "refreshToken",
+									"value": "{{REFRESH_TOKEN}}"
+								}
+							]
+						},
+						"description": "Generate new access token using refresh token"
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/logout",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "Logout the current user"
+					}
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/me",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "me"]
+						},
+						"description": "Get information about the currently authenticated user"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. User Management",
+			"description": "User profile and management endpoints",
+			"item": [
+				{
+					"name": "Get Current User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/profile",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "users", "profile"]
+						},
+						"description": "Get the profile of the currently authenticated user"
+					}
+				},
+				{
+					"name": "Get User By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "users", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get user information by user ID"
+					}
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe Updated\",\n  \"phone\": \"+1234567890\",\n  \"country\": \"United States\",\n  \"city\": \"Los Angeles\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"language\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/profile",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "users", "profile"]
+						},
+						"description": "Update the profile of the currently authenticated user"
+					}
+				},
+				{
+					"name": "Update User Avatar",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/profile/avatar?avatarUrl=https://example.com/avatar.jpg",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "users", "profile", "avatar"],
+							"query": [
+								{
+									"key": "avatarUrl",
+									"value": "https://example.com/avatar.jpg"
+								}
+							]
+						},
+						"description": "Update the avatar URL of the currently authenticated user"
+					}
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/search?searchTerm=john",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "users", "search"],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "john"
+								}
+							]
+						},
+						"description": "Search users by name or email"
+					}
+				},
+				{
+					"name": "Switch User Role",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/users/profile/switch-role?newRole=FREELANCER",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "users", "profile", "switch-role"],
+							"query": [
+								{
+									"key": "newRole",
+									"value": "FREELANCER"
+								}
+							]
+						},
+						"description": "Switch the active role for the current user between CLIENT and FREELANCER. Requires user to have both roles."
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Projects",
+			"description": "Project management endpoints including create, update, publish, search, and attachments",
+			"item": [
+				{
+					"name": "Create Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"PROJECT_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"E-commerce Website Development\",\n  \"description\": \"I need a full-stack developer to build a modern e-commerce website with payment integration, user authentication, product catalog, shopping cart, and admin panel. The site should be responsive and SEO-friendly.\",\n  \"category\": \"Web Development\",\n  \"skillsRequired\": [\"React\", \"Node.js\", \"MongoDB\", \"Express\", \"Stripe\"],\n  \"budgetMin\": 5000.00,\n  \"budgetMax\": 8000.00,\n  \"currency\": \"USD\",\n  \"projectType\": \"FIXED\",\n  \"duration\": \"2-3 months\",\n  \"deadline\": \"2025-03-31\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects"]
+						},
+						"description": "Create a new project as a client"
+					}
+				},
+				{
+					"name": "Get Project By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Retrieve a specific project by its ID"
+					}
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"E-commerce Website Development - Updated\",\n  \"description\": \"Updated description with more details about the project requirements and expectations.\",\n  \"budgetMin\": 6000.00,\n  \"budgetMax\": 9000.00\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Update an existing project (only draft projects)"
+					}
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Delete a project (only draft projects)"
+					}
+				},
+				{
+					"name": "Publish Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId/publish",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId", "publish"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Publish a draft project to make it visible to freelancers"
+					}
+				},
+				{
+					"name": "Get My Projects",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/my-projects?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", "my-projects"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all projects created by the current user"
+					}
+				},
+				{
+					"name": "Get Published Projects",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all published projects with pagination"
+					}
+				},
+				{
+					"name": "Get Featured Projects",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/featured?page=0&size=10",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", "featured"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all featured published projects"
+					}
+				},
+				{
+					"name": "Search Projects",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/search?query=website&category=Web Development&skills=React&minBudget=1000&maxBudget=10000&projectType=FIXED&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "website"
+								},
+								{
+									"key": "category",
+									"value": "Web Development"
+								},
+								{
+									"key": "skills",
+									"value": "React"
+								},
+								{
+									"key": "minBudget",
+									"value": "1000"
+								},
+								{
+									"key": "maxBudget",
+									"value": "10000"
+								},
+								{
+									"key": "projectType",
+									"value": "FIXED"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search published projects with filters"
+					}
+				},
+				{
+					"name": "Add Attachment to Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId/attachments",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId", "attachments"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Upload and attach a file to a project"
+					}
+				},
+				{
+					"name": "Remove Attachment from Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId/attachments/:attachmentId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId", "attachments", ":attachmentId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								},
+								{
+									"key": "attachmentId",
+									"value": "{{ATTACHMENT_ID}}"
+								}
+							]
+						},
+						"description": "Remove an attachment from a project"
+					}
+				},
+				{
+					"name": "Update Project Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/projects/:projectId/status?status=IN_PROGRESS",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "projects", ":projectId", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "IN_PROGRESS"
+								}
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Update the status of a project"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Proposals",
+			"description": "Proposal management including submission, acceptance, rejection, and withdrawal",
+			"item": [
+				{
+					"name": "Submit Proposal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"PROPOSAL_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"projectId\": \"{{PROJECT_ID}}\",\n  \"title\": \"Professional E-commerce Solution\",\n  \"description\": \"I am an experienced full-stack developer with 5+ years of experience building e-commerce platforms. I can deliver a modern, scalable solution using React, Node.js, and MongoDB with all the features you require. I will ensure the site is responsive, SEO-optimized, and includes comprehensive payment integration.\",\n  \"proposedAmount\": 7500.00,\n  \"currency\": \"USD\",\n  \"estimatedDuration\": \"10 weeks\",\n  \"attachments\": []\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals"]
+						},
+						"description": "Submit a proposal for a project (freelancers only)"
+					}
+				},
+				{
+					"name": "Get Proposal By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/:proposalId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", ":proposalId"],
+							"variable": [
+								{
+									"key": "proposalId",
+									"value": "{{PROPOSAL_ID}}"
+								}
+							]
+						},
+						"description": "Retrieve a specific proposal by its ID"
+					}
+				},
+				{
+					"name": "Update Proposal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Professional E-commerce Solution - Updated\",\n  \"description\": \"Updated proposal description with more details.\",\n  \"proposedAmount\": 7000.00,\n  \"estimatedDuration\": \"9 weeks\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/:proposalId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", ":proposalId"],
+							"variable": [
+								{
+									"key": "proposalId",
+									"value": "{{PROPOSAL_ID}}"
+								}
+							]
+						},
+						"description": "Update an existing proposal (only pending proposals)"
+					}
+				},
+				{
+					"name": "Delete Proposal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/:proposalId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", ":proposalId"],
+							"variable": [
+								{
+									"key": "proposalId",
+									"value": "{{PROPOSAL_ID}}"
+								}
+							]
+						},
+						"description": "Delete a proposal (only pending proposals)"
+					}
+				},
+				{
+					"name": "Accept Proposal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/:proposalId/accept",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", ":proposalId", "accept"],
+							"variable": [
+								{
+									"key": "proposalId",
+									"value": "{{PROPOSAL_ID}}"
+								}
+							]
+						},
+						"description": "Accept a proposal (clients only)"
+					}
+				},
+				{
+					"name": "Reject Proposal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/:proposalId/reject",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", ":proposalId", "reject"],
+							"variable": [
+								{
+									"key": "proposalId",
+									"value": "{{PROPOSAL_ID}}"
+								}
+							]
+						},
+						"description": "Reject a proposal (clients only)"
+					}
+				},
+				{
+					"name": "Withdraw Proposal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/:proposalId/withdraw",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", ":proposalId", "withdraw"],
+							"variable": [
+								{
+									"key": "proposalId",
+									"value": "{{PROPOSAL_ID}}"
+								}
+							]
+						},
+						"description": "Withdraw a proposal (freelancers only)"
+					}
+				},
+				{
+					"name": "Get My Proposals",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/my-proposals?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", "my-proposals"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all proposals submitted by the current freelancer"
+					}
+				},
+				{
+					"name": "Get Received Proposals",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/received?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", "received"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all proposals received by the current client"
+					}
+				},
+				{
+					"name": "Get Proposals for Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/proposals/project/:projectId?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "proposals", "project", ":projectId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Get all proposals for a specific project"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Contracts",
+			"description": "Contract and milestone management",
+			"item": [
+				{
+					"name": "Create Contract",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"CONTRACT_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"proposalId\": \"{{PROPOSAL_ID}}\",\n  \"title\": \"E-commerce Website Development Contract\",\n  \"description\": \"This contract covers the complete development of an e-commerce platform as specified in the project requirements and accepted proposal.\",\n  \"totalAmount\": 7500.00,\n  \"currency\": \"USD\",\n  \"startDate\": \"2025-01-15\",\n  \"endDate\": \"2025-03-31\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts"]
+						},
+						"description": "Create a new contract from an accepted proposal (clients only)"
+					}
+				},
+				{
+					"name": "Get Contract By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Retrieve a specific contract by its ID"
+					}
+				},
+				{
+					"name": "Accept Contract",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/accept",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "accept"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Accept a contract (freelancers only)"
+					}
+				},
+				{
+					"name": "Reject Contract",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/reject",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "reject"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Reject a contract (freelancers only)"
+					}
+				},
+				{
+					"name": "Complete Contract",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/complete",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "complete"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Mark a contract as completed (clients only)"
+					}
+				},
+				{
+					"name": "Get My Contracts (Client)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/my-contracts?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", "my-contracts"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all contracts for the current client"
+					}
+				},
+				{
+					"name": "Get Freelancer Contracts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/freelancer-contracts?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", "freelancer-contracts"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all contracts for the current freelancer"
+					}
+				},
+				{
+					"name": "Create Milestone",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"MILESTONE_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Initial Setup and Authentication\",\n  \"description\": \"Setup project structure, implement user authentication and basic layout\",\n  \"amount\": 2500.00,\n  \"dueDate\": \"2025-02-01\",\n  \"orderIndex\": 1\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/milestones",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "milestones"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Create a new milestone for a contract"
+					}
+				},
+				{
+					"name": "Update Milestone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Initial Setup and Authentication - Updated\",\n  \"description\": \"Updated milestone description\",\n  \"dueDate\": \"2025-02-05\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/milestones/:milestoneId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "milestones", ":milestoneId"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								},
+								{
+									"key": "milestoneId",
+									"value": "{{MILESTONE_ID}}"
+								}
+							]
+						},
+						"description": "Update an existing milestone"
+					}
+				},
+				{
+					"name": "Complete Milestone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/milestones/:milestoneId/complete",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "milestones", ":milestoneId", "complete"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								},
+								{
+									"key": "milestoneId",
+									"value": "{{MILESTONE_ID}}"
+								}
+							]
+						},
+						"description": "Mark a milestone as completed (freelancers only)"
+					}
+				},
+				{
+					"name": "Get Contract Milestones",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/contracts/:contractId/milestones",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "contracts", ":contractId", "milestones"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Get all milestones for a contract"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Payments",
+			"description": "Payment request and transaction management",
+			"item": [
+				{
+					"name": "Create Payment Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"PAYMENT_REQUEST_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"milestoneId\": \"{{MILESTONE_ID}}\",\n  \"amount\": 2500.00,\n  \"description\": \"Payment for completed milestone: Initial Setup and Authentication\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests"]
+						},
+						"description": "Create a payment request for a completed milestone (freelancers only)"
+					}
+				},
+				{
+					"name": "Get Payment Request By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests/:paymentRequestId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests", ":paymentRequestId"],
+							"variable": [
+								{
+									"key": "paymentRequestId",
+									"value": "{{PAYMENT_REQUEST_ID}}"
+								}
+							]
+						},
+						"description": "Retrieve a specific payment request by its ID"
+					}
+				},
+				{
+					"name": "Approve Payment Request",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests/:paymentRequestId/approve",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests", ":paymentRequestId", "approve"],
+							"variable": [
+								{
+									"key": "paymentRequestId",
+									"value": "{{PAYMENT_REQUEST_ID}}"
+								}
+							]
+						},
+						"description": "Approve a payment request (clients only)"
+					}
+				},
+				{
+					"name": "Reject Payment Request",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests/:paymentRequestId/reject?rejectionReason=Work not completed as expected",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests", ":paymentRequestId", "reject"],
+							"query": [
+								{
+									"key": "rejectionReason",
+									"value": "Work not completed as expected"
+								}
+							],
+							"variable": [
+								{
+									"key": "paymentRequestId",
+									"value": "{{PAYMENT_REQUEST_ID}}"
+								}
+							]
+						},
+						"description": "Reject a payment request with reason (clients only)"
+					}
+				},
+				{
+					"name": "Process Payment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/process?paymentRequestId={{PAYMENT_REQUEST_ID}}&paymentMethod=stripe&gatewayTransactionId=pi_xxxxxxxxxxxxx",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "process"],
+							"query": [
+								{
+									"key": "paymentRequestId",
+									"value": "{{PAYMENT_REQUEST_ID}}"
+								},
+								{
+									"key": "paymentMethod",
+									"value": "stripe"
+								},
+								{
+									"key": "gatewayTransactionId",
+									"value": "pi_xxxxxxxxxxxxx"
+								}
+							]
+						},
+						"description": "Process an approved payment request"
+					}
+				},
+				{
+					"name": "Get My Payment Requests",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests/my-requests?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests", "my-requests"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all payment requests created by the current freelancer"
+					}
+				},
+				{
+					"name": "Get Received Payment Requests",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests/received?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests", "received"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all payment requests received by the current client"
+					}
+				},
+				{
+					"name": "Get Payment Requests for Contract",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/requests/contract/:contractId?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "requests", "contract", ":contractId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Get all payment requests for a specific contract"
+					}
+				},
+				{
+					"name": "Get Transactions for Contract",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/payments/transactions/contract/:contractId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "payments", "transactions", "contract", ":contractId"],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Get all transactions for a specific contract"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Messages",
+			"description": "Message and conversation management",
+			"item": [
+				{
+					"name": "Send Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"MESSAGE_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientId\": \"{{USER_ID}}\",\n  \"projectId\": \"{{PROJECT_ID}}\",\n  \"content\": \"Hello! I'm interested in your project and would like to discuss the requirements in more detail.\",\n  \"messageType\": \"TEXT\",\n  \"attachments\": []\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages"]
+						},
+						"description": "Send a message to another user"
+					}
+				},
+				{
+					"name": "Get Message By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/:messageId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", ":messageId"],
+							"variable": [
+								{
+									"key": "messageId",
+									"value": "{{MESSAGE_ID}}"
+								}
+							]
+						},
+						"description": "Retrieve a specific message by its ID"
+					}
+				},
+				{
+					"name": "Get User Conversations",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/conversations",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", "conversations"]
+						},
+						"description": "Get all conversations for the current user"
+					}
+				},
+				{
+					"name": "Get Conversation Messages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/conversations/:conversationId?projectId={{PROJECT_ID}}&userId1={{USER_ID}}&userId2={{USER_ID}}&page=0&size=50",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", "conversations", ":conversationId"],
+							"query": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								},
+								{
+									"key": "userId1",
+									"value": "{{USER_ID}}"
+								},
+								{
+									"key": "userId2",
+									"value": "{{USER_ID}}"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "50"
+								}
+							],
+							"variable": [
+								{
+									"key": "conversationId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get messages in a specific conversation"
+					}
+				},
+				{
+					"name": "Get Project Messages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/project/:projectId?page=0&size=50",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", "project", ":projectId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "50"
+								}
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Get all messages for a specific project"
+					}
+				},
+				{
+					"name": "Mark Message as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/:messageId/read",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", ":messageId", "read"],
+							"variable": [
+								{
+									"key": "messageId",
+									"value": "{{MESSAGE_ID}}"
+								}
+							]
+						},
+						"description": "Mark a message as read"
+					}
+				},
+				{
+					"name": "Mark Conversation as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/conversations/read?projectId={{PROJECT_ID}}&userId1={{USER_ID}}&userId2={{USER_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", "conversations", "read"],
+							"query": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								},
+								{
+									"key": "userId1",
+									"value": "{{USER_ID}}"
+								},
+								{
+									"key": "userId2",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Mark all messages in a conversation as read"
+					}
+				},
+				{
+					"name": "Get Unread Message Count",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/unread/count",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", "unread", "count"]
+						},
+						"description": "Get the count of unread messages for the current user"
+					}
+				},
+				{
+					"name": "Get Unread Messages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/unread",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", "unread"]
+						},
+						"description": "Get all unread messages for the current user"
+					}
+				},
+				{
+					"name": "Delete Message",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/messages/:messageId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "messages", ":messageId"],
+							"variable": [
+								{
+									"key": "messageId",
+									"value": "{{MESSAGE_ID}}"
+								}
+							]
+						},
+						"description": "Delete a message (only sender can delete)"
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Notifications",
+			"description": "Notification management",
+			"item": [
+				{
+					"name": "Get User Notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "notifications"]
+						},
+						"description": "Get all notifications for the current user"
+					}
+				},
+				{
+					"name": "Get Unread Notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/unread",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "notifications", "unread"]
+						},
+						"description": "Get all unread notifications for the current user"
+					}
+				},
+				{
+					"name": "Get Unread Notification Count",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/unread/count",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "notifications", "unread", "count"]
+						},
+						"description": "Get the count of unread notifications"
+					}
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/:notificationId/read",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "notifications", ":notificationId", "read"],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "{{NOTIFICATION_ID}}"
+								}
+							]
+						},
+						"description": "Mark a specific notification as read"
+					}
+				},
+				{
+					"name": "Mark All Notifications as Read",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/mark-all-read",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "notifications", "mark-all-read"]
+						},
+						"description": "Mark all notifications as read for the current user"
+					}
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/notifications/:notificationId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "notifications", ":notificationId"],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "{{NOTIFICATION_ID}}"
+								}
+							]
+						},
+						"description": "Delete a specific notification"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "ACCESS_TOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "REFRESH_TOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "USER_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PROJECT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PROPOSAL_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "CONTRACT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "MILESTONE_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PAYMENT_REQUEST_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "MESSAGE_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "NOTIFICATION_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ATTACHMENT_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

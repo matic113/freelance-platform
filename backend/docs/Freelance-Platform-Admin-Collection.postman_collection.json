@@ -1,0 +1,2009 @@
+{
+	"info": {
+		"_postman_id": "freelance-platform-admin",
+		"name": "Freelance Platform - Admin Panel Collection",
+		"description": "Complete Admin Panel API Collection - Covers all administrative functions including user management, project moderation, analytics, reporting, and system configuration. **60+ Admin-Only Endpoints**",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Admin Authentication",
+			"description": "Admin-specific authentication endpoints - Login, Logout, Token management",
+			"item": [
+				{
+					"name": "Register Admin User (Initial Setup)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.id) {",
+									"        pm.environment.set(\"ADMIN_USER_ID\", jsonData.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Super\",\n  \"lastName\": \"Admin\",\n  \"email\": \"admin@freelanceplatform.com\",\n  \"password\": \"SuperAdmin123!\",\n  \"userType\": \"CLIENT\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/register",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "**INITIAL SETUP ONLY** - Register the first admin account. After registration, you need to manually grant admin role in the database.\n\n**Steps:**\n1. Register using this endpoint\n2. Update user role in database to ADMIN\n3. Use 'Admin Login' endpoint below\n\n**Note:** This is a standard user registration. Admin role must be granted via database or by existing SUPER_ADMIN."
+					}
+				},
+				{
+					"name": "Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"ACCESS_TOKEN\", jsonData.accessToken);",
+									"    pm.environment.set(\"REFRESH_TOKEN\", jsonData.refreshToken);",
+									"    pm.environment.set(\"ADMIN_USER_ID\", jsonData.userId);",
+									"    console.log(\"✅ Admin logged in successfully!\");",
+									"    console.log(\"Admin ID: \" + jsonData.userId);",
+									"    console.log(\"User Roles: \" + jsonData.roles.join(', '));",
+									"    console.log(\"Active Role: \" + jsonData.activeRole);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@freelanceplatform.com\",\n  \"password\": \"SuperAdmin123!\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/login",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "**Admin Login** - Login with admin credentials. Access token will be automatically saved to environment.\n\n**Auto-saves:**\n- ACCESS_TOKEN (for all subsequent requests)\n- REFRESH_TOKEN (for token renewal)\n- ADMIN_USER_ID (current admin's user ID)\n\n**Credentials:**\n- Email: admin@freelanceplatform.com\n- Password: SuperAdmin123!\n\n**After login, you can access all admin endpoints!**"
+					}
+				},
+				{
+					"name": "Get Current Admin User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/me",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "me"]
+						},
+						"description": "Get information about the currently logged-in admin user. Verify admin role and permissions."
+					}
+				},
+				{
+					"name": "Refresh Admin Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"ACCESS_TOKEN\", jsonData.accessToken);",
+									"    console.log(\"✅ Admin token refreshed successfully!\");",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/refresh?refreshToken={{REFRESH_TOKEN}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "refresh"],
+							"query": [
+								{
+									"key": "refreshToken",
+									"value": "{{REFRESH_TOKEN}}"
+								}
+							]
+						},
+						"description": "Refresh the admin access token using the refresh token. New access token will be auto-saved."
+					}
+				},
+				{
+					"name": "Admin Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/logout",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "Logout the current admin user and invalidate the session"
+					}
+				},
+				{
+					"name": "Verify Admin Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/dashboard",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "dashboard"]
+						},
+						"description": "**Test endpoint** to verify admin access is working. If you get 200 OK, you have admin access. If you get 403 Forbidden, your account doesn't have admin role."
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Admin Dashboard",
+			"description": "Main admin dashboard and activity tracking",
+			"item": [
+				{
+					"name": "Get Admin Dashboard",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/dashboard",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "dashboard"]
+						},
+						"description": "Get comprehensive admin dashboard statistics and overview"
+					}
+				},
+				{
+					"name": "Get Admin Actions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/actions?page=0&size=50",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "actions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get paginated list of all admin actions performed on the platform"
+					}
+				},
+				{
+					"name": "Get Admin Actions By Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/actions/admin/:adminId?page=0&size=50",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "actions", "admin", ":adminId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "50"
+								}
+							],
+							"variable": [
+								{
+									"key": "adminId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							]
+						},
+						"description": "Get actions performed by a specific admin user"
+					}
+				},
+				{
+					"name": "Get Recent Admin Actions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/actions/recent",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "actions", "recent"]
+						},
+						"description": "Get 10 most recent admin actions"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Admin User Management (SUPER_ADMIN)",
+			"description": "Manage admin users, roles, and permissions",
+			"item": [
+				{
+					"name": "Create Admin User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"ADMIN_USER_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@freelanceplatform.com\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"password\": \"AdminSecure123!\",\n  \"role\": \"MODERATOR\",\n  \"permissions\": [\"MANAGE_USERS\", \"MANAGE_PROJECTS\", \"VIEW_REPORTS\"]\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users"]
+						},
+						"description": "Create a new admin user with specific role and permissions"
+					}
+				},
+				{
+					"name": "Get All Admin Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of all admin users"
+					}
+				},
+				{
+					"name": "Get Admin User By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/:adminUserId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", ":adminUserId"],
+							"variable": [
+								{
+									"key": "adminUserId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							]
+						},
+						"description": "Get admin user details by ID"
+					}
+				},
+				{
+					"name": "Update Admin User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Updated Admin\",\n  \"lastName\": \"User\",\n  \"email\": \"admin.updated@freelanceplatform.com\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/:adminUserId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", ":adminUserId"],
+							"variable": [
+								{
+									"key": "adminUserId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							]
+						},
+						"description": "Update admin user details"
+					}
+				},
+				{
+					"name": "Delete Admin User",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/:adminUserId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", ":adminUserId"],
+							"variable": [
+								{
+									"key": "adminUserId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							]
+						},
+						"description": "Delete an admin user"
+					}
+				},
+				{
+					"name": "Update Admin User Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/:adminUserId/status?isActive=true",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", ":adminUserId", "status"],
+							"query": [
+								{
+									"key": "isActive",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "adminUserId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							]
+						},
+						"description": "Activate or deactivate an admin user"
+					}
+				},
+				{
+					"name": "Update Admin User Role",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/:adminUserId/role?role=SUPER_ADMIN",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", ":adminUserId", "role"],
+							"query": [
+								{
+									"key": "role",
+									"value": "SUPER_ADMIN"
+								}
+							],
+							"variable": [
+								{
+									"key": "adminUserId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							]
+						},
+						"description": "Update admin user role (SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT)"
+					}
+				},
+				{
+					"name": "Search Admin Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/search?query=admin&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "admin"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search admin users by name or email"
+					}
+				},
+				{
+					"name": "Get Admin Roles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/roles",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", "roles"]
+						},
+						"description": "Get list of all available admin roles"
+					}
+				},
+				{
+					"name": "Get Admin Permissions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/permissions",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", "permissions"]
+						},
+						"description": "Get permissions structure for all admin roles"
+					}
+				},
+				{
+					"name": "Update Admin Permissions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"permissions\": [\n    \"MANAGE_USERS\",\n    \"MANAGE_PROJECTS\",\n    \"VIEW_REPORTS\",\n    \"MANAGE_CONTENT\",\n    \"VIEW_ANALYTICS\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/permissions/:role",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", "permissions", ":role"],
+							"variable": [
+								{
+									"key": "role",
+									"value": "MODERATOR"
+								}
+							]
+						},
+						"description": "Update permissions for a specific admin role"
+					}
+				}
+			]
+		},
+		{
+			"name": "2.5. User Management",
+			"description": "Manage regular platform users, roles, and permissions",
+			"item": [
+				{
+					"name": "Get All Users (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of all platform users with roles and active role information"
+					}
+				},
+				{
+					"name": "Search Users (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/search?query=john&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "john"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search users by name or email with pagination"
+					}
+				},
+				{
+					"name": "Get User By ID (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/users/123e4567-e89b-12d3-a456-426614174000",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "users", "123e4567-e89b-12d3-a456-426614174000"]
+						},
+						"description": "Get detailed information about a specific user including roles and active role"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Admin Project Management",
+			"description": "Manage, moderate, and configure projects from admin panel",
+			"item": [
+				{
+					"name": "Get All Projects (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of ALL projects (including drafts and hidden)"
+					}
+				},
+				{
+					"name": "Get Project By ID (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/:projectId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", ":projectId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Get complete project details by ID (admin view)"
+					}
+				},
+				{
+					"name": "Update Project Status (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/:projectId/status?status=SUSPENDED",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", ":projectId", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "SUSPENDED"
+								}
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Update project status (PUBLISHED, SUSPENDED, CANCELLED, etc.)"
+					}
+				},
+				{
+					"name": "Update Project Featured Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/:projectId/featured?isFeatured=true",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", ":projectId", "featured"],
+							"query": [
+								{
+									"key": "isFeatured",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Mark or unmark project as featured on homepage"
+					}
+				},
+				{
+					"name": "Delete Project (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/:projectId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", ":projectId"],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Permanently delete a project (admin override)"
+					}
+				},
+				{
+					"name": "Get Project Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/statistics",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "statistics"]
+						},
+						"description": "Get comprehensive project statistics for dashboard"
+					}
+				},
+				{
+					"name": "Get Reported Projects",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/reported?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "reported"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get projects that have been reported by users"
+					}
+				},
+				{
+					"name": "Moderate Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/:projectId/moderate?action=APPROVE&reason=Content reviewed and approved",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", ":projectId", "moderate"],
+							"query": [
+								{
+									"key": "action",
+									"value": "APPROVE"
+								},
+								{
+									"key": "reason",
+									"value": "Content reviewed and approved"
+								}
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{PROJECT_ID}}"
+								}
+							]
+						},
+						"description": "Moderate project content (APPROVE, REJECT, FLAG)"
+					}
+				},
+				{
+					"name": "Get Project Categories",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "categories"]
+						},
+						"description": "Get all project categories with statistics"
+					}
+				},
+				{
+					"name": "Create Project Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Blockchain Development\",\n  \"description\": \"Projects related to blockchain, cryptocurrency, and DeFi\",\n  \"icon\": \"blockchain-icon\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "categories"]
+						},
+						"description": "Create a new project category"
+					}
+				},
+				{
+					"name": "Update Project Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Web3 & Blockchain Development\",\n  \"description\": \"Updated description for blockchain projects\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/categories/:categoryId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "categories", ":categoryId"],
+							"variable": [
+								{
+									"key": "categoryId",
+									"value": "{{CATEGORY_ID}}"
+								}
+							]
+						},
+						"description": "Update an existing project category"
+					}
+				},
+				{
+					"name": "Delete Project Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/categories/:categoryId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "categories", ":categoryId"],
+							"variable": [
+								{
+									"key": "categoryId",
+									"value": "{{CATEGORY_ID}}"
+								}
+							]
+						},
+						"description": "Delete a project category"
+					}
+				},
+				{
+					"name": "Search Projects (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/search?query=website&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "website"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search all projects by title, description, or client"
+					}
+				},
+				{
+					"name": "Get Project Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/projects/analytics",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "projects", "analytics"]
+						},
+						"description": "Get detailed project analytics and trends"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Admin Analytics",
+			"description": "Comprehensive analytics, reports, and business intelligence",
+			"item": [
+				{
+					"name": "Get Analytics Dashboard",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/dashboard",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "dashboard"]
+						},
+						"description": "Get comprehensive analytics dashboard with all key metrics"
+					}
+				},
+				{
+					"name": "Get User Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/users",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "users"]
+						},
+						"description": "Get user growth statistics, retention, and demographics"
+					}
+				},
+				{
+					"name": "Get Project Analytics (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/projects",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "projects"]
+						},
+						"description": "Get project statistics and trends"
+					}
+				},
+				{
+					"name": "Get Revenue Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/revenue",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "revenue"]
+						},
+						"description": "Get revenue statistics, trends, and projections"
+					}
+				},
+				{
+					"name": "Get Performance Metrics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/performance",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "performance"]
+						},
+						"description": "Get platform performance metrics (response times, uptime, etc.)"
+					}
+				},
+				{
+					"name": "Get Geographic Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/geographic",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "geographic"]
+						},
+						"description": "Get user distribution by country, city, and region"
+					}
+				},
+				{
+					"name": "Get Trend Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/trends",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "trends"]
+						},
+						"description": "Get platform trends and pattern analysis"
+					}
+				},
+				{
+					"name": "Get Custom Reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/custom-reports",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "custom-reports"]
+						},
+						"description": "Get list of custom analytics reports"
+					}
+				},
+				{
+					"name": "Create Custom Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Monthly Revenue by Category\",\n  \"description\": \"Track revenue breakdown by project category on a monthly basis\",\n  \"metrics\": [\"revenue\", \"projects\", \"completion_rate\"],\n  \"dimensions\": [\"category\", \"month\"],\n  \"filters\": {\n    \"dateRange\": \"last_12_months\"\n  },\n  \"schedule\": \"monthly\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/custom-reports",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "custom-reports"]
+						},
+						"description": "Create a new custom analytics report"
+					}
+				},
+				{
+					"name": "Export Analytics Data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/export?format=csv&dateRange=last_30_days",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "export"],
+							"query": [
+								{
+									"key": "format",
+									"value": "csv"
+								},
+								{
+									"key": "dateRange",
+									"value": "last_30_days"
+								}
+							]
+						},
+						"description": "Export analytics data in CSV, Excel, or PDF format"
+					}
+				},
+				{
+					"name": "Get Real-Time Metrics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/real-time",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "real-time"]
+						},
+						"description": "Get real-time platform metrics (active users, ongoing transactions, etc.)"
+					}
+				},
+				{
+					"name": "Get Comparison Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/comparison?period1=2024-01&period2=2024-02",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "comparison"],
+							"query": [
+								{
+									"key": "period1",
+									"value": "2024-01"
+								},
+								{
+									"key": "period2",
+									"value": "2024-02"
+								}
+							]
+						},
+						"description": "Compare metrics between two time periods"
+					}
+				},
+				{
+					"name": "Get Predictive Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/analytics/predictions",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "analytics", "predictions"]
+						},
+						"description": "Get AI-powered predictions and forecasts for key metrics"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Admin Report Management",
+			"description": "Manage user reports, moderation, and content review",
+			"item": [
+				{
+					"name": "Get All Reports (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of all user reports"
+					}
+				},
+				{
+					"name": "Get Report By ID (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/:reportId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", ":reportId"],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Get complete report details by ID"
+					}
+				},
+				{
+					"name": "Update Report Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/:reportId/status?status=INVESTIGATING",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", ":reportId", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "INVESTIGATING"
+								}
+							],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Update report status (PENDING, INVESTIGATING, RESOLVED, DISMISSED)"
+					}
+				},
+				{
+					"name": "Assign Report to Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/:reportId/assign?adminUserId={{ADMIN_USER_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", ":reportId", "assign"],
+							"query": [
+								{
+									"key": "adminUserId",
+									"value": "{{ADMIN_USER_ID}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Assign report to specific admin user for handling"
+					}
+				},
+				{
+					"name": "Get Report Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/statistics",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "statistics"]
+						},
+						"description": "Get comprehensive report statistics for dashboard"
+					}
+				},
+				{
+					"name": "Get Pending Reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/pending?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "pending"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all reports pending review and action"
+					}
+				},
+				{
+					"name": "Get Report Categories",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "categories"]
+						},
+						"description": "Get all report categories with counts"
+					}
+				},
+				{
+					"name": "Create Report Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Scam/Fraud\",\n  \"description\": \"Reports related to scams, fraudulent activities, or financial fraud\",\n  \"severity\": \"HIGH\",\n  \"requiresImmediate\": true\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "categories"]
+						},
+						"description": "Create a new report category"
+					}
+				},
+				{
+					"name": "Update Report Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Scam/Fraud/Phishing\",\n  \"description\": \"Updated description for scam and fraud reports\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/categories/:categoryId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "categories", ":categoryId"],
+							"variable": [
+								{
+									"key": "categoryId",
+									"value": "{{CATEGORY_ID}}"
+								}
+							]
+						},
+						"description": "Update an existing report category"
+					}
+				},
+				{
+					"name": "Delete Report Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/categories/:categoryId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "categories", ":categoryId"],
+							"variable": [
+								{
+									"key": "categoryId",
+									"value": "{{CATEGORY_ID}}"
+								}
+							]
+						},
+						"description": "Delete a report category"
+					}
+				},
+				{
+					"name": "Search Reports (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/search?query=harassment&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "harassment"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search reports by content or reporter"
+					}
+				},
+				{
+					"name": "Get Report Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/analytics",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "analytics"]
+						},
+						"description": "Get detailed report analytics and trends"
+					}
+				},
+				{
+					"name": "Resolve Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resolution\": \"User has been warned and inappropriate content removed. Account flagged for monitoring.\",\n  \"actionTaken\": \"WARNING_ISSUED\",\n  \"notes\": \"First offense, verbal warning given. Will escalate on repeat.\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/:reportId/resolve",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", ":reportId", "resolve"],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Mark report as resolved with action taken and notes"
+					}
+				},
+				{
+					"name": "Dismiss Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/:reportId/dismiss?reason=No policy violation found after investigation",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", ":reportId", "dismiss"],
+							"query": [
+								{
+									"key": "reason",
+									"value": "No policy violation found after investigation"
+								}
+							],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Dismiss report as invalid or unfounded"
+					}
+				},
+				{
+					"name": "Get Report Types",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/admin/reports/types",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "admin", "reports", "types"]
+						},
+						"description": "Get all available report types"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "ACCESS_TOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ADMIN_USER_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PROJECT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "CATEGORY_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "REPORT_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

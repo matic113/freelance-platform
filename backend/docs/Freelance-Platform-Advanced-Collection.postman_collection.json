@@ -1,0 +1,2083 @@
+{
+	"info": {
+		"_postman_id": "freelance-platform-advanced",
+		"name": "Freelance Platform - Advanced Features Collection",
+		"description": "Advanced features collection including Analytics, Settings, Reviews, Files, Reports, Help, Content, and Health Check APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "9. Analytics",
+			"description": "Analytics and statistics endpoints",
+			"item": [
+				{
+					"name": "Get User Dashboard Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/dashboard/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "dashboard", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get comprehensive dashboard statistics for a user"
+					}
+				},
+				{
+					"name": "Get Project Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/projects/stats",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "projects", "stats"]
+						},
+						"description": "Get project-related statistics for the authenticated user"
+					}
+				},
+				{
+					"name": "Get Freelancer Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/freelancers/stats",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "freelancers", "stats"]
+						},
+						"description": "Get freelancer-related statistics"
+					}
+				},
+				{
+					"name": "Get Earnings Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/earnings/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "earnings", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get earnings statistics for a user"
+					}
+				},
+				{
+					"name": "Get Performance Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/performance/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "performance", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get performance metrics for a user"
+					}
+				},
+				{
+					"name": "Get Trend Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/trends",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "trends"]
+						},
+						"description": "Get platform trends and patterns"
+					}
+				},
+				{
+					"name": "Get Revenue Analytics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/analytics/revenue",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "analytics", "revenue"]
+						},
+						"description": "Get revenue statistics for the authenticated user"
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Settings",
+			"description": "User settings management endpoints",
+			"item": [
+				{
+					"name": "Get Profile Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/profile/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "profile", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get profile settings for a user"
+					}
+				},
+				{
+					"name": "Update Profile Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"displayName\": \"John Developer\",\n  \"bio\": \"Full-stack developer with 5+ years of experience\",\n  \"website\": \"https://johndoe.dev\",\n  \"linkedin\": \"https://linkedin.com/in/johndoe\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/profile/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "profile", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Update profile settings for a user"
+					}
+				},
+				{
+					"name": "Get Notification Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/notifications/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "notifications", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get notification preferences for a user"
+					}
+				},
+				{
+					"name": "Update Notification Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emailNotifications\": true,\n  \"pushNotifications\": true,\n  \"newProposals\": true,\n  \"messageReceived\": true,\n  \"paymentReceived\": true,\n  \"contractUpdates\": true\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/notifications/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "notifications", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Update notification preferences for a user"
+					}
+				},
+				{
+					"name": "Get Privacy Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/privacy/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "privacy", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get privacy settings for a user"
+					}
+				},
+				{
+					"name": "Update Privacy Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"profileVisibility\": \"public\",\n  \"showEmail\": false,\n  \"showPhone\": false,\n  \"allowMessages\": true\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/privacy/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "privacy", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Update privacy settings for a user"
+					}
+				},
+				{
+					"name": "Get Security Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/security/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "security", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get security settings for a user"
+					}
+				},
+				{
+					"name": "Update Security Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"twoFactorEnabled\": false,\n  \"loginAlerts\": true\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/security/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "security", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Update security settings for a user"
+					}
+				},
+				{
+					"name": "Get Billing Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/billing/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "billing", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get billing settings for a user"
+					}
+				},
+				{
+					"name": "Update Billing Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"preferredPaymentMethod\": \"stripe\",\n  \"billingAddress\": \"123 Main St, New York, NY 10001\",\n  \"taxId\": \"12-3456789\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/billing/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "billing", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Update billing settings for a user"
+					}
+				},
+				{
+					"name": "Get Integration Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/integrations/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "integrations", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get integration settings for a user"
+					}
+				},
+				{
+					"name": "Update Integration Settings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"slackWebhook\": \"https://hooks.slack.com/services/...\",\n  \"githubConnected\": true\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/settings/integrations/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "settings", "integrations", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Update integration settings for a user"
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Reviews",
+			"description": "Review and rating system endpoints",
+			"item": [
+				{
+					"name": "Get Reviews",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews?userId={{USER_ID}}&contractId={{CONTRACT_ID}}&minRating=4&maxRating=5&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								},
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								},
+								{
+									"key": "minRating",
+									"value": "4"
+								},
+								{
+									"key": "maxRating",
+									"value": "5"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of reviews with filters"
+					}
+				},
+				{
+					"name": "Create Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"REVIEW_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contractId\": \"{{CONTRACT_ID}}\",\n  \"rating\": 5,\n  \"comment\": \"Excellent work! The freelancer delivered high-quality code on time and was very professional throughout the project.\",\n  \"additionalFeedback\": \"Great communication skills and technical expertise. Would highly recommend!\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews"]
+						},
+						"description": "Create a new review for a contract"
+					}
+				},
+				{
+					"name": "Get Review By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/:reviewId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", ":reviewId"],
+							"variable": [
+								{
+									"key": "reviewId",
+									"value": "{{REVIEW_ID}}"
+								}
+							]
+						},
+						"description": "Get a specific review by ID"
+					}
+				},
+				{
+					"name": "Update Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contractId\": \"{{CONTRACT_ID}}\",\n  \"rating\": 5,\n  \"comment\": \"Updated review: Excellent work and professional delivery!\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/:reviewId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", ":reviewId"],
+							"variable": [
+								{
+									"key": "reviewId",
+									"value": "{{REVIEW_ID}}"
+								}
+							]
+						},
+						"description": "Update an existing review"
+					}
+				},
+				{
+					"name": "Delete Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/:reviewId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", ":reviewId"],
+							"variable": [
+								{
+									"key": "reviewId",
+									"value": "{{REVIEW_ID}}"
+								}
+							]
+						},
+						"description": "Delete a review"
+					}
+				},
+				{
+					"name": "Get User Reviews",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/user/:userId?type=received&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", "user", ":userId"],
+							"query": [
+								{
+									"key": "type",
+									"value": "received"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get all reviews for a specific user"
+					}
+				},
+				{
+					"name": "Get Contract Reviews",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/contract/:contractId?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", "contract", ":contractId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "contractId",
+									"value": "{{CONTRACT_ID}}"
+								}
+							]
+						},
+						"description": "Get all reviews for a specific contract"
+					}
+				},
+				{
+					"name": "Get User Review Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/statistics/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", "statistics", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get review statistics for a user"
+					}
+				},
+				{
+					"name": "Report Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"inappropriate_content\",\n  \"description\": \"This review contains offensive language\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/:reviewId/report",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", ":reviewId", "report"],
+							"variable": [
+								{
+									"key": "reviewId",
+									"value": "{{REVIEW_ID}}"
+								}
+							]
+						},
+						"description": "Report an inappropriate review"
+					}
+				},
+				{
+					"name": "Search Reviews",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reviews/search?query=excellent&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reviews", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "excellent"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search reviews by content"
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Files",
+			"description": "File upload and management endpoints",
+			"item": [
+				{
+					"name": "Upload File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"FILE_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "category",
+									"value": "document",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/upload",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", "upload"]
+						},
+						"description": "Upload a single file"
+					}
+				},
+				{
+					"name": "Bulk Upload Files",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "category",
+									"value": "documents",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/bulk-upload",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", "bulk-upload"]
+						},
+						"description": "Upload multiple files at once"
+					}
+				},
+				{
+					"name": "Get File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/:fileId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", ":fileId"],
+							"variable": [
+								{
+									"key": "fileId",
+									"value": "{{FILE_ID}}"
+								}
+							]
+						},
+						"description": "Get file information by ID"
+					}
+				},
+				{
+					"name": "Delete File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/:fileId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", ":fileId"],
+							"variable": [
+								{
+									"key": "fileId",
+									"value": "{{FILE_ID}}"
+								}
+							]
+						},
+						"description": "Delete a file"
+					}
+				},
+				{
+					"name": "Get User Files",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/user/:userId?category=documents&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", "user", ":userId"],
+							"query": [
+								{
+									"key": "category",
+									"value": "documents"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get all files for a user"
+					}
+				},
+				{
+					"name": "Download File",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/download/:fileId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", "download", ":fileId"],
+							"variable": [
+								{
+									"key": "fileId",
+									"value": "{{FILE_ID}}"
+								}
+							]
+						},
+						"description": "Download a file"
+					}
+				},
+				{
+					"name": "Update File Metadata",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Document Title\",\n  \"description\": \"This is an updated description of the file\",\n  \"tags\": [\"important\", \"project-docs\"]\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/:fileId/metadata",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", ":fileId", "metadata"],
+							"variable": [
+								{
+									"key": "fileId",
+									"value": "{{FILE_ID}}"
+								}
+							]
+						},
+						"description": "Update file metadata"
+					}
+				},
+				{
+					"name": "Get File Categories",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", "categories"]
+						},
+						"description": "Get available file categories"
+					}
+				},
+				{
+					"name": "Get Storage Usage",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/files/storage-usage/:userId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "files", "storage-usage", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						},
+						"description": "Get storage usage for a user"
+					}
+				}
+			]
+		},
+		{
+			"name": "13. Reports",
+			"description": "Reporting system endpoints",
+			"item": [
+				{
+					"name": "Get Reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports?status=PENDING&category=harassment&reporterId={{USER_ID}}&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING"
+								},
+								{
+									"key": "category",
+									"value": "harassment"
+								},
+								{
+									"key": "reporterId",
+									"value": "{{USER_ID}}"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated list of reports with filters"
+					}
+				},
+				{
+					"name": "Create Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"REPORT_ID\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reportType\": \"USER\",\n  \"category\": \"harassment\",\n  \"description\": \"This user has been sending inappropriate and harassing messages repeatedly despite being asked to stop.\",\n  \"reportedUserId\": \"{{USER_ID}}\",\n  \"evidence\": [],\n  \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports"]
+						},
+						"description": "Create a new report"
+					}
+				},
+				{
+					"name": "Get Report By ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/:reportId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", ":reportId"],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Get a specific report by ID"
+					}
+				},
+				{
+					"name": "Update Report Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"INVESTIGATING\",\n  \"notes\": \"Investigation started by admin team\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/:reportId/status",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", ":reportId", "status"],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Update report status (admin only)"
+					}
+				},
+				{
+					"name": "Get Report Types",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/types",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", "types"]
+						},
+						"description": "Get available report types"
+					}
+				},
+				{
+					"name": "Get Report Categories",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", "categories"]
+						},
+						"description": "Get available report categories"
+					}
+				},
+				{
+					"name": "Get My Reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/my-reports?status=PENDING&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", "my-reports"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get reports created by the authenticated user"
+					}
+				},
+				{
+					"name": "Get Report Statistics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/statistics",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", "statistics"]
+						},
+						"description": "Get report statistics (admin only)"
+					}
+				},
+				{
+					"name": "Resolve Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resolution\": \"User has been warned and content has been removed\",\n  \"action\": \"WARNING_ISSUED\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/:reportId/resolve",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", ":reportId", "resolve"],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Resolve a report (admin only)"
+					}
+				},
+				{
+					"name": "Dismiss Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Report does not violate platform policies\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/:reportId/dismiss",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", ":reportId", "dismiss"],
+							"variable": [
+								{
+									"key": "reportId",
+									"value": "{{REPORT_ID}}"
+								}
+							]
+						},
+						"description": "Dismiss a report (admin only)"
+					}
+				},
+				{
+					"name": "Search Reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{ACCESS_TOKEN}}"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/reports/search?query=harassment&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "reports", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "harassment"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search reports by content"
+					}
+				}
+			]
+		},
+		{
+			"name": "14. Help & Support",
+			"description": "Help and support system endpoints",
+			"item": [
+				{
+					"name": "Get FAQ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/faq?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "faq"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get frequently asked questions"
+					}
+				},
+				{
+					"name": "Search FAQ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/faq/search?query=payment&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "faq", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "payment"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search FAQ by keywords"
+					}
+				},
+				{
+					"name": "Get Help Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "categories"]
+						},
+						"description": "Get list of help categories"
+					}
+				},
+				{
+					"name": "Submit Contact Form",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"subject\": \"Need help with payment issue\",\n  \"message\": \"I'm having trouble processing a payment for my completed milestone. Can you please assist?\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/contact",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "contact"]
+						},
+						"description": "Submit a contact form for support"
+					}
+				},
+				{
+					"name": "Get Help Guides",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/guides?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "guides"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get help guides and tutorials"
+					}
+				},
+				{
+					"name": "Get Help Guide By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/guides/:guideId",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "guides", ":guideId"],
+							"variable": [
+								{
+									"key": "guideId",
+									"value": "{{GUIDE_ID}}"
+								}
+							]
+						},
+						"description": "Get a specific help guide"
+					}
+				},
+				{
+					"name": "Get Guides By Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/guides/category/:categoryId?page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "guides", "category", ":categoryId"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							],
+							"variable": [
+								{
+									"key": "categoryId",
+									"value": "{{CATEGORY_ID}}"
+								}
+							]
+						},
+						"description": "Get help guides by category"
+					}
+				},
+				{
+					"name": "Search Help Content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/search?query=getting started&page=0&size=20",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "getting started"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Search across all help content"
+					}
+				},
+				{
+					"name": "Get Popular Topics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/popular",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "popular"]
+						},
+						"description": "Get most popular help topics"
+					}
+				},
+				{
+					"name": "Get Recent Topics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/help/recent",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "help", "recent"]
+						},
+						"description": "Get recently added help topics"
+					}
+				}
+			]
+		},
+		{
+			"name": "15. Content",
+			"description": "Legal and content pages endpoints",
+			"item": [
+				{
+					"name": "Get Privacy Policy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/privacy-policy",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "privacy-policy"]
+						},
+						"description": "Get the privacy policy content"
+					}
+				},
+				{
+					"name": "Get Terms of Use",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/terms-of-use",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "terms-of-use"]
+						},
+						"description": "Get the terms of use content"
+					}
+				},
+				{
+					"name": "Get Cookie Policy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/cookie-policy",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "cookie-policy"]
+						},
+						"description": "Get the cookie policy content"
+					}
+				},
+				{
+					"name": "Get About Us",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/about-us",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "about-us"]
+						},
+						"description": "Get the about us content"
+					}
+				},
+				{
+					"name": "Get Success Stories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/success-stories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "success-stories"]
+						},
+						"description": "Get success stories showcase"
+					}
+				},
+				{
+					"name": "Get Client Experiences",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/client-experiences",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "client-experiences"]
+						},
+						"description": "Get client experiences testimonials"
+					}
+				},
+				{
+					"name": "Submit Contact Us",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"subject\": \"Business Inquiry\",\n  \"message\": \"I would like to discuss partnership opportunities with your platform.\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/contact-us",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "contact-us"]
+						},
+						"description": "Submit contact us form"
+					}
+				},
+				{
+					"name": "Get Legal Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/legal/:type",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "legal", ":type"],
+							"variable": [
+								{
+									"key": "type",
+									"value": "terms"
+								}
+							]
+						},
+						"description": "Get specific legal document by type"
+					}
+				},
+				{
+					"name": "Get Banners",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/banners",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "banners"]
+						},
+						"description": "Get active banners"
+					}
+				},
+				{
+					"name": "Get Announcements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/content/announcements",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "content", "announcements"]
+						},
+						"description": "Get active announcements"
+					}
+				}
+			]
+		},
+		{
+			"name": "16. Health Check",
+			"description": "Health check and system status endpoints",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/health",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "health"]
+						},
+						"description": "Check if the API is running"
+					}
+				},
+				{
+					"name": "System Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/health/status",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "health", "status"]
+						},
+						"description": "Get detailed system status information"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "ACCESS_TOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "USER_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PROJECT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "CONTRACT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "REVIEW_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "FILE_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "REPORT_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "GUIDE_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "CATEGORY_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
