@@ -119,7 +119,6 @@ interface TopFreelancersProps {
 }
 
 export const TopFreelancers = ({ isRTL = false }: TopFreelancersProps) => {
-  const freelancers = isRTL ? sampleFreelancers : sampleFreelancersEN;
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
@@ -139,15 +138,6 @@ export const TopFreelancers = ({ isRTL = false }: TopFreelancersProps) => {
               ? "تعرف على نخبة من أفضل المستقلين المحترفين في مختلف المجالات"
               : "Meet the elite of the best professional freelancers in various fields"}
           </p>
-        </div>
-
-        {/* Freelancers Grid (just show first 3) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {freelancers.slice(0, 3).map((freelancer) => (
-            <div key={freelancer.id} className="animate-fade-in">
-              <FreelancerCard freelancer={freelancer} isRTL={isRTL} />
-            </div>
-          ))}
         </div>
 
         {/* View All Button */}

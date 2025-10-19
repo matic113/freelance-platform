@@ -160,7 +160,6 @@ export const sampleProjectsEN = [
 ];
 
 export const FeaturedProjects = ({ isRTL = false }: FeaturedProjectsProps) => {
-  const projects = isRTL ? sampleProjects : sampleProjectsEN;
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
@@ -174,13 +173,6 @@ export const FeaturedProjects = ({ isRTL = false }: FeaturedProjectsProps) => {
           <p className="text-xl text-muted-foreground">
             {isRTL ? "اكتشف المشاريع المميزة والمتنوعة" : "Discover featured and diverse projects"}
           </p>
-        </div>
-
-        {/* Results */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project as any} isRTL={isRTL} />
-          ))}
         </div>
 
         {/* View All Button */}
