@@ -11,6 +11,7 @@ import com.freelance.platform.exception.UnauthorizedException;
 import com.freelance.platform.repository.ContractRepository;
 import com.freelance.platform.repository.MilestoneRepository;
 import com.freelance.platform.repository.ProposalRepository;
+import com.freelance.platform.repository.ProjectRepository;
 import com.freelance.platform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,9 @@ public class ContractService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @Autowired
     private NotificationService notificationService;
@@ -114,6 +118,22 @@ public class ContractService {
         contract.setUpdatedAt(LocalDateTime.now());
 
         Contract acceptedContract = contractRepository.save(contract);
+
+        Project project = contract.getProject();
+        if (project.getStatus() == ProjectStatus.PUBLISHED) {
+            project.setStatus(ProjectStatus.IN_PROGRESS);
+            project.setUpdatedAt(LocalDateTime.now());
+            projectRepository.save(project);
+
+            notificationService.createNotificationForUser(
+                    contract.getClient().getId(),
+                    "PROJECT_STARTED",
+                    "Project Started",
+                    String.format("Your project '%s' is now in progress", project.getTitle()),
+                    "high",
+                    String.format("{\"projectId\":\"%s\"}", project.getId())
+            );
+        }
 
         // Send notification to client
         notificationService.createNotificationForUser(
@@ -208,9 +228,9 @@ public class ContractService {
         }
         System.out.println("DEBUG: Client ownership validation passed");
 
-        if (contract.getStatus() != ContractStatus.ACTIVE) {
-            System.out.println("DEBUG: Contract status validation failed - status is: " + contract.getStatus() + ", expected: ACTIVE");
-            throw new UnauthorizedException("Can only create milestones for active contracts");
+        if (contract.getStatus() != ContractStatus.ACTIVE && contract.getStatus() != ContractStatus.PENDING) {
+            System.out.println("DEBUG: Contract status validation failed - status is: " + contract.getStatus() + ", expected: ACTIVE or PENDING");
+            throw new UnauthorizedException("Can only create milestones for active or pending contracts");
         }
         System.out.println("DEBUG: Contract status validation passed");
 
@@ -347,38 +367,62 @@ public class ContractService {
           return mapToMilestoneResponse(completedMilestone);
       }
 
-      private void checkAndAutoCompleteContract(Contract contract) {
-          List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
-          
-          boolean allCompleted = allMilestones.stream()
-                  .allMatch(m -> m.getStatus() == MilestoneStatus.COMPLETED);
-          
-          if (allCompleted && contract.getStatus() == ContractStatus.ACTIVE) {
-              contract.setStatus(ContractStatus.COMPLETED);
-              contract.setUpdatedAt(LocalDateTime.now());
-              contractRepository.save(contract);
+       private void checkAndAutoCompleteContract(Contract contract) {
+           List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
+           
+           boolean allCompleted = allMilestones.stream()
+                   .allMatch(m -> m.getStatus() == MilestoneStatus.COMPLETED);
+           
+           if (allCompleted && contract.getStatus() == ContractStatus.ACTIVE) {
+               contract.setStatus(ContractStatus.COMPLETED);
+               contract.setUpdatedAt(LocalDateTime.now());
+               contractRepository.save(contract);
 
-              notificationService.createNotificationForUser(
-                      contract.getClient().getId(),
-                      "CONTRACT_COMPLETED",
-                      "Contract Auto-Completed",
-                      String.format("All milestones completed! Your contract for project '%s' has been auto-completed", contract.getProject().getTitle()),
-                      "high",
-                      String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
-                                   contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
-              );
+               notificationService.createNotificationForUser(
+                       contract.getClient().getId(),
+                       "CONTRACT_COMPLETED",
+                       "Contract Auto-Completed",
+                       String.format("All milestones completed! Your contract for project '%s' has been auto-completed", contract.getProject().getTitle()),
+                       "high",
+                       String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
+                                    contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
+               );
 
-              notificationService.createNotificationForUser(
-                      contract.getFreelancer().getId(),
-                      "CONTRACT_COMPLETED",
-                      "Contract Auto-Completed",
-                      String.format("Congratulations! Your contract for project '%s' has been completed", contract.getProject().getTitle()),
-                      "high",
-                      String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}", 
-                                   contract.getId(), contract.getProject().getId(), contract.getClient().getId())
-              );
-          }
-      }
+               notificationService.createNotificationForUser(
+                       contract.getFreelancer().getId(),
+                       "CONTRACT_COMPLETED",
+                       "Contract Auto-Completed",
+                       String.format("Congratulations! Your contract for project '%s' has been completed", contract.getProject().getTitle()),
+                       "high",
+                       String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}", 
+                                    contract.getId(), contract.getProject().getId(), contract.getClient().getId())
+               );
+
+               checkAndAutoCompleteProject(contract.getProject());
+           }
+       }
+
+       private void checkAndAutoCompleteProject(Project project) {
+           List<Contract> projectContracts = contractRepository.findByProject(project);
+           
+           boolean allContractsCompleted = projectContracts.stream()
+                   .allMatch(c -> c.getStatus() == ContractStatus.COMPLETED);
+           
+           if (allContractsCompleted && project.getStatus() == ProjectStatus.IN_PROGRESS) {
+               project.setStatus(ProjectStatus.COMPLETED);
+               project.setUpdatedAt(LocalDateTime.now());
+               projectRepository.save(project);
+
+               notificationService.createNotificationForUser(
+                       project.getClient().getId(),
+                       "PROJECT_COMPLETED",
+                       "Project Auto-Completed",
+                       String.format("Congratulations! Your project '%s' has been completed", project.getTitle()),
+                       "high",
+                       String.format("{\"projectId\":\"%s\"}", project.getId())
+               );
+           }
+       }
 
     public ContractResponse getContractById(UUID contractId) {
         Contract contract = contractRepository.findById(contractId)
