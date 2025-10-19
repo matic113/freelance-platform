@@ -23,7 +23,10 @@ import {
   ArrowUpRight,
   Search,
   FileText,
-  Target
+  Target,
+  Plus,
+  User,
+  Settings
 } from "lucide-react";
 
 export default function FreelancerDashboard() {
@@ -155,204 +158,248 @@ export default function FreelancerDashboard() {
     );
   }
 
-  return (
-    <DashboardShell isRTL={isRTL} onLanguageToggle={toggleLanguage}>
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-[#0A2540]" />
-            <p className="text-muted-foreground">
-              {isRTL ? "جاري تحميل البيانات..." : "Loading dashboard data..."}
-            </p>
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex flex-col items-center gap-4">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <p className="text-muted-foreground">
-              {isRTL ? "حدث خطأ في تحميل البيانات" : "Error loading dashboard data"}
-            </p>
-            <Button onClick={() => window.location.reload()}>
-              {isRTL ? "إعادة المحاولة" : "Retry"}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Dashboard Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-[#0A2540] mb-2">
-              {isRTL ? "لوحة تحكم المستقل" : "Freelancer Dashboard"}
-            </h1>
-            <p className="text-muted-foreground">
-              {isRTL 
-                ? "مرحباً بك في لوحة التحكم الخاصة بك. تابع مشاريعك وإدارة عملائك" 
-                : "Welcome back! Here's what you need to know about your freelance business"
-              }
-            </p>
-          </div>
+   return (
+     <DashboardShell isRTL={isRTL} onLanguageToggle={toggleLanguage}>
+       {/* Dashboard Header */}
+       <div className="mb-6">
+         <h1 className="text-3xl md:text-4xl font-bold text-[#0A2540] mb-2">
+           {isRTL ? "لوحة تحكم المستقل" : "Freelancer Dashboard"}
+         </h1>
+         <p className="text-muted-foreground">
+           {isRTL 
+             ? "مرحباً بك في لوحة التحكم الخاصة بك. تابع مشاريعك وإدارة عملائك" 
+             : "Welcome to your dashboard. Track your projects and manage your clients"
+           }
+         </p>
+       </div>
 
-          {/* Primary CTA: Find New Projects */}
-          <div className="mb-6">
-            <Link to="/available-projects">
-              <Button className="w-full md:w-auto bg-[#0A2540] hover:bg-[#142b52] h-12 px-6 text-base font-semibold">
-                <Search className="h-5 w-5 mr-2" />
-                {isRTL ? "البحث عن مشاريع جديدة" : "Find New Projects"}
-              </Button>
-            </Link>
-          </div>
-
-           {/* Key Stat Cards */}
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
-             {stats.map((stat, index) => (
-               <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
-                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4 px-4">
-                   <CardTitle className="text-xs font-medium text-muted-foreground">
-                     {stat.title}
-                   </CardTitle>
-                   <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                 </CardHeader>
-                 <CardContent className="p-4 pt-0">
-                   <div className={`text-lg font-bold ${stat.color}`}>{stat.value}</div>
-                 </CardContent>
-               </Card>
-             ))}
-           </div>
-
-          {/* Main Content Grid: Active Projects + Recent Proposals */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* My Active Projects */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Briefcase className="h-5 w-5" />
-                    {isRTL ? "مشاريعي النشطة" : "My Active Projects"}
-                  </span>
-                  <Link to="/my-projects">
-                    <Button variant="outline" size="sm">
-                      {isRTL ? "عرض الكل" : "View All"}
-                    </Button>
-                  </Link>
-                </CardTitle>
-                <CardDescription>
-                  {isRTL ? "ماذا تحتاج إلى العمل عليه؟" : "What do you need to work on?"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {activeProjects.length > 0 ? (
-                  <div className="space-y-3">
-                    {activeProjects.slice(0, 5).map((project) => (
-                      <div key={project.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="font-semibold text-sm text-[#0A2540] truncate">
-                                {project.projectTitle}
-                              </h3>
-                              <Badge className={cn("text-xs", getContractStatusColor(project.status))}>
-                                {getContractStatusText(project.status)}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {isRTL ? "العميل: " : "Client: "}{project.clientName}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            ${project.totalAmount}
-                          </span>
-                          {project.deadline && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(project.deadline).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+        {/* Stats Cards Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {stats.map((stat, index) => (
+            <Card key={index} className="hover:shadow-md transition-shadow duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
+                    <p className="text-xl font-bold text-[#0A2540]">{stat.value}</p>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Briefcase className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {isRTL ? "لا توجد مشاريع نشطة حالياً" : "No active projects yet"}
-                    </p>
-                    <Link to="/available-projects">
-                      <Button className="bg-[#0A2540] hover:bg-[#142b52]" size="sm">
-                        {isRTL ? "ابدأ البحث الآن" : "Start Searching"}
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+                  <stat.icon className={`h-5 w-5 flex-shrink-0 ml-2 ${stat.color}`} />
+                </div>
               </CardContent>
             </Card>
+          ))}
+        </div>
 
-            {/* Recent Proposal Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    {isRTL ? "نشاط العروض الأخيرة" : "Recent Proposal Activity"}
-                  </span>
-                  <Link to="/my-proposals">
-                    <Button variant="outline" size="sm">
-                      {isRTL ? "إدارة الكل" : "Manage All"}
-                    </Button>
-                  </Link>
-                </CardTitle>
-                <CardDescription>
-                  {isRTL ? "ما هي حالة خطوط أنابيبك؟" : "What's in your pipeline?"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {recentProposals.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentProposals.slice(0, 5).map((proposal) => (
-                      <div key={proposal.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="font-semibold text-sm text-[#0A2540] truncate">
-                                {proposal.project?.title}
-                              </h3>
-                              <Badge className={cn("text-xs", getProposalStatusColor(proposal.status))}>
-                                {getProposalStatusText(proposal.status)}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {isRTL ? "العرض المقترح: " : "Your Bid: "}<span className="font-semibold">${proposal.proposedBudget}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-600 line-clamp-1">
-                          {proposal.coverLetter}
-                        </p>
-                      </div>
-                    ))}
+         {/* Main Content Area */}
+         <div className="space-y-6">
+           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+             {/* Quick Actions - Left Column */}
+             <Card className="lg:col-span-1">
+               <CardHeader className="pb-3">
+                 <CardTitle className="text-sm flex items-center gap-2">
+                   <Plus className="h-4 w-4" />
+                   {isRTL ? "إجراءات سريعة" : "Actions"}
+                 </CardTitle>
+               </CardHeader>
+               <CardContent className="p-2 pt-0">
+                 <div className="space-y-1">
+                   <Link to="/available-projects" className="block">
+                     <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
+                       <Search className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
+                       <span className="truncate text-xs">{isRTL ? "مشاريع جديدة" : "Find Projects"}</span>
+                     </div>
+                   </Link>
+                   <Link to="/my-projects" className="block">
+                     <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
+                       <Briefcase className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
+                       <span className="truncate text-xs">{isRTL ? "مشاريعي" : "My Projects"}</span>
+                     </div>
+                   </Link>
+                   <Link to="/my-proposals" className="block">
+                     <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
+                       <FileText className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
+                       <span className="truncate text-xs">{isRTL ? "عروضي" : "My Proposals"}</span>
+                     </div>
+                   </Link>
+                   <Link to="/messages" className="block">
+                     <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
+                       <MessageCircle className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
+                       <span className="truncate text-xs">{isRTL ? "الرسائل" : "Messages"}</span>
+                     </div>
+                   </Link>
+                   <Link to="/profile" className="block">
+                     <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
+                       <User className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
+                       <span className="truncate text-xs">{isRTL ? "الملف" : "Profile"}</span>
+                     </div>
+                   </Link>
+                   <Link to="/settings" className="block">
+                     <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
+                       <Settings className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
+                       <span className="truncate text-xs">{isRTL ? "الإعدادات" : "Settings"}</span>
+                     </div>
+                   </Link>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {isRTL ? "لم تقدم أي عروض بعد" : "No proposals yet"}
-                    </p>
-                    <Link to="/available-projects">
-                      <Button className="bg-[#0A2540] hover:bg-[#142b52]" size="sm">
-                        {isRTL ? "ابدأ البحث" : "Browse Projects"}
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* Right Column - Stacked Cards */}
+              <div className="lg:col-span-3 space-y-6">
+                {/* My Active Projects */}
+                <Card>
+               <CardHeader>
+                 <CardTitle className="flex items-center justify-between">
+                   <span className="flex items-center gap-2">
+                     <Briefcase className="h-5 w-5" />
+                     {isRTL ? "مشاريعي النشطة" : "My Active Projects"}
+                   </span>
+                   <Link to="/my-projects">
+                     <Button variant="outline" size="sm">
+                       <Eye className="h-4 w-4 mr-2" />
+                       {isRTL ? "عرض الكل" : "View All"}
+                     </Button>
+                   </Link>
+                 </CardTitle>
+                 <CardDescription>
+                   {isRTL ? "تتبع حالة مشاريعك الحالية" : "Track the status of your current projects"}
+                 </CardDescription>
+               </CardHeader>
+               <CardContent>
+                 {isLoading ? (
+                   <div className="flex items-center justify-center py-8">
+                     <Loader2 className="h-6 w-6 animate-spin text-[#0A2540]" />
+                     <span className="ml-2">{isRTL ? "جاري التحميل..." : "Loading..."}</span>
+                   </div>
+                 ) : error ? (
+                   <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+                     <AlertCircle className="h-5 w-5 text-red-600" />
+                     <span className="text-red-700">{isRTL ? "خطأ في التحميل" : "Error loading data"}</span>
+                   </div>
+                 ) : activeProjects.length > 0 ? (
+                   <div className="space-y-4">
+                     {activeProjects.slice(0, 5).map((project) => (
+                       <Link key={project.id} to={`/contracts/${project.id}`}>
+                         <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                           <div className="flex items-center gap-3 mb-2">
+                             <h3 className="font-semibold text-[#0A2540]">{project.projectTitle}</h3>
+                             <Badge className={cn("text-xs", getContractStatusColor(project.status))}>
+                               {getContractStatusText(project.status)}
+                             </Badge>
+                           </div>
+                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                             <span className="flex items-center gap-1">
+                               <span className="text-xs">{isRTL ? "العميل: " : "Client: "}</span>
+                               {project.clientName}
+                             </span>
+                           </div>
+                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                             <span className="flex items-center gap-1">
+                               <DollarSign className="h-4 w-4" />
+                               ${project.totalAmount}
+                             </span>
+                             {project.deadline && (
+                               <span className="flex items-center gap-1">
+                                 <Clock className="h-4 w-4" />
+                                 {new Date(project.deadline).toLocaleDateString()}
+                               </span>
+                             )}
+                           </div>
+                         </div>
+                       </Link>
+                     ))}
+                   </div>
+                 ) : (
+                   <div className="text-center py-8">
+                     <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                     <p className="text-muted-foreground">
+                       {isRTL ? "لا توجد مشاريع نشطة حالياً" : "No active projects yet"}
+                     </p>
+                     <Link to="/available-projects">
+                       <Button className="bg-[#0A2540] hover:bg-[#142b52] mt-4">
+                         <Search className="h-4 w-4 mr-2" />
+                         {isRTL ? "البحث عن مشاريع" : "Find Projects"}
+                       </Button>
+                     </Link>
+                   </div>
+                 )}
+               </CardContent>
+              </Card>
+
+              {/* Recent Proposals */}
+              <Card>
+             <CardHeader>
+               <CardTitle className="flex items-center justify-between">
+                 <span className="flex items-center gap-2">
+                   <FileText className="h-5 w-5" />
+                   {isRTL ? "عروضي الأخيرة" : "Recent Proposals"}
+                 </span>
+                 <Link to="/my-proposals">
+                   <Button variant="outline" size="sm">
+                     <Eye className="h-4 w-4 mr-2" />
+                     {isRTL ? "عرض الكل" : "View All"}
+                   </Button>
+                 </Link>
+               </CardTitle>
+               <CardDescription>
+                 {isRTL ? "تتبع حالة عروضك المقدمة" : "Track your submitted proposals"}
+               </CardDescription>
+             </CardHeader>
+             <CardContent>
+               {isLoading ? (
+                 <div className="flex items-center justify-center py-8">
+                   <Loader2 className="h-6 w-6 animate-spin text-[#0A2540]" />
+                   <span className="ml-2">{isRTL ? "جاري التحميل..." : "Loading..."}</span>
+                 </div>
+               ) : error ? (
+                 <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+                   <AlertCircle className="h-5 w-5 text-red-600" />
+                   <span className="text-red-700">{isRTL ? "خطأ في التحميل" : "Error loading data"}</span>
+                 </div>
+               ) : recentProposals.length > 0 ? (
+                 <div className="space-y-4">
+                   {recentProposals.slice(0, 5).map((proposal) => (
+                     <Link key={proposal.id} to="/my-proposals">
+                       <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                         <div className="flex items-center justify-between gap-3 mb-2">
+                           <h3 className="font-semibold text-sm text-[#0A2540] truncate flex-1">
+                             {proposal.project?.title}
+                           </h3>
+                           <Badge className={cn("text-xs flex-shrink-0", getProposalStatusColor(proposal.status))}>
+                             {getProposalStatusText(proposal.status)}
+                           </Badge>
+                         </div>
+                         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                           <span className="flex items-center gap-1">
+                             <DollarSign className="h-4 w-4" />
+                             {isRTL ? "عرضي: " : "Your Bid: "}${proposal.proposedBudget}
+                           </span>
+                         </div>
+                         <p className="text-xs text-gray-600 line-clamp-2">
+                           {proposal.coverLetter}
+                         </p>
+                       </div>
+                     </Link>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="text-center py-8">
+                   <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                   <p className="text-muted-foreground">
+                     {isRTL ? "لم تقدم أي عروض بعد" : "No proposals yet"}
+                   </p>
+                   <Link to="/available-projects">
+                     <Button className="bg-[#0A2540] hover:bg-[#142b52] mt-4">
+                       <Search className="h-4 w-4 mr-2" />
+                       {isRTL ? "ابدأ البحث" : "Browse Projects"}
+                     </Button>
+                   </Link>
+                 </div>
+               )}
+               </CardContent>
+             </Card>
+              </div>
+            </div>
           </div>
-        </>
-      )}
-    </DashboardShell>
-  );
-}
+      </DashboardShell>
+   );
+ }
