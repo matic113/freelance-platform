@@ -39,6 +39,9 @@ public class ProposalService {
     @Autowired
     private EmailNotificationService emailNotificationService;
 
+    @Autowired
+    private AutoContractService autoContractService;
+
     public ProposalResponse submitProposal(SubmitProposalRequest request, UUID freelancerId) {
         System.out.println("DEBUG: ProposalService.submitProposal called");
         System.out.println("DEBUG: Freelancer ID: " + freelancerId);
@@ -206,6 +209,9 @@ public class ProposalService {
         projectRepository.save(proposal.getProject());
 
         Proposal acceptedProposal = proposalRepository.save(proposal);
+
+        // Auto-create contract from accepted proposal
+        autoContractService.createContractFromProposal(acceptedProposal);
 
         // Send notification to accepted freelancer
         notificationService.createNotificationForUser(

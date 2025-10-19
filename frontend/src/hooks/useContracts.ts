@@ -84,8 +84,7 @@ export const useCreateContract = () => {
   return useMutation({
     mutationFn: contractService.createContract,
     onSuccess: () => {
-      // Invalidate contract lists
-      queryClient.invalidateQueries({ queryKey: contractKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: contractKeys.all });
     },
     onError: (error) => {
       console.error('Create contract error:', error);
@@ -146,76 +145,68 @@ export const useCompleteContract = () => {
 
 // Milestone mutations
 export const useCreateMilestone = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ contractId, request }: { contractId: string; request: CreateMilestoneRequest }) =>
-      contractService.createMilestone(contractId, request),
-    onSuccess: (data, { contractId }) => {
-      // Invalidate milestones for this contract
-      queryClient.invalidateQueries({ queryKey: contractKeys.milestones(contractId) });
-      // Invalidate contract details
-      queryClient.invalidateQueries({ queryKey: contractKeys.detail(contractId) });
-    },
-    onError: (error) => {
-      console.error('Create milestone error:', error);
-    },
-  });
-};
+   const queryClient = useQueryClient();
+   
+   return useMutation({
+     mutationFn: ({ contractId, request }: { contractId: string; request: CreateMilestoneRequest }) =>
+       contractService.createMilestone(contractId, request),
+     onSuccess: (data, { contractId }) => {
+       // Invalidate all contract queries to refetch updated contracts
+       queryClient.invalidateQueries({ queryKey: contractKeys.all });
+     },
+     onError: (error) => {
+       console.error('Create milestone error:', error);
+     },
+   });
+ };
 
 export const useUpdateMilestone = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ contractId, milestoneId, request }: { contractId: string; milestoneId: string; request: UpdateMilestoneRequest }) =>
-      contractService.updateMilestone(contractId, milestoneId, request),
-    onSuccess: (data, { contractId }) => {
-      // Invalidate milestones for this contract
-      queryClient.invalidateQueries({ queryKey: contractKeys.milestones(contractId) });
-      // Invalidate contract details
-      queryClient.invalidateQueries({ queryKey: contractKeys.detail(contractId) });
-    },
-    onError: (error) => {
-      console.error('Update milestone error:', error);
-    },
-  });
-};
+   const queryClient = useQueryClient();
+   
+   return useMutation({
+     mutationFn: ({ contractId, milestoneId, request }: { contractId: string; milestoneId: string; request: UpdateMilestoneRequest }) =>
+       contractService.updateMilestone(contractId, milestoneId, request),
+     onSuccess: (data, { contractId }) => {
+       // Invalidate all contract queries to refetch updated contracts
+       queryClient.invalidateQueries({ queryKey: contractKeys.all });
+     },
+     onError: (error) => {
+       console.error('Update milestone error:', error);
+     },
+   });
+ };
 
 export const useCompleteMilestone = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ contractId, milestoneId }: { contractId: string; milestoneId: string }) =>
-      contractService.completeMilestone(contractId, milestoneId),
-    onSuccess: (data, { contractId }) => {
-      // Invalidate milestones for this contract
-      queryClient.invalidateQueries({ queryKey: contractKeys.milestones(contractId) });
-      // Invalidate contract details
-      queryClient.invalidateQueries({ queryKey: contractKeys.detail(contractId) });
-    },
-    onError: (error) => {
-      console.error('Complete milestone error:', error);
-    },
-  });
-};
+   const queryClient = useQueryClient();
+   
+   return useMutation({
+     mutationFn: ({ contractId, milestoneId }: { contractId: string; milestoneId: string }) =>
+       contractService.completeMilestone(contractId, milestoneId),
+     onSuccess: (data, { contractId }) => {
+       // Invalidate all contract queries to refetch updated contracts
+       queryClient.invalidateQueries({ queryKey: contractKeys.all });
+     },
+     onError: (error) => {
+       console.error('Complete milestone error:', error);
+     },
+   });
+ };
 
 export const useDeleteMilestone = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ contractId, milestoneId }: { contractId: string; milestoneId: string }) =>
-      contractService.deleteMilestone(contractId, milestoneId),
-    onSuccess: (_, { contractId }) => {
-      // Invalidate milestones for this contract
-      queryClient.invalidateQueries({ queryKey: contractKeys.milestones(contractId) });
-      // Invalidate contract details
-      queryClient.invalidateQueries({ queryKey: contractKeys.detail(contractId) });
-    },
-    onError: (error) => {
-      console.error('Delete milestone error:', error);
-    },
-  });
-};
+   const queryClient = useQueryClient();
+   
+   return useMutation({
+     mutationFn: ({ contractId, milestoneId }: { contractId: string; milestoneId: string }) =>
+       contractService.deleteMilestone(contractId, milestoneId),
+     onSuccess: (_, { contractId }) => {
+       // Invalidate all contract queries to refetch updated contracts
+       queryClient.invalidateQueries({ queryKey: contractKeys.all });
+     },
+     onError: (error) => {
+       console.error('Delete milestone error:', error);
+     },
+   });
+ };
 
 // Payment hooks
 export const useMyPaymentRequests = (page: number = 0, size: number = 20, sort: string = 'requestedAt,desc', enabled: boolean = true) => {

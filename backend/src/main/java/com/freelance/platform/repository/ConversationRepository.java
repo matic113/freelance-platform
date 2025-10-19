@@ -2,6 +2,7 @@ package com.freelance.platform.repository;
 
 import com.freelance.platform.entity.Conversation;
 import com.freelance.platform.entity.ConversationType;
+import com.freelance.platform.entity.Project;
 import com.freelance.platform.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -53,12 +54,22 @@ public interface ConversationRepository extends JpaRepository<Conversation, UUID
     Page<Conversation> findByTypeAndParticipant(@Param("type") ConversationType type, 
                                                 @Param("user") User user, Pageable pageable);
     
-    /**
-     * Count unread conversations for a user (where user is participant1 or participant2)
-     * This can be optimized with a custom query if needed
-     */
-    @Query("SELECT COUNT(c) FROM Conversation c WHERE " +
-           "((c.participant1 = :user AND c.participant1Blocked = false) OR " +
-           "(c.participant2 = :user AND c.participant2Blocked = false))")
-    Long countUserConversations(@Param("user") User user);
+     /**
+      * Count unread conversations for a user (where user is participant1 or participant2)
+      * This can be optimized with a custom query if needed
+      */
+     @Query("SELECT COUNT(c) FROM Conversation c WHERE " +
+            "((c.participant1 = :user AND c.participant1Blocked = false) OR " +
+            "(c.participant2 = :user AND c.participant2Blocked = false))")
+     Long countUserConversations(@Param("user") User user);
+     
+     /**
+      * Find a project-based conversation between two users for a specific project
+      */
+     @Query("SELECT c FROM Conversation c WHERE c.project = :project AND c.type = 'PROJECT_CHAT' AND " +
+            "((c.participant1 = :user1 AND c.participant2 = :user2) OR " +
+            "(c.participant1 = :user2 AND c.participant2 = :user1))")
+     Optional<Conversation> findProjectConversation(@Param("project") Project project, 
+                                                     @Param("user1") User user1, 
+                                                     @Param("user2") User user2);
 }

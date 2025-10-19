@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
 import { 
   Plus, 
@@ -54,6 +53,7 @@ import { ContractCard } from '@/components/contracts/ContractCard';
 import { MilestoneCard } from '@/components/contracts/MilestoneCard';
 import { PaymentRequestCard } from '@/components/contracts/PaymentRequestCard';
 import { ContractDetailsModal } from '@/components/modals/ContractDetailsModal';
+import { ContractAcceptanceFlow } from '@/components/contracts/ContractAcceptanceFlow';
 import { 
   Contract, 
   Milestone, 
@@ -79,7 +79,9 @@ import {
   useDeleteMilestone,
   useCreatePaymentRequest,
   useApprovePaymentRequest,
-  useRejectPaymentRequest
+  useRejectPaymentRequest,
+  useAcceptContract,
+  useRejectContract
 } from '@/hooks/useContracts';
 
 export default function ContractsPage() {
@@ -132,14 +134,16 @@ export default function ContractsPage() {
     error: receivedPaymentRequestsError 
   } = useReceivedPaymentRequests(0, 20, 'requestedAt,desc', isClient);
 
-  // Mutation hooks
-  const createMilestoneMutation = useCreateMilestone();
-  const updateMilestoneMutation = useUpdateMilestone();
-  const completeMilestoneMutation = useCompleteMilestone();
-  const deleteMilestoneMutation = useDeleteMilestone();
-  const createPaymentRequestMutation = useCreatePaymentRequest();
-  const approvePaymentRequestMutation = useApprovePaymentRequest();
-  const rejectPaymentRequestMutation = useRejectPaymentRequest();
+   // Mutation hooks
+   const createMilestoneMutation = useCreateMilestone();
+   const updateMilestoneMutation = useUpdateMilestone();
+   const completeMilestoneMutation = useCompleteMilestone();
+   const deleteMilestoneMutation = useDeleteMilestone();
+   const createPaymentRequestMutation = useCreatePaymentRequest();
+   const approvePaymentRequestMutation = useApprovePaymentRequest();
+   const rejectPaymentRequestMutation = useRejectPaymentRequest();
+   const acceptContractMutation = useAcceptContract();
+   const rejectContractMutation = useRejectContract();
 
   // Extract data from API responses
   const contracts = [
@@ -147,10 +151,19 @@ export default function ContractsPage() {
     ...(isFreelancer ? (freelancerContractsData?.content || []) : [])
   ];
   
-  const paymentRequests = [
-    ...(isFreelancer ? (myPaymentRequestsData?.content || []) : []),
-    ...(isClient ? (receivedPaymentRequestsData?.content || []) : [])
-  ];
+   const paymentRequests = [
+     ...(isFreelancer ? (myPaymentRequestsData?.content || []) : []),
+     ...(isClient ? (receivedPaymentRequestsData?.content || []) : [])
+   ];
+
+   useEffect(() => {
+     if (selectedContract) {
+       const updatedContract = contracts.find(c => c.id === selectedContract.id);
+       if (updatedContract) {
+         setSelectedContract(updatedContract);
+       }
+     }
+   }, [contracts, selectedContract?.id]);
 
   // Calculate stats from backend data
   const totalContracts = contracts.length;
@@ -175,19 +188,19 @@ export default function ContractsPage() {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const getStatusText = (status: string) => {
-    const texts = {
-      PENDING: isRTL ? 'في الانتظار' : 'Pending',
-      IN_PROGRESS: isRTL ? 'قيد التنفيذ' : 'In Progress',
-      COMPLETED: isRTL ? 'مكتمل' : 'Completed',
-      PAID: isRTL ? 'مدفوع' : 'Paid',
-      ACTIVE: isRTL ? 'نشط' : 'Active',
-      CANCELLED: isRTL ? 'ملغي' : 'Cancelled',
-      APPROVED: isRTL ? 'موافق عليه' : 'Approved',
-      REJECTED: isRTL ? 'مرفوض' : 'Rejected'
-    };
-    return texts[status as keyof typeof texts] || status;
-  };
+   const getStatusText = (status: string) => {
+     const texts = {
+       PENDING: isRTL ? 'بانتظار موافقة المستقل' : 'Pending Freelancer Approval',
+       IN_PROGRESS: isRTL ? 'قيد التنفيذ' : 'In Progress',
+       COMPLETED: isRTL ? 'مكتمل' : 'Completed',
+       PAID: isRTL ? 'مدفوع' : 'Paid',
+       ACTIVE: isRTL ? 'موافق عليه' : 'Approved',
+       CANCELLED: isRTL ? 'ملغي' : 'Cancelled',
+       APPROVED: isRTL ? 'موافق عليه' : 'Approved',
+       REJECTED: isRTL ? 'مرفوض' : 'Rejected'
+     };
+     return texts[status as keyof typeof texts] || status;
+   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -212,13 +225,16 @@ export default function ContractsPage() {
     }
   };
 
-  const calculateProgress = (milestones: MilestoneResponse[]) => {
-    if (!milestones || milestones.length === 0) return 0;
-    const completed = milestones.filter(m => m.status === MilestoneStatus.COMPLETED || m.status === MilestoneStatus.PAID).length;
-    return Math.round((completed / milestones.length) * 100);
-  };
+   const sortMilestonesByDate = (milestones: MilestoneResponse[]) => {
+     if (!milestones || milestones.length === 0) return [];
+     return [...milestones].sort((a, b) => {
+       const dateA = new Date(a.dueDate).getTime();
+       const dateB = new Date(b.dueDate).getTime();
+       return dateA - dateB;
+     });
+   };
 
-  const filteredContracts = contracts.filter(contract => {
+   const filteredContracts = contracts.filter(contract => {
     const matchesSearch = contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          contract.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || contract.status === statusFilter;
@@ -439,9 +455,41 @@ export default function ContractsPage() {
     }
   };
 
-  const handleRequestPaymentForModal = async (contractId: string, milestoneId: string, amount: number) => {
-    await handleRequestPayment(contractId, milestoneId, amount);
-  };
+   const handleRequestPaymentForModal = async (contractId: string, milestoneId: string, amount: number) => {
+     await handleRequestPayment(contractId, milestoneId, amount);
+   };
+
+   const handleAcceptContract = async (contractId: string) => {
+     try {
+       await acceptContractMutation.mutateAsync(contractId);
+       toast({
+         title: isRTL ? "تم قبول العقد" : "Contract Accepted",
+         description: isRTL ? "تم قبول العقد بنجاح" : "Contract has been accepted successfully",
+       });
+     } catch (error) {
+       toast({
+         title: isRTL ? "خطأ في قبول العقد" : "Error Accepting Contract",
+         description: isRTL ? "حدث خطأ أثناء قبول العقد" : "An error occurred while accepting the contract",
+         variant: "destructive",
+       });
+     }
+   };
+
+   const handleRejectContract = async (contractId: string) => {
+     try {
+       await rejectContractMutation.mutateAsync(contractId);
+       toast({
+         title: isRTL ? "تم رفض العقد" : "Contract Rejected",
+         description: isRTL ? "تم رفض العقد بنجاح" : "Contract has been rejected successfully",
+       });
+     } catch (error) {
+       toast({
+         title: isRTL ? "خطأ في رفض العقد" : "Error Rejecting Contract",
+         description: isRTL ? "حدث خطأ أثناء رفض العقد" : "An error occurred while rejecting the contract",
+         variant: "destructive",
+       });
+     }
+   };
 
   return (
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
@@ -586,24 +634,75 @@ export default function ContractsPage() {
           </CardContent>
         </Card>
 
-        {/* Main Content */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="contracts">
-              <FileText className="h-4 w-4 mr-2" />
-              {isRTL ? "العقود" : "Contracts"}
-            </TabsTrigger>
-            <TabsTrigger value="milestones">
-              <Target className="h-4 w-4 mr-2" />
-              {isRTL ? "المراحل" : "Milestones"}
-            </TabsTrigger>
-            <TabsTrigger value="payments">
-              <DollarSign className="h-4 w-4 mr-2" />
-              {isRTL ? "المدفوعات" : "Payments"}
-            </TabsTrigger>
-          </TabsList>
+         {/* Main Content */}
+         <Tabs value={activeTab} onValueChange={setActiveTab}>
+           <TabsList className={`grid w-full ${isFreelancer ? 'grid-cols-4' : 'grid-cols-3'} mb-6`}>
+             {isFreelancer && (
+               <TabsTrigger value="acceptance">
+                 <Clock className="h-4 w-4 mr-2" />
+                 {isRTL ? "الانتظار" : "Awaiting"}
+               </TabsTrigger>
+             )}
+             <TabsTrigger value="contracts">
+               <FileText className="h-4 w-4 mr-2" />
+               {isRTL ? "العقود" : "Contracts"}
+             </TabsTrigger>
+             <TabsTrigger value="milestones">
+               <Target className="h-4 w-4 mr-2" />
+               {isRTL ? "المراحل" : "Milestones"}
+             </TabsTrigger>
+             <TabsTrigger value="payments">
+               <DollarSign className="h-4 w-4 mr-2" />
+               {isRTL ? "المدفوعات" : "Payments"}
+             </TabsTrigger>
+           </TabsList>
 
-          {/* Contracts Tab */}
+           {/* Awaiting Acceptance Tab - Only for Freelancers */}
+           {isFreelancer && (
+             <TabsContent value="acceptance" className="space-y-6">
+               {freelancerContractsLoading ? (
+                 <div className="flex items-center justify-center py-12">
+                   <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                   <span className="ml-3 text-gray-600">
+                     {isRTL ? "جاري تحميل العقود..." : "Loading contracts..."}
+                   </span>
+                 </div>
+               ) : (
+                 <div className="space-y-6">
+                   {contracts.filter(c => c.status === ContractStatus.PENDING).length === 0 ? (
+                     <Card>
+                       <CardContent className="p-8 text-center">
+                         <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                         <h3 className="text-lg font-medium text-gray-900 mb-2">
+                           {isRTL ? "لا توجد عقود في الانتظار" : "No Pending Contracts"}
+                         </h3>
+                         <p className="text-gray-500">
+                           {isRTL 
+                             ? "جميع العقود قد تم التعامل معها"
+                             : "All contracts have been reviewed"
+                           }
+                         </p>
+                       </CardContent>
+                     </Card>
+                   ) : (
+                     contracts
+                       .filter(c => c.status === ContractStatus.PENDING)
+                       .map((contract) => (
+                         <ContractAcceptanceFlow
+                           key={contract.id}
+                           contract={contract}
+                           onAccept={handleAcceptContract}
+                           onReject={handleRejectContract}
+                           isLoading={acceptContractMutation.isPending || rejectContractMutation.isPending}
+                         />
+                       ))
+                   )}
+                 </div>
+               )}
+             </TabsContent>
+           )}
+
+           {/* Contracts Tab */}
           <TabsContent value="contracts" className="space-y-6">
             {(isClient && myContractsLoading) || (isFreelancer && freelancerContractsLoading) ? (
               <div className="flex items-center justify-center py-12">
@@ -667,64 +766,47 @@ export default function ContractsPage() {
                           </div>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">
-                              {isRTL ? "التقدم" : "Progress"}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {calculateProgress(contract.milestones || [])}%
-                            </span>
-                          </div>
-                          <Progress value={calculateProgress(contract.milestones || [])} className="h-2" />
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleViewContract(contract.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSendMessage(contract.id)}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
+                         {/* Milestones Count */}
+                         <div className="mb-4">
+                           <div className="flex items-center justify-between">
+                             <span className="text-sm font-medium text-gray-700">
+                               {isRTL ? "المراحل المكتملة" : "Milestones Completed"}
+                             </span>
+                             <span className="text-sm font-semibold text-gray-900">
+                               {(contract.milestones || []).filter(m => m.status === MilestoneStatus.COMPLETED || m.status === MilestoneStatus.PAID).length}/{(contract.milestones || []).length}
+                             </span>
+                           </div>
+                         </div>
+                       </div>
+                       
+                       <div className="flex items-center gap-2">
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           onClick={() => {
+                             setSelectedContract(contract);
+                             setNewMilestone({
+                               title: '',
+                               description: '',
+                               amount: '',
+                               dueDate: '',
+                               orderIndex: (contract.milestones || []).length + 1
+                             });
+                             setShowMilestoneDialog(true);
+                           }}
+                         >
+                           <Plus className="h-4 w-4 mr-1" />
+                           {isRTL ? "إضافة مرحلة" : "Add Milestone"}
+                         </Button>
+                       </div>
                     </div>
 
                     {/* Milestones Preview */}
                     <div className="mt-4 pt-4 border-t">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-gray-700">
-                          {isRTL ? "المراحل" : "Milestones"}
-                        </h4>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedContract(contract);
-                            setNewMilestone({
-                              title: '',
-                              description: '',
-                              amount: '',
-                              dueDate: '',
-                              orderIndex: (contract.milestones || []).length + 1
-                            });
-                            setShowMilestoneDialog(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          {isRTL ? "إضافة مرحلة" : "Add Milestone"}
-                        </Button>
-                      </div>
-                      
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        {isRTL ? "المراحل" : "Milestones"}
+                      </h4>
+                       
                       <div className="space-y-2">
                         {(contract.milestones || []).length === 0 ? (
                           <div className="text-center py-6">
@@ -738,7 +820,7 @@ export default function ContractsPage() {
                           </div>
                         ) : (
                           <>
-                            {(contract.milestones || []).slice(0, 3).map((milestone) => (
+                            {sortMilestonesByDate(contract.milestones || []).slice(0, 3).map((milestone) => (
                               <div key={milestone.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div className="flex items-center gap-3">
                                   <Badge className={getStatusColor(milestone.status)}>
@@ -866,7 +948,7 @@ export default function ContractsPage() {
                           </p>
                         </div>
                       ) : (
-                        (contract.milestones || []).map((milestone) => (
+                        sortMilestonesByDate(contract.milestones || []).map((milestone) => (
                           <div key={milestone.id} className="flex items-center justify-between p-4 border rounded-lg">
                             <div className="flex items-center gap-4 flex-1">
                               <div className="flex items-center gap-2">
@@ -1216,7 +1298,7 @@ export default function ContractsPage() {
       {/* Contract Details Modal */}
       <ContractDetailsModal
         contract={selectedContract}
-        milestones={contracts.flatMap(c => c.milestones || [])}
+        milestones={sortMilestonesByDate(contracts.flatMap(c => c.milestones || []))}
         paymentRequests={paymentRequests}
         isOpen={showContractDetails}
         onClose={() => {
