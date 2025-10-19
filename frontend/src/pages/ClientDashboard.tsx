@@ -399,17 +399,14 @@ export default function ClientDashboard() {
                              {project.deadline}
                            </span>
                          </div>
-                         <div className="flex items-center gap-3">
-                           <span className="text-xs text-muted-foreground whitespace-nowrap">
-                             {isRTL ? "المرحلة:" : "Stage:"}
-                           </span>
-                           <Badge className={cn("text-xs whitespace-nowrap", PROJECT_STAGES[STAGE_SEQUENCE[project.stageIndex]]?.bgColor, PROJECT_STAGES[STAGE_SEQUENCE[project.stageIndex]]?.color)}>
-                             {PROJECT_STAGES[STAGE_SEQUENCE[project.stageIndex]]?.label}
-                           </Badge>
-                           <span className="text-xs font-medium text-[#0A2540] whitespace-nowrap">
-                             {project.stageIndex + 1} / {STAGE_SEQUENCE.length}
-                           </span>
-                         </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {isRTL ? "المرحلة:" : "Stage:"}
+                            </span>
+                            <span className="text-xs font-medium text-[#0A2540] whitespace-nowrap">
+                              {project.stageIndex + 1} / {STAGE_SEQUENCE.length}
+                            </span>
+                          </div>
                        </div>
                     </Link>
                   ))}
