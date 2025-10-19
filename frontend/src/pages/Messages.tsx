@@ -50,7 +50,7 @@ import {
   MoreHorizontal,
   Video
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useConversations } from "@/hooks/useConversations";
 import { conversationService } from "@/services/conversation.service";
@@ -60,7 +60,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { fileUploadService } from "@/services/fileUpload.service";
 import { Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUserId, isMessageFromCurrentUser } from "@/services/user.service";
 
 const getMessagePreview = (
@@ -99,88 +99,94 @@ export default function Messages() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const mainContainerRef = useRef<HTMLDivElement>(null);
-  const notifiedConversationsRef = useRef<Set<string>>(new Set());
-  const currentUserId: string | null = getCurrentUserId(user);
-  const { uploadFile, isUploading } = useFileUpload();
-  const isHeaderVisible = useHideNavbarOnScroll(mainContainerRef);
+   const messagesContainerRef = useRef<HTMLDivElement>(null);
+   const mainContainerRef = useRef<HTMLDivElement>(null);
+   const notifiedConversationsRef = useRef<Set<string>>(new Set());
+   const isUserAtBottomRef = useRef(true);
+   const currentUserId: string | null = getCurrentUserId(user);
+   const { uploadFile, isUploading } = useFileUpload();
+   const isHeaderVisible = useHideNavbarOnScroll(mainContainerRef);
+   const queryClient = useQueryClient();
 
-  // Use the new conversation hook
-  const {
-    conversations,
-    isLoading: conversationsLoading,
-    unreadCount,
-    sendMessage,
-    markConversationAsRead,
-    useConversationMessages,
-  } = useConversations();
+   // Use the new conversation hook
+   const {
+     conversations,
+     isLoading: conversationsLoading,
+     unreadCount,
+     sendMessage,
+     markConversationAsRead,
+     useConversationMessages,
+   } = useConversations();
 
-  // Get messages for selected conversation
-  const { data: messagesData, refetch: refetchMessages } = useConversationMessages(selectedChat || null);
-  const messages = messagesData?.content || [];
+   // Get messages for selected conversation
+   const { data: messagesData, refetch: refetchMessages } = useConversationMessages(selectedChat || null);
+   const messages = messagesData?.content || [];
 
-  // WebSocket connection and real-time updates
-  useEffect(() => {
-    // Connect to WebSocket
-    websocketService.connect().catch((error) => {
-      console.error('Failed to connect to WebSocket:', error);
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to real-time messaging. Some features may not work.",
-        variant: "destructive",
-      });
-    });
+   // WebSocket connection and real-time updates
+   useEffect(() => {
+     // Connect to WebSocket
+     websocketService.connect().catch((error) => {
+       console.error('Failed to connect to WebSocket:', error);
+       toast({
+         title: "Connection Error",
+         description: "Failed to connect to real-time messaging. Some features may not work.",
+         variant: "destructive",
+       });
+     });
 
-    // Listen for incoming messages
-    const handleMessage = (event: CustomEvent) => {
-      const message = event.detail;
-      // Handle incoming message - trigger a refetch of messages
-      console.log('Received message:', message);
-      
-      // Group notifications by conversation - only show one toast per conversation
-      const conversationId = message.conversationId;
-      if (conversationId && !notifiedConversationsRef.current.has(conversationId) && selectedChat !== conversationId) {
-        // Only show notification if not already notified for this conversation in this session
-        // and if this is not the currently selected chat
-        notifiedConversationsRef.current.add(conversationId);
-        
-        // Find the conversation to get sender info
-        const conversation = conversations.find(c => c.id === conversationId);
-        if (conversation) {
-          toast({
-            title: isRTL ? "رسالة جديدة" : "New Message",
-            description: isRTL 
-              ? `من ${conversation.otherParticipantName}: ${conversation.lastMessagePreview}`
-              : `From ${conversation.otherParticipantName}: ${conversation.lastMessagePreview}`,
-          });
-        }
-      }
-      
-      // Refetch messages to get any new messages or read receipts
-      if (selectedChat) {
-        refetchMessages();
-      }
-    };
+     // Listen for incoming messages
+     const handleMessage = (event: CustomEvent) => {
+       const message = event.detail;
+       console.log('Received message:', message);
+       
+       const conversationId = message.conversationId;
+       
+       // Check if conversation exists in current list
+       const conversationExists = conversations.some(c => c.id === conversationId);
+       
+       if (!conversationExists) {
+         queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+         queryClient.refetchQueries({ queryKey: ['conversations', user?.id] });
+       }
+       
+       // Group notifications by conversation - only show one toast per conversation
+       if (conversationId && !notifiedConversationsRef.current.has(conversationId) && selectedChat !== conversationId) {
+         notifiedConversationsRef.current.add(conversationId);
+         
+         const conversation = conversations.find(c => c.id === conversationId);
+         if (conversation) {
+           toast({
+             title: isRTL ? "رسالة جديدة" : "New Message",
+             description: isRTL 
+               ? `من ${conversation.otherParticipantName}: ${conversation.lastMessagePreview}`
+               : `From ${conversation.otherParticipantName}: ${conversation.lastMessagePreview}`,
+           });
+         }
+       }
+       
+       if (selectedChat) {
+         refetchMessages();
+       }
+     };
 
-    // Listen for read receipt updates
-    const handleReadReceipt = (event: CustomEvent) => {
-      console.log('Read receipt received:', event.detail);
-      // Refetch messages to update read indicators
-      if (selectedChat) {
-        refetchMessages();
-      }
-    };
+     // Listen for read receipt updates
+     const handleReadReceipt = (event: CustomEvent) => {
+       console.log('Read receipt received:', event.detail);
+       // Refetch messages to update read indicators
+       if (selectedChat) {
+         refetchMessages();
+       }
+     };
 
-    window.addEventListener('websocket:message', handleMessage as EventListener);
-    window.addEventListener('websocket:read-receipt', handleReadReceipt as EventListener);
+     window.addEventListener('websocket:message', handleMessage as EventListener);
+     window.addEventListener('websocket:read-receipt', handleReadReceipt as EventListener);
 
-    return () => {
-      websocketService.disconnect();
-      window.removeEventListener('websocket:message', handleMessage as EventListener);
-      window.removeEventListener('websocket:read-receipt', handleReadReceipt as EventListener);
-    };
-  }, [toast, selectedChat, refetchMessages, conversations, isRTL]);
+     return () => {
+       websocketService.disconnect();
+       window.removeEventListener('websocket:message', handleMessage as EventListener);
+       window.removeEventListener('websocket:read-receipt', handleReadReceipt as EventListener);
+     };
+    }, [toast, selectedChat, refetchMessages, conversations, isRTL, queryClient, user?.id]);
 
   // Clear notification tracking for current conversation when selected chat changes
   useEffect(() => {
@@ -208,31 +214,47 @@ export default function Messages() {
     });
   }, [messages, selectedChat, currentUserId]);
 
-  // Scroll to first unread message when messages load or chat changes
-  useEffect(() => {
-    if (!messagesContainerRef.current || messages.length === 0) {
-      return;
-    }
+   const scrollToLastMessage = useCallback(() => {
+     if (!messagesContainerRef.current || messages.length === 0) {
+       return;
+     }
 
-    // Find first unread message
-    const firstUnreadIndex = messages.findIndex((msg) => !msg.isRead && !isMessageFromCurrentUser(msg.senderId, currentUserId));
-    
-    if (firstUnreadIndex !== -1) {
-      setTimeout(() => {
-        const messageElements = messagesContainerRef.current?.querySelectorAll('[data-message-id]');
-        if (messageElements && messageElements[firstUnreadIndex]) {
-          messageElements[firstUnreadIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 200);
-    } else {
-      // If no unread messages, scroll to bottom
-      setTimeout(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-      }, 200);
-    }
-  }, [messages, selectedChat, currentUserId]);
+     const container = messagesContainerRef.current;
+     setTimeout(() => {
+       const messageElements = container.querySelectorAll('[data-message-id]');
+       if (messageElements.length > 0) {
+         const lastMessage = messageElements[messageElements.length - 1];
+         lastMessage.scrollIntoView({ behavior: 'auto', block: 'end' });
+         isUserAtBottomRef.current = true;
+       }
+     }, 50);
+   }, [messages.length]);
+
+   const handleMessagesContainerScroll = useCallback(() => {
+     if (!messagesContainerRef.current) return;
+
+     const container = messagesContainerRef.current;
+     const { scrollTop, scrollHeight, clientHeight } = container;
+     const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+     
+     isUserAtBottomRef.current = distanceFromBottom < 50;
+   }, []);
+
+   useEffect(() => {
+     const container = messagesContainerRef.current;
+     if (!container) return;
+
+     container.addEventListener('scroll', handleMessagesContainerScroll);
+     return () => {
+       container.removeEventListener('scroll', handleMessagesContainerScroll);
+     };
+   }, [handleMessagesContainerScroll]);
+
+   useEffect(() => {
+     if (selectedChat && messages.length > 0 && isUserAtBottomRef.current) {
+       scrollToLastMessage();
+     }
+   }, [messages, selectedChat, scrollToLastMessage]);
 
   // Handle sending messages
   const handleSendMessage = async () => {
@@ -280,17 +302,21 @@ export default function Messages() {
   };
 
    // Handle chat selection
-   const handleChatSelect = async (conversationId: string) => {
-     setSelectedChat(conversationId);
-     setSearchParams({ conversationId }, { replace: true });
-     
-     // Mark conversation as read
-     try {
-       await markConversationAsRead(conversationId);
-     } catch (error) {
-       console.error('Failed to mark conversation as read:', error);
-     }
-   };
+    const handleChatSelect = useCallback(async (conversationId: string) => {
+      setSelectedChat(conversationId);
+      setSearchParams({ conversationId }, { replace: true });
+      isUserAtBottomRef.current = true;
+      
+      setTimeout(() => {
+        scrollToLastMessage();
+      }, 100);
+      
+      try {
+        await markConversationAsRead(conversationId);
+      } catch (error) {
+        console.error('Failed to mark conversation as read:', error);
+      }
+    }, [scrollToLastMessage, markConversationAsRead, setSearchParams]);
 
    // Handle starting a conversation with a userId
     useEffect(() => {
@@ -312,8 +338,8 @@ export default function Messages() {
         }
       };
 
-      startConversationWithUser();
-    }, [pendingUserId, selectedChat, handleChatSelect, toast, isRTL]); // eslint-disable-next-line react-hooks/exhaustive-deps
+       startConversationWithUser();
+     }, [pendingUserId, selectedChat, handleChatSelect, toast, isRTL]);
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

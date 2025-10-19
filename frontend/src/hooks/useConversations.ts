@@ -33,26 +33,27 @@ export const useConversations = () => {
     staleTime: 1000 * 30, // 30 seconds
   });
 
-  // Start conversation by email
-  const startConversationByEmail = useMutation({
-    mutationFn: (email: string) =>
-      conversationService.startConversationByEmail(email),
-    onSuccess: (conversation) => {
-      // Invalidate conversations list to refresh
-      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
-      return conversation;
-    },
-  });
+   // Start conversation by email
+   const startConversationByEmail = useMutation({
+     mutationFn: (email: string) =>
+       conversationService.startConversationByEmail(email),
+     onSuccess: (conversation) => {
+       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+       queryClient.refetchQueries({ queryKey: ['conversations', user?.id] });
+       return conversation;
+     },
+   });
 
-  // Start conversation by user ID
-  const startConversationById = useMutation({
-    mutationFn: (userId: string) =>
-      conversationService.startConversationById(userId),
-    onSuccess: (conversation) => {
-      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
-      return conversation;
-    },
-  });
+   // Start conversation by user ID
+   const startConversationById = useMutation({
+     mutationFn: (userId: string) =>
+       conversationService.startConversationById(userId),
+     onSuccess: (conversation) => {
+       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+       queryClient.refetchQueries({ queryKey: ['conversations', user?.id] });
+       return conversation;
+     },
+   });
 
   // Create conversations query hook for lazy loading
   const useConversationMessages = (
