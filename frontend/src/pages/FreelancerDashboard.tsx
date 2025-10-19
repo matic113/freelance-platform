@@ -277,8 +277,8 @@ export default function FreelancerDashboard() {
                    </div>
                  ) : activeProjects.length > 0 ? (
                    <div className="space-y-4">
-                     {activeProjects.slice(0, 5).map((project) => (
-                       <Link key={project.id} to={`/contracts/${project.id}`}>
+                    {activeProjects.slice(0, 5).map((project) => (
+                        <Link key={project.id} to="/contracts">
                          <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                            <div className="flex items-center gap-3 mb-2">
                              <h3 className="font-semibold text-[#0A2540]">{project.projectTitle}</h3>
