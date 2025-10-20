@@ -27,5 +27,5 @@
 - **Controllers:** @RestController, @RequestMapping, @PreAuthorize for security, @PageableDefault for pagination, @Operation/@Tag for Swagger docs
 
 ## Shared
-- **Git:** No uncommitted changes before starting; stage only relevant files; meaningful commit messages
+- **Git:** No uncommitted changes before starting; stage only relevant files; meaningful commit messages; don't auto commit unless asked to commit changes.
 - **Secrets:** Never commit API keys, tokens, or credentials; use environment variables

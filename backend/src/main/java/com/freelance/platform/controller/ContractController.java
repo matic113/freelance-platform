@@ -3,6 +3,7 @@ package com.freelance.platform.controller;
 import com.freelance.platform.dto.request.CreateContractRequest;
 import com.freelance.platform.dto.request.CreateMilestoneRequest;
 import com.freelance.platform.dto.request.UpdateMilestoneRequest;
+import com.freelance.platform.dto.request.UpdateMilestoneStatusRequest;
 import com.freelance.platform.dto.response.ContractResponse;
 import com.freelance.platform.dto.response.MilestoneResponse;
 import com.freelance.platform.security.UserPrincipal;
@@ -175,37 +176,22 @@ public class ContractController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/milestones/{milestoneId}/start")
-    @Operation(summary = "Start milestone", description = "Mark a milestone as in-progress (freelancers only)")
+    @PutMapping("/{id}/milestones/{milestoneId}/update-status")
+    @Operation(summary = "Update milestone status", description = "Update the status of a milestone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Milestone started successfully"),
+            @ApiResponse(responseCode = "200", description = "Milestone status updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid status transition"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Not authorized to start this milestone"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to update this milestone"),
             @ApiResponse(responseCode = "404", description = "Contract or milestone not found")
     })
-    public ResponseEntity<MilestoneResponse> startMilestone(
+    public ResponseEntity<MilestoneResponse> updateMilestoneStatus(
             @Parameter(description = "Contract ID") @PathVariable UUID id,
             @Parameter(description = "Milestone ID") @PathVariable UUID milestoneId,
+            @Valid @RequestBody UpdateMilestoneStatusRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         
-        MilestoneResponse response = contractService.startMilestone(id, milestoneId, currentUser.getId());
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{id}/milestones/{milestoneId}/complete")
-    @Operation(summary = "Complete milestone", description = "Mark a milestone as completed (freelancers only)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Milestone completed successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Not authorized to complete this milestone"),
-            @ApiResponse(responseCode = "404", description = "Contract or milestone not found")
-    })
-    public ResponseEntity<MilestoneResponse> completeMilestone(
-            @Parameter(description = "Contract ID") @PathVariable UUID id,
-            @Parameter(description = "Milestone ID") @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal UserPrincipal currentUser) {
-        
-        MilestoneResponse response = contractService.completeMilestone(id, milestoneId, currentUser.getId());
+        MilestoneResponse response = contractService.updateMilestoneStatus(id, milestoneId, request.getStatus(), currentUser.getId());
         return ResponseEntity.ok(response);
     }
 

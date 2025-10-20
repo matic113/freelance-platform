@@ -75,7 +75,7 @@ import {
   useReceivedPaymentRequests,
   useCreateMilestone,
   useUpdateMilestone,
-  useCompleteMilestone,
+  useUpdateMilestoneStatus,
   useDeleteMilestone,
   useCreatePaymentRequest,
   useApprovePaymentRequest,
@@ -134,11 +134,11 @@ export default function ContractsPage() {
     error: receivedPaymentRequestsError 
   } = useReceivedPaymentRequests(0, 20, 'requestedAt,desc', isClient);
 
-   // Mutation hooks
-   const createMilestoneMutation = useCreateMilestone();
-   const updateMilestoneMutation = useUpdateMilestone();
-   const completeMilestoneMutation = useCompleteMilestone();
-   const deleteMilestoneMutation = useDeleteMilestone();
+    // Mutation hooks
+    const createMilestoneMutation = useCreateMilestone();
+     const updateMilestoneMutation = useUpdateMilestone();
+     const updateMilestoneStatusMutation = useUpdateMilestoneStatus();
+     const deleteMilestoneMutation = useDeleteMilestone();
    const createPaymentRequestMutation = useCreatePaymentRequest();
    const approvePaymentRequestMutation = useApprovePaymentRequest();
    const rejectPaymentRequestMutation = useRejectPaymentRequest();
@@ -225,14 +225,38 @@ export default function ContractsPage() {
     }
   };
 
-   const sortMilestonesByDate = (milestones: MilestoneResponse[]) => {
-     if (!milestones || milestones.length === 0) return [];
-     return [...milestones].sort((a, b) => {
-       const dateA = new Date(a.dueDate).getTime();
-       const dateB = new Date(b.dueDate).getTime();
-       return dateA - dateB;
-     });
-   };
+    const sortMilestonesByDate = (milestones: MilestoneResponse[]) => {
+      if (!milestones || milestones.length === 0) return [];
+      return [...milestones].sort((a, b) => {
+        const dateA = new Date(a.dueDate).getTime();
+        const dateB = new Date(b.dueDate).getTime();
+        return dateA - dateB;
+      });
+    };
+
+    const isContractApproved = (contract: ContractResponse) => {
+      return contract.status === ContractStatus.ACTIVE;
+    };
+
+    const canTransitionMilestoneStatus = (currentStatus: string, newStatus: string): boolean => {
+      const transitions: Record<string, string[]> = {
+        [MilestoneStatus.PENDING]: [MilestoneStatus.IN_PROGRESS],
+        [MilestoneStatus.IN_PROGRESS]: [MilestoneStatus.COMPLETED],
+        [MilestoneStatus.COMPLETED]: [MilestoneStatus.PAID],
+        [MilestoneStatus.PAID]: []
+      };
+      return transitions[currentStatus]?.includes(newStatus) || false;
+    };
+
+    const getAvailableMilestoneStatuses = (currentStatus: string): string[] => {
+      const transitions: Record<string, string[]> = {
+        [MilestoneStatus.PENDING]: [MilestoneStatus.IN_PROGRESS],
+        [MilestoneStatus.IN_PROGRESS]: [MilestoneStatus.COMPLETED],
+        [MilestoneStatus.COMPLETED]: [MilestoneStatus.PAID],
+        [MilestoneStatus.PAID]: []
+      };
+      return transitions[currentStatus] || [];
+    };
 
    const filteredContracts = contracts.filter(contract => {
     const matchesSearch = contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -338,27 +362,26 @@ export default function ContractsPage() {
     }
   };
 
-  const handleUpdateMilestoneStatus = async (contractId: string, milestoneId: string, status: string) => {
-    try {
-      if (status === MilestoneStatus.COMPLETED) {
-        await completeMilestoneMutation.mutateAsync({
+    const handleUpdateMilestoneStatus = async (contractId: string, milestoneId: string, status: string) => {
+      try {
+        await updateMilestoneStatusMutation.mutateAsync({
           contractId,
-          milestoneId
+          milestoneId,
+          status
+        });
+        
+        toast({
+          title: isRTL ? "تم تحديث حالة المرحلة" : "Milestone Status Updated",
+          description: isRTL ? "تم تحديث حالة المرحلة بنجاح" : "Milestone status has been updated successfully",
+        });
+      } catch (error) {
+        toast({
+          title: isRTL ? "خطأ في تحديث حالة المرحلة" : "Error Updating Milestone Status",
+          description: isRTL ? "حدث خطأ أثناء تحديث حالة المرحلة" : "An error occurred while updating milestone status",
+          variant: "destructive",
         });
       }
-      
-      toast({
-        title: isRTL ? "تم تحديث حالة المرحلة" : "Milestone Status Updated",
-        description: isRTL ? "تم تحديث حالة المرحلة بنجاح" : "Milestone status has been updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: isRTL ? "خطأ في تحديث حالة المرحلة" : "Error Updating Milestone Status",
-        description: isRTL ? "حدث خطأ أثناء تحديث حالة المرحلة" : "An error occurred while updating milestone status",
-        variant: "destructive",
-      });
-    }
-  };
+    };
 
   const handleRequestPayment = async (contractId: string, milestoneId: string, amount: number) => {
     try {
@@ -936,98 +959,106 @@ export default function ContractsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {(contract.milestones || []).length === 0 ? (
-                        <div className="text-center py-8">
-                          <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">
-                            {isRTL ? "لا توجد مراحل لهذا العقد" : "No milestones for this contract"}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {isRTL ? "أضف مرحلة جديدة لبدء العمل" : "Add a milestone to get started"}
-                          </p>
-                        </div>
-                      ) : (
-                        sortMilestonesByDate(contract.milestones || []).map((milestone) => (
-                          <div key={milestone.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className="flex items-center gap-2">
-                                <Badge className={getStatusColor(milestone.status)}>
-                                  <div className="flex items-center gap-1">
-                                    {getStatusIcon(milestone.status)}
-                                    {getStatusText(milestone.status)}
-                                  </div>
-                                </Badge>
-                              </div>
-                              
-                              <div className="flex-1">
-                                <h4 className="font-semibold">{milestone.title}</h4>
-                                <p className="text-sm text-gray-600">{milestone.description}</p>
-                                <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                                  <span>{milestone.amount} {contract.currency}</span>
-                                  <span>{milestone.dueDate}</span>
-                                  {milestone.completedDate && (
-                                    <span>{isRTL ? "مكتمل في" : "Completed"} {milestone.completedDate}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Select 
-                              value={milestone.status} 
-                              onValueChange={(value) => handleUpdateMilestoneStatus(contract.id, milestone.id, value)}
-                            >
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="PENDING">
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4" />
-                                    {isRTL ? "في الانتظار" : "Pending"}
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="IN_PROGRESS">
-                                  <div className="flex items-center gap-2">
-                                    <Play className="h-4 w-4" />
-                                    {isRTL ? "قيد التنفيذ" : "In Progress"}
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="COMPLETED">
-                                  <div className="flex items-center gap-2">
-                                    <CheckCircle className="h-4 w-4" />
-                                    {isRTL ? "مكتمل" : "Completed"}
-                                  </div>
-                                </SelectItem>
-                                <SelectItem value="PAID">
-                                  <div className="flex items-center gap-2">
-                                    <CheckCircle className="h-4 w-4" />
-                                    {isRTL ? "مدفوع" : "Paid"}
-                                  </div>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditMilestone(milestone)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDeleteMilestone(contract.id, milestone.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        ))
-                      )}
+                       <div className="space-y-4">
+                         {(contract.milestones || []).length === 0 ? (
+                           <div className="text-center py-8">
+                             <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                             <p className="text-sm text-gray-500">
+                               {isRTL ? "لا توجد مراحل لهذا العقد" : "No milestones for this contract"}
+                             </p>
+                             <p className="text-xs text-gray-400">
+                               {isRTL ? "أضف مرحلة جديدة لبدء العمل" : "Add a milestone to get started"}
+                             </p>
+                           </div>
+                         ) : (
+                           sortMilestonesByDate(contract.milestones || []).map((milestone) => {
+                             const isContractActive = contract.status === ContractStatus.ACTIVE;
+                             const availableStatuses = getAvailableMilestoneStatuses(milestone.status);
+                             
+                             return (
+                               <div key={milestone.id} className="flex items-center justify-between p-4 border rounded-lg">
+                                 <div className="flex items-center gap-4 flex-1">
+                                   <div className="flex items-center gap-2">
+                                     <Badge className={getStatusColor(milestone.status)}>
+                                       <div className="flex items-center gap-1">
+                                         {getStatusIcon(milestone.status)}
+                                         {getStatusText(milestone.status)}
+                                       </div>
+                                     </Badge>
+                                   </div>
+                                   
+                                   <div className="flex-1">
+                                     <h4 className="font-semibold">{milestone.title}</h4>
+                                     <p className="text-sm text-gray-600">{milestone.description}</p>
+                                     <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                                       <span>{milestone.amount} {contract.currency}</span>
+                                       <span>{milestone.dueDate}</span>
+                                       {milestone.completedDate && (
+                                         <span>{isRTL ? "مكتمل في" : "Completed"} {milestone.completedDate}</span>
+                                       )}
+                                     </div>
+                                   </div>
+                                 </div>
+                               
+                                 <div className="flex items-center gap-2">
+                                   <Select 
+                                     value={milestone.status} 
+                                     onValueChange={(value) => handleUpdateMilestoneStatus(contract.id, milestone.id, value)}
+                                     disabled={!isContractActive}
+                                   >
+                                     <SelectTrigger className={cn("w-32", !isContractActive && "opacity-50 cursor-not-allowed")}>
+                                       <SelectValue />
+                                     </SelectTrigger>
+                                     <SelectContent>
+                                       <SelectItem value="PENDING" disabled={milestone.status !== 'PENDING'}>
+                                         <div className="flex items-center gap-2">
+                                           <Clock className="h-4 w-4" />
+                                           {isRTL ? "في الانتظار" : "Pending"}
+                                         </div>
+                                       </SelectItem>
+                                       <SelectItem value="IN_PROGRESS" disabled={!availableStatuses.includes('IN_PROGRESS')}>
+                                         <div className="flex items-center gap-2">
+                                           <Play className="h-4 w-4" />
+                                           {isRTL ? "قيد التنفيذ" : "In Progress"}
+                                         </div>
+                                       </SelectItem>
+                                       <SelectItem value="COMPLETED" disabled={!availableStatuses.includes('COMPLETED')}>
+                                         <div className="flex items-center gap-2">
+                                           <CheckCircle className="h-4 w-4" />
+                                           {isRTL ? "مكتمل" : "Completed"}
+                                         </div>
+                                       </SelectItem>
+                                       <SelectItem value="PAID" disabled={!availableStatuses.includes('PAID')}>
+                                         <div className="flex items-center gap-2">
+                                           <CheckCircle className="h-4 w-4" />
+                                           {isRTL ? "مدفوع" : "Paid"}
+                                         </div>
+                                       </SelectItem>
+                                     </SelectContent>
+                                   </Select>
+                                   
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => handleEditMilestone(milestone)}
+                                     disabled={!isContractActive}
+                                   >
+                                     <Edit className="h-4 w-4" />
+                                   </Button>
+                                   
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => handleDeleteMilestone(contract.id, milestone.id)}
+                                     disabled={!isContractActive}
+                                   >
+                                     <Trash2 className="h-4 w-4" />
+                                   </Button>
+                                 </div>
+                               </div>
+                             );
+                           })
+                         )}
                     </div>
                   </CardContent>
                 </Card>

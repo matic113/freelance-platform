@@ -176,21 +176,20 @@ export const useUpdateMilestone = () => {
    });
  };
 
-export const useCompleteMilestone = () => {
-   const queryClient = useQueryClient();
-   
-   return useMutation({
-     mutationFn: ({ contractId, milestoneId }: { contractId: string; milestoneId: string }) =>
-       contractService.completeMilestone(contractId, milestoneId),
-     onSuccess: (data, { contractId }) => {
-       // Invalidate all contract queries to refetch updated contracts
-       queryClient.invalidateQueries({ queryKey: contractKeys.all });
-     },
-     onError: (error) => {
-       console.error('Complete milestone error:', error);
-     },
-   });
- };
+  export const useUpdateMilestoneStatus = () => {
+     const queryClient = useQueryClient();
+     
+     return useMutation({
+       mutationFn: ({ contractId, milestoneId, status }: { contractId: string; milestoneId: string; status: string }) =>
+         contractService.updateMilestoneStatus(contractId, milestoneId, status),
+       onSuccess: (data, { contractId }) => {
+         queryClient.invalidateQueries({ queryKey: contractKeys.all });
+       },
+       onError: (error) => {
+         console.error('Update milestone status error:', error);
+       },
+     });
+   };
 
 export const useDeleteMilestone = () => {
    const queryClient = useQueryClient();

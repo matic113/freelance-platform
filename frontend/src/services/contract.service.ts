@@ -62,18 +62,13 @@ export const contractService = {
     return apiService.put<MilestoneResponse>(`/contracts/${contractId}/milestones/${milestoneId}`, request);
   },
 
-   // Start milestone
-   startMilestone: async (contractId: string, milestoneId: string): Promise<MilestoneResponse> => {
-     return apiService.post<MilestoneResponse>(`/contracts/${contractId}/milestones/${milestoneId}/start`);
-   },
+    // Update milestone status (unified endpoint for all status transitions)
+    updateMilestoneStatus: async (contractId: string, milestoneId: string, status: string): Promise<MilestoneResponse> => {
+      return apiService.put<MilestoneResponse>(`/contracts/${contractId}/milestones/${milestoneId}/update-status`, { status });
+    },
 
-   // Complete milestone
-   completeMilestone: async (contractId: string, milestoneId: string): Promise<MilestoneResponse> => {
-     return apiService.post<MilestoneResponse>(`/contracts/${contractId}/milestones/${milestoneId}/complete`);
-   },
-
-   // Delete milestone
-   deleteMilestone: async (contractId: string, milestoneId: string): Promise<void> => {
-     return apiService.delete<void>(`/contracts/${contractId}/milestones/${milestoneId}`);
-   }
+    // Delete milestone
+    deleteMilestone: async (contractId: string, milestoneId: string): Promise<void> => {
+      return apiService.delete<void>(`/contracts/${contractId}/milestones/${milestoneId}`);
+    }
 };

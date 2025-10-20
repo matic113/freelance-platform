@@ -124,123 +124,90 @@ export function ContractAcceptanceFlow({
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle>{contract.title}</CardTitle>
-              <CardDescription>{contract.projectTitle}</CardDescription>
+    <div className="space-y-4">
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg">{contract.title}</CardTitle>
+              <CardDescription className="text-xs">{contract.projectTitle}</CardDescription>
             </div>
-            <Badge className={getStatusColor(contract.status)}>
+            <Badge className={`${getStatusColor(contract.status)} whitespace-nowrap`}>
               {getStatusText(contract.status)}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">{isRTL ? 'العميل' : 'Client'}</p>
-                  <p className="font-medium">{contract.clientName}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <DollarSign className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">{isRTL ? 'الإجمالي' : 'Total Amount'}</p>
-                  <p className="font-medium text-lg">{formatCurrency(contract.totalAmount)}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">{isRTL ? 'تاريخ البدء' : 'Start Date'}</p>
-                  <p className="font-medium">{formatDate(contract.startDate)}</p>
-                </div>
-              </div>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-gray-500">{isRTL ? 'العميل' : 'Client'}</p>
+              <p className="font-medium line-clamp-1">{contract.clientName}</p>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Briefcase className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">{isRTL ? 'المشروع' : 'Project'}</p>
-                  <p className="font-medium">{contract.projectTitle}</p>
-                </div>
-              </div>
+            <div>
+              <p className="text-xs text-gray-500">{isRTL ? 'الإجمالي' : 'Total'}</p>
+              <p className="font-medium">{formatCurrency(contract.totalAmount)}</p>
+            </div>
 
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">{isRTL ? 'تاريخ الانتهاء' : 'End Date'}</p>
-                  <p className="font-medium">{formatDate(contract.endDate)}</p>
-                </div>
-              </div>
+            <div>
+              <p className="text-xs text-gray-500">{isRTL ? 'البدء' : 'Start'}</p>
+              <p className="font-medium text-xs">{formatDate(contract.startDate)}</p>
+            </div>
 
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">{isRTL ? 'العملة' : 'Currency'}</p>
-                  <p className="font-medium">{contract.currency}</p>
-                </div>
-              </div>
+            <div>
+              <p className="text-xs text-gray-500">{isRTL ? 'المشروع' : 'Project'}</p>
+              <p className="font-medium line-clamp-1">{contract.projectTitle}</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">{isRTL ? 'الانتهاء' : 'End'}</p>
+              <p className="font-medium text-xs">{formatDate(contract.endDate)}</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">{isRTL ? 'العملة' : 'Currency'}</p>
+              <p className="font-medium">{contract.currency}</p>
             </div>
           </div>
 
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
-              {isRTL ? 'الوصف' : 'Description'}
-            </p>
-            <p className="text-gray-600">{contract.description}</p>
-          </div>
+          {contract.description && (
+            <div className="text-sm">
+              <p className="text-gray-600 line-clamp-2">{contract.description}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {contract.milestones && contract.milestones.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>{isRTL ? 'المراحل' : 'Milestones'}</CardTitle>
-            <CardDescription>
-              {isRTL ? 'المراحل المحددة مسبقاً للمشروع' : 'Pre-defined project milestones'}
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">{isRTL ? 'المراحل' : 'Milestones'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {contract.milestones.map((milestone, index) => (
-                <div key={milestone.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-semibold">{milestone.title}</h4>
-                      <p className="text-sm text-gray-600">{milestone.description}</p>
+            <div className="space-y-2">
+              {[...contract.milestones]
+                .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                .map((milestone) => (
+                  <div key={milestone.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm">{milestone.title}</h4>
+                      <p className="text-xs text-gray-500">{milestone.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-600 mt-1">
+                        <span className="font-medium">{formatCurrency(milestone.amount)}</span>
+                        <span>{formatDate(milestone.dueDate)}</span>
+                      </div>
                     </div>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="whitespace-nowrap ml-2">
                       {formatCurrency(milestone.amount)}
                     </Badge>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date'}:</span>
-                      <p className="font-medium">{formatDate(milestone.dueDate)}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">{isRTL ? 'الحالة' : 'Status'}:</span>
-                      <p className="font-medium">{milestone.status}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
 
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex justify-between items-center">
+            <div className="mt-3 pt-3 border-t">
+              <div className="flex justify-between items-center text-sm">
                 <span className="font-medium">{isRTL ? 'الإجمالي' : 'Total'}</span>
-                <span className="text-lg font-bold">
+                <span className="font-bold">
                   {formatCurrency(
                     contract.milestones.reduce((sum, m) => sum + m.amount, 0)
                   )}
@@ -252,34 +219,28 @@ export function ContractAcceptanceFlow({
       )}
 
       <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div>
-              <CardTitle className="text-base">{isRTL ? 'ملخص العقد' : 'Contract Summary'}</CardTitle>
+        <CardContent className="p-4">
+          <div className="flex gap-3">
+            <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-900 space-y-1">
+              <p className="font-medium">{isRTL ? 'ملخص العقد' : 'Contract Summary'}</p>
+              <p className="text-xs">
+                {isRTL
+                  ? 'بقبولك لهذا العقد، فإنك توافق على الشروط والمراحل المذكورة أعلاه.'
+                  : 'By accepting this contract, you agree to the terms and milestones mentioned above.'}
+              </p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p>
-            {isRTL
-              ? 'تم إنشاء هذا العقد تلقائياً بناءً على اقتراحك المقبول. يحتوي على شروط المشروع والمراحل المحددة مسبقاً.'
-              : 'This contract was automatically created based on your accepted proposal. It contains the project terms and pre-defined milestones.'}
-          </p>
-          <p>
-            {isRTL
-              ? 'بقبولك لهذا العقد، فإنك توافق على الشروط والمراحل المذكورة أعلاه.'
-              : 'By accepting this contract, you agree to the terms and milestones mentioned above.'}
-          </p>
         </CardContent>
       </Card>
 
-      <div className="flex gap-4 justify-end">
+      <div className="flex gap-2 justify-end">
         <Button
           variant="outline"
           onClick={handleReject}
           disabled={isAccepting || isRejecting || isLoading}
           className="flex items-center gap-2"
+          size="sm"
         >
           <X className="h-4 w-4" />
           {isRTL ? 'رفض' : 'Reject'}
@@ -288,6 +249,7 @@ export function ContractAcceptanceFlow({
           onClick={handleAccept}
           disabled={isAccepting || isRejecting || isLoading}
           className="flex items-center gap-2"
+          size="sm"
         >
           {isAccepting ? (
             <>
@@ -297,7 +259,7 @@ export function ContractAcceptanceFlow({
           ) : (
             <>
               <CheckCircle className="h-4 w-4" />
-              {isRTL ? 'قبول العقد' : 'Accept Contract'}
+              {isRTL ? 'قبول' : 'Accept'}
             </>
           )}
         </Button>

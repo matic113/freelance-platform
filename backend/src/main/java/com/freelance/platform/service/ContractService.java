@@ -122,6 +122,13 @@ public class ContractService {
 
          Contract acceptedContract = contractRepository.save(contract);
 
+         // Set all milestones to PENDING status when contract is approved
+         List<Milestone> milestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contractId);
+         for (Milestone milestone : milestones) {
+             milestone.setStatus(MilestoneStatus.PENDING);
+             milestoneRepository.save(milestone);
+         }
+
          Project project = contract.getProject();
          if (project.getStatus() == ProjectStatus.PUBLISHED) {
              project.setStatus(ProjectStatus.IN_PROGRESS);
@@ -301,94 +308,84 @@ public class ContractService {
 
         Milestone updatedMilestone = milestoneRepository.save(milestone);
         return mapToMilestoneResponse(updatedMilestone);
-    }
-
-     public MilestoneResponse startMilestone(UUID contractId, UUID milestoneId, UUID freelancerId) {
-         Contract contract = contractRepository.findById(contractId)
-                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
-
-         if (!contract.getFreelancer().getId().equals(freelancerId)) {
-             throw new UnauthorizedException("You can only start milestones for your own contracts");
-         }
-
-         Milestone milestone = milestoneRepository.findById(milestoneId)
-                 .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
-
-         if (!milestone.getContract().getId().equals(contractId)) {
-             throw new UnauthorizedException("Milestone does not belong to this contract");
-         }
-
-         if (milestone.getStatus() != MilestoneStatus.PENDING) {
-             throw new UnauthorizedException("Only pending milestones can be started");
-         }
-
-         milestone.setStatus(MilestoneStatus.IN_PROGRESS);
-
-         Milestone startedMilestone = milestoneRepository.save(milestone);
-
-         // Send notification to client
-         notificationService.createNotificationForUser(
-                 contract.getClient().getId(),
-                 "MILESTONE_STARTED",
-                 "Milestone Started",
-                 String.format("Milestone '%s' has been started by the freelancer", milestone.getTitle()),
-                 "medium",
-                 String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
-                              milestone.getId(), contract.getId(), contract.getProject().getId())
-         );
-
-         return mapToMilestoneResponse(startedMilestone);
      }
 
-       public MilestoneResponse completeMilestone(UUID contractId, UUID milestoneId, UUID freelancerId) {
-           Contract contract = contractRepository.findById(contractId)
-                   .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+     public MilestoneResponse updateMilestoneStatus(UUID contractId, UUID milestoneId, MilestoneStatus newStatus, UUID userId) {
+            Contract contract = contractRepository.findById(contractId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-           if (!contract.getFreelancer().getId().equals(freelancerId)) {
-               throw new UnauthorizedException("You can only complete milestones for your own contracts");
-           }
+            if (!contract.getFreelancer().getId().equals(userId)) {
+                throw new UnauthorizedException("You can only update milestones for your own contracts");
+            }
 
-           Milestone milestone = milestoneRepository.findById(milestoneId)
-                   .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
+            Milestone milestone = milestoneRepository.findById(milestoneId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
 
-           if (!milestone.getContract().getId().equals(contractId)) {
-               throw new UnauthorizedException("Milestone does not belong to this contract");
-           }
+            if (!milestone.getContract().getId().equals(contractId)) {
+                throw new UnauthorizedException("Milestone does not belong to this contract");
+            }
 
-           if (milestone.getStatus() != MilestoneStatus.PENDING && milestone.getStatus() != MilestoneStatus.IN_PROGRESS) {
-               throw new UnauthorizedException("Only pending or in-progress milestones can be completed");
-           }
+            MilestoneStatus currentStatus = milestone.getStatus();
+            
+            if (!isValidStatusTransition(currentStatus, newStatus)) {
+                throw new UnauthorizedException(
+                    String.format("Cannot transition from %s to %s", currentStatus, newStatus)
+                );
+            }
 
-           milestone.setStatus(MilestoneStatus.COMPLETED);
-           milestone.setCompletedDate(LocalDateTime.now());
+            milestone.setStatus(newStatus);
+            
+            if (newStatus == MilestoneStatus.COMPLETED) {
+                milestone.setCompletedDate(LocalDateTime.now());
+            }
 
-           Milestone completedMilestone = milestoneRepository.save(milestone);
+            Milestone updatedMilestone = milestoneRepository.save(milestone);
 
-           notificationService.createNotificationForUser(
-                   contract.getClient().getId(),
-                   "MILESTONE_COMPLETED",
-                   "Milestone Completed",
-                   String.format("Milestone '%s' has been completed by the freelancer", milestone.getTitle()),
-                   "medium",
-                   String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
-                                milestone.getId(), contract.getId(), contract.getProject().getId())
-           );
+            String notificationTitle = getStatusChangeNotificationTitle(newStatus);
+            String notificationMessage = String.format("Milestone '%s' status has been updated to %s", 
+                    milestone.getTitle(), newStatus);
 
-           emailService.sendMilestoneCompletedEmail(
-                   contract.getClient(),
-                   contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
-                   milestone.getTitle(),
-                   contract.getProject().getTitle(),
-                   milestone.getAmount().toString(),
-                   contract.getCurrency()
-           );
+            notificationService.createNotificationForUser(
+                    contract.getClient().getId(),
+                    "MILESTONE_STATUS_CHANGED",
+                    notificationTitle,
+                    notificationMessage,
+                    "medium",
+                    String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
+                                 milestone.getId(), contract.getId(), contract.getProject().getId())
+            );
 
-           checkAndAutoCompleteContract(contract);
+            if (newStatus == MilestoneStatus.COMPLETED) {
+                checkAndAutoCompleteContract(contract);
+            }
 
-           return mapToMilestoneResponse(completedMilestone);
-       }
+            return mapToMilestoneResponse(updatedMilestone);
+        }
 
-       private void checkAndAutoCompleteContract(Contract contract) {
+        private boolean isValidStatusTransition(MilestoneStatus currentStatus, MilestoneStatus newStatus) {
+            if (currentStatus == newStatus) {
+                return false;
+            }
+            
+            return switch (currentStatus) {
+                case PENDING -> newStatus == MilestoneStatus.IN_PROGRESS;
+                case IN_PROGRESS -> newStatus == MilestoneStatus.COMPLETED;
+                case COMPLETED -> newStatus == MilestoneStatus.PAID;
+                case PAID -> false;
+                default -> false;
+            };
+        }
+
+        private String getStatusChangeNotificationTitle(MilestoneStatus status) {
+            return switch (status) {
+                case IN_PROGRESS -> "Milestone Started";
+                case COMPLETED -> "Milestone Completed";
+                case PAID -> "Milestone Paid";
+                default -> "Milestone Status Updated";
+            };
+        }
+
+        private void checkAndAutoCompleteContract(Contract contract) {
            List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
            
            boolean allCompleted = allMilestones.stream()
