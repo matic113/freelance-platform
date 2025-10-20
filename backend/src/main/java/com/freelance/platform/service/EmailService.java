@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Service
 public class EmailService {
@@ -322,20 +323,39 @@ public class EmailService {
          sendTemplateEmail(user.getEmail(), "PROJECT_COMPLETED", variables);
      }
 
-     private String replaceTemplateVariables(String template, Map<String, Object> variables) {
-         if (template == null || variables == null) {
-             return template;
-         }
+      private String replaceTemplateVariables(String template, Map<String, Object> variables) {
+          if (template == null || variables == null) {
+              return template;
+          }
 
-         String result = template;
-         for (Map.Entry<String, Object> entry : variables.entrySet()) {
-             String placeholder = "{{" + entry.getKey() + "}}";
-             String value = entry.getValue() != null ? entry.getValue().toString() : "";
-             result = result.replace(placeholder, value);
-         }
+          String result = template;
+          for (Map.Entry<String, Object> entry : variables.entrySet()) {
+              String placeholder = "{{" + entry.getKey() + "}}";
+              String value = entry.getValue() != null ? entry.getValue().toString() : "";
+              result = result.replace(placeholder, value);
+          }
 
-         return result;
-     }
+          result = replaceConditionals(result, variables);
+
+          return result;
+      }
+
+       private String replaceConditionals(String template, Map<String, Object> variables) {
+           String result = template;
+           
+           for (Map.Entry<String, Object> entry : variables.entrySet()) {
+               String conditionalPattern = "\\{\\{#" + Pattern.quote(entry.getKey()) + "\\}\\}(.*?)\\{\\{/" + Pattern.quote(entry.getKey()) + "\\}\\}";
+               boolean conditionValue = entry.getValue() != null && !entry.getValue().toString().equals("false");
+               
+               if (conditionValue) {
+                   result = result.replaceAll(conditionalPattern, "$1");
+               } else {
+                   result = result.replaceAll(conditionalPattern, "");
+               }
+           }
+           
+           return result;
+       }
 
     public void createDefaultEmailTemplates() {
         createTemplateIfNotExists("WELCOME", "Welcome to Freelancer Platform", 
@@ -390,13 +410,15 @@ public class EmailService {
              createTemplateIfNotExists("NEW_REVIEW", "You Received a New Review", 
                      loadHtmlTemplate("new-review.html"));
              
-             createTemplateIfNotExists("SYSTEM_NOTIFICATION", "{{subject}}", 
-                     "<h1>{{subject}}</h1><p>{{message}}</p>");
-         } catch (Exception e) {
-             System.err.println("Warning: Failed to load some email templates from files: " + e.getMessage());
-             createBackupTemplates();
-         }
-    }
+              createTemplateIfNotExists("SYSTEM_NOTIFICATION", "{{subject}}", 
+                      "<h1>{{subject}}</h1><p>{{message}}</p>");
+          } catch (Exception e) {
+              System.err.println("Warning: Failed to load some email templates from files: " + e.getMessage());
+              createBackupTemplates();
+          }
+          
+          updateProjectCompletedTemplate();
+     }
 
      private void createBackupTemplates() {
          createTemplateIfNotExists("PROPOSAL_RECEIVED", "New Proposal Received", 
@@ -414,13 +436,10 @@ public class EmailService {
          createTemplateIfNotExists("CONTRACT_REJECTED", "Contract Rejected", 
                  "<h1>Contract Rejected</h1><p>Unfortunately, {{freelancerName}} has rejected your contract for project: {{projectTitle}}</p>");
          
-         createTemplateIfNotExists("MILESTONE_COMPLETED", "Milestone Completed!", 
-                 "<h1>Milestone Completed!</h1><p>{{otherPartyName}} has completed the milestone '{{milestoneTitle}}' for {{amount}} {{currency}} on project: {{projectTitle}}</p>");
-         
-         createTemplateIfNotExists("PROJECT_COMPLETED", "Project Completed!", 
-                 "<h1>Project Completed!</h1><p>Congratulations! All milestones for project '{{projectTitle}}' have been successfully completed and paid.</p>");
-         
-         createTemplateIfNotExists("PAYMENT_REQUEST", "Payment Request Received", 
+          createTemplateIfNotExists("MILESTONE_COMPLETED", "Milestone Completed!", 
+                  "<h1>Milestone Completed!</h1><p>{{otherPartyName}} has completed the milestone '{{milestoneTitle}}' for {{amount}} {{currency}} on project: {{projectTitle}}</p>");
+          
+          createTemplateIfNotExists("PAYMENT_REQUEST", "Payment Request Received",
                  "<h1>Payment Request</h1><p>{{freelancerName}} has requested payment of {{amount}} {{currency}}.</p>");
          
          createTemplateIfNotExists("PAYMENT_RECEIVED", "Payment Received", 
@@ -453,6 +472,31 @@ public class EmailService {
             template.setIsActive(true);
             
             emailTemplateRepository.save(template);
+        }
+    }
+
+    public void updateProjectCompletedTemplate() {
+        try {
+            String projectCompletedHtml = loadHtmlTemplate("project-completed.html");
+            var existingTemplate = emailTemplateRepository.findByTemplateKey("PROJECT_COMPLETED");
+            
+            if (existingTemplate.isPresent()) {
+                EmailTemplate template = existingTemplate.get();
+                template.setHtmlContent(projectCompletedHtml);
+                template.setSubject("Project Completed!");
+                emailTemplateRepository.save(template);
+            } else {
+                EmailTemplate template = new EmailTemplate();
+                template.setTemplateKey("PROJECT_COMPLETED");
+                template.setSubject("Project Completed!");
+                template.setHtmlContent(projectCompletedHtml);
+                template.setTemplateType(TemplateType.SYSTEM);
+                template.setLanguage("en");
+                template.setIsActive(true);
+                emailTemplateRepository.save(template);
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Failed to update PROJECT_COMPLETED template: " + e.getMessage());
         }
     }
 }

@@ -824,62 +824,57 @@ export default function ContractsPage() {
                        </div>
                     </div>
 
-                    {/* Milestones Preview */}
-                    <div className="mt-4 pt-4 border-t">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">
-                        {isRTL ? "المراحل" : "Milestones"}
-                      </h4>
-                       
-                      <div className="space-y-2">
-                        {(contract.milestones || []).length === 0 ? (
-                          <div className="text-center py-6">
-                            <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500">
-                              {isRTL ? "لا توجد مراحل" : "No milestones yet"}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {isRTL ? "أضف مرحلة جديدة لبدء المشروع" : "Add a milestone to get started"}
-                            </p>
-                          </div>
-                        ) : (
-                          <>
-                            {sortMilestonesByDate(contract.milestones || []).slice(0, 3).map((milestone) => (
-                              <div key={milestone.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  <Badge className={getStatusColor(milestone.status)}>
-                                    <div className="flex items-center gap-1">
-                                      {getStatusIcon(milestone.status)}
-                                      {getStatusText(milestone.status)}
-                                    </div>
-                                  </Badge>
-                                  <div>
-                                    <h5 className="text-sm font-medium">{milestone.title}</h5>
-                                    <p className="text-xs text-gray-500">{milestone.dueDate}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-semibold">
-                                    {milestone.amount} {contract.currency}
-                                  </span>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleEditMilestone(milestone)}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                </div>
+                        {/* Milestones Preview */}
+                        <div className="mt-4 pt-4 border-t">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3">
+                            {isRTL ? "المراحل" : "Milestones"}
+                          </h4>
+                           
+                          <div className="space-y-2">
+                            {(contract.milestones || []).length === 0 ? (
+                              <div className="text-center py-6">
+                                <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm text-gray-500">
+                                  {isRTL ? "لا توجد مراحل" : "No milestones yet"}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {isRTL ? "أضف مرحلة جديدة لبدء المشروع" : "Add a milestone to get started"}
+                                </p>
                               </div>
-                            ))}
-                            {(contract.milestones || []).length > 3 && (
-                              <p className="text-xs text-gray-500 text-center">
-                                +{(contract.milestones || []).length - 3} {isRTL ? "مرحلة أخرى" : "more milestones"}
-                              </p>
+                            ) : (
+                              <>
+                                {sortMilestonesByDate(contract.milestones || []).map((milestone) => (
+                                  <div key={milestone.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                      <Badge className={getStatusColor(milestone.status)}>
+                                        <div className="flex items-center gap-1">
+                                          {getStatusIcon(milestone.status)}
+                                          {getStatusText(milestone.status)}
+                                        </div>
+                                      </Badge>
+                                      <div>
+                                        <h5 className="text-sm font-medium">{milestone.title}</h5>
+                                        <p className="text-xs text-gray-500">{milestone.dueDate}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-semibold">
+                                        {milestone.amount} {contract.currency}
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => handleEditMilestone(milestone)}
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
                             )}
-                          </>
-                        )}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                   </CardContent>
                 </Card>
               ))}

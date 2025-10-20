@@ -155,13 +155,22 @@
                     <p class="project-name">{{projectTitle}}</p>
                     <p>All milestones have been successfully completed and paid!</p>
                 </div>
-                <p>This project is now officially complete. Both parties have fulfilled their obligations and delivered excellent work. We hope this was a great experience and look forward to future collaborations on the platform.</p>
-                {{#isClient}}<a href="{{frontendUrl}}/my-projects" class="cta-button">View My Projects</a>{{/isClient}}
-                {{#isFreelancer}}<a href="{{frontendUrl}}/contracts" class="cta-button">View Contracts</a>{{/isFreelancer}}
+                {{#isClient}}
+                <p>Thank you for your business! Your freelancer has delivered excellent work and fulfilled all project requirements. All payments have been processed successfully.</p>
+                <p>This is a great opportunity to rate your freelancer's performance and help them build a strong reputation on the platform.</p>
+                <a href="{{frontendUrl}}/reviews" class="cta-button">Leave a Review</a>
+                {{/isClient}}
+                {{#isFreelancer}}
+                <p>Excellent work! Your client is satisfied with the deliverables and all payments have been completed. Thank you for providing professional service throughout this project.</p>
+                <p>You can now mark this as complete and showcase it in your portfolio. Consider requesting a testimonial from your client!</p>
+                <a href="{{frontendUrl}}/contracts" class="cta-button">View Your Contracts</a>
+                {{/isFreelancer}}
+                <p style="margin-top: 24px; font-size: 14px; font-style: italic; color: var(--text-muted);">We hope this was a great experience and look forward to future collaborations on the platform.</p>
             </div>
             <div class="meta">
                 <p>
-                    Want to leave feedback? Consider leaving a review to help the {{otherPartyType}} improve their services or share your positive experience!
+                    {{#isClient}}Your freelancer would appreciate your feedback about this project.{{/isClient}}
+                    {{#isFreelancer}}Help build trust in our community by requesting a review from your client.{{/isFreelancer}}
                 </p>
             </div>
         </div>
