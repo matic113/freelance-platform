@@ -482,6 +482,19 @@ public class ContractService {
         return mapToContractResponse(contract);
     }
 
+    public Page<ContractResponse> getMyContracts(UUID userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        Page<ContractResponse> response;
+        if (user.getActiveRole() == Role.FREELANCER) {
+            response = getContractsByFreelancer(userId, pageable);
+        } else {
+            response = getContractsByClient(userId, pageable);
+        }
+        return response;
+    }
+
     public Page<ContractResponse> getContractsByClient(UUID clientId, Pageable pageable) {
         Page<Contract> contracts = contractRepository.findByClientIdOrderByCreatedAtDesc(clientId, pageable);
         return contracts.map(contract -> {

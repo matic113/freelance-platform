@@ -220,4 +220,12 @@ export const authService = {
       return true;
     }
   },
+
+  // Switch active role
+  switchRole: async (newRole: UserType): Promise<UserResponse> => {
+    const user = await apiService.put<UserResponse>('/users/profile/switch-role', null, {
+      params: { newRole },
+    });
+    return normalizeUser(user);
+  },
 };

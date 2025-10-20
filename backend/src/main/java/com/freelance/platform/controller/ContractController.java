@@ -113,7 +113,7 @@ public class ContractController {
     }
 
     @GetMapping("/my-contracts")
-    @Operation(summary = "Get my contracts", description = "Get all contracts for the current client")
+    @Operation(summary = "Get my contracts", description = "Get all contracts for the current user based on active role")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Contracts retrieved successfully")
     })
@@ -121,7 +121,7 @@ public class ContractController {
             @PageableDefault(size = 20) Pageable pageable,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         
-        Page<ContractResponse> response = contractService.getContractsByClient(currentUser.getId(), pageable);
+        Page<ContractResponse> response = contractService.getMyContracts(currentUser.getId(), pageable);
         return ResponseEntity.ok(response);
     }
 

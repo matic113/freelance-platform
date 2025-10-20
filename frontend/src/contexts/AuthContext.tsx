@@ -238,16 +238,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const setActiveRole = (newRole: UserType) => {
-    if (!availableRoles.includes(newRole)) {
-      return;
-    }
+   const setActiveRole = (newRole: UserType) => {
+     if (!availableRoles.includes(newRole)) {
+       return;
+     }
 
-    setActiveRoleState(newRole);
-    if (user) {
-      authService.storeUser({ ...user, activeRole: newRole }, newRole);
-    }
-  };
+     setIsLoading(true);
+     authService.switchRole(newRole)
+       .then((updatedUser) => {
+         setUser(updatedUser);
+         setActiveRoleState(newRole);
+         authService.storeUser(updatedUser, newRole);
+       })
+       .catch((error) => {
+         console.error('Failed to switch role:', error);
+       })
+       .finally(() => {
+         setIsLoading(false);
+       });
+   };
 
   const value: AuthContextType = {
     user,
