@@ -4,10 +4,12 @@ import com.freelance.platform.dto.request.CreateReviewRequest;
 import com.freelance.platform.dto.response.ReviewResponse;
 import com.freelance.platform.entity.Contract;
 import com.freelance.platform.entity.Review;
+import com.freelance.platform.entity.ReviewOpportunity;
 import com.freelance.platform.entity.User;
 import com.freelance.platform.exception.ResourceNotFoundException;
 import com.freelance.platform.exception.UnauthorizedException;
 import com.freelance.platform.repository.ContractRepository;
+import com.freelance.platform.repository.ReviewOpportunityRepository;
 import com.freelance.platform.repository.ReviewRepository;
 import com.freelance.platform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,6 +31,9 @@ public class ReviewService {
 
     @Autowired
     private ReviewRepository reviewRepository;
+
+    @Autowired
+    private ReviewOpportunityRepository reviewOpportunityRepository;
 
     @Autowired
     private ContractRepository contractRepository;
@@ -95,6 +101,15 @@ public class ReviewService {
         review.setCreatedAt(LocalDateTime.now());
 
         Review savedReview = reviewRepository.save(review);
+        
+        // Mark review opportunity as submitted
+        reviewOpportunityRepository.findByContractIdAndReviewerId(contract.getId(), reviewerId)
+                .ifPresent(opportunity -> {
+                    opportunity.setReview(savedReview);
+                    opportunity.setReviewSubmitted(true);
+                    opportunity.setReviewSubmittedAt(LocalDateTime.now());
+                    reviewOpportunityRepository.save(opportunity);
+                });
         
         emailNotificationService.sendNewReviewEmail(review.getReviewee(), 
                 review.getReviewer().getFirstName() + " " + review.getReviewer().getLastName(), 
@@ -179,6 +194,31 @@ public class ReviewService {
         response.put("reportId", UUID.randomUUID().toString());
         
         return response;
+    }
+
+    public Page<ReviewOpportunity> getPendingReviewsForUser(UUID userId, Pageable pageable) {
+        return reviewOpportunityRepository.findPendingReviewsForUser(userId, pageable);
+    }
+
+    public void createReviewOpportunities(Contract contract) {
+        ReviewOpportunity clientReviewsFreelancer = new ReviewOpportunity(
+                contract,
+                contract.getClient(),
+                contract.getFreelancer()
+        );
+        
+        ReviewOpportunity freelancerReviewsClient = new ReviewOpportunity(
+                contract,
+                contract.getFreelancer(),
+                contract.getClient()
+        );
+        
+        reviewOpportunityRepository.save(clientReviewsFreelancer);
+        reviewOpportunityRepository.save(freelancerReviewsClient);
+    }
+
+    public List<ReviewOpportunity> getContractReviewStatuses(UUID contractId) {
+        return reviewOpportunityRepository.findByContractId(contractId);
     }
 
     public Page<ReviewResponse> searchReviews(String query, Pageable pageable) {

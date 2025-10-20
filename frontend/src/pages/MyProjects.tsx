@@ -25,6 +25,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ReviewPromptsList } from "@/components/reviews/ReviewPrompt";
+import { usePendingReviews } from "@/hooks/useReviewOpportunities";
 
 interface ProjectStage {
   name: string;
@@ -80,13 +82,18 @@ const STAGE_SEQUENCE = [
 ];
 
 export default function MyProjects() {
-  const { isRTL, toggleLanguage } = useLocalization();
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<ProjectResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<ProjectStatus | 'ALL'>('ALL');
+   const { isRTL, toggleLanguage } = useLocalization();
+   const { user } = useAuth();
+   const [projects, setProjects] = useState<ProjectResponse[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
+   const [searchTerm, setSearchTerm] = useState('');
+   const [filterStatus, setFilterStatus] = useState<ProjectStatus | 'ALL'>('ALL');
+
+   const {
+     data: pendingReviewsData,
+     isLoading: pendingReviewsLoading
+   } = usePendingReviews(0, 100, true);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -184,22 +191,28 @@ export default function MyProjects() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statsCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                  <p className="text-3xl font-bold text-[#0A2540]">{stat.value}</p>
-                </div>
-                <stat.icon className={`h-8 w-8 ${stat.color} opacity-20`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+       {/* Stats Grid */}
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+         {statsCards.map((stat, index) => (
+           <Card key={index} className="hover:shadow-md transition-shadow">
+             <CardContent className="p-4">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
+                   <p className="text-3xl font-bold text-[#0A2540]">{stat.value}</p>
+                 </div>
+                 <stat.icon className={`h-8 w-8 ${stat.color} opacity-20`} />
+               </div>
+             </CardContent>
+           </Card>
+         ))}
+       </div>
+
+       {/* Review Prompts Section */}
+       <ReviewPromptsList 
+         opportunities={pendingReviewsData?.content || []}
+         className="mb-8"
+       />
 
       {/* Search and Filter */}
       <Card className="mb-6">

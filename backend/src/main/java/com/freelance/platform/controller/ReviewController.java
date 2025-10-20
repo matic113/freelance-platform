@@ -2,6 +2,8 @@ package com.freelance.platform.controller;
 
 import com.freelance.platform.dto.request.CreateReviewRequest;
 import com.freelance.platform.dto.response.ReviewResponse;
+import com.freelance.platform.dto.response.ReviewOpportunityResponse;
+import com.freelance.platform.entity.ReviewOpportunity;
 import com.freelance.platform.security.UserPrincipal;
 import com.freelance.platform.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,8 +24,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -204,5 +208,58 @@ public class ReviewController {
         
         Page<ReviewResponse> reviews = reviewService.searchReviews(query, pageable);
         return ResponseEntity.ok(reviews);
+    }
+
+    @GetMapping("/pending")
+    @Operation(summary = "Get pending reviews", description = "Get pending review opportunities for the current user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pending reviews retrieved successfully")
+    })
+    public ResponseEntity<Page<ReviewOpportunityResponse>> getPendingReviews(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PageableDefault(size = 20) Pageable pageable) {
+        
+        Page<ReviewOpportunity> opportunities = reviewService.getPendingReviewsForUser(currentUser.getId(), pageable);
+        Page<ReviewOpportunityResponse> responses = opportunities.map(this::convertToResponse);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/contract/{contractId}/status")
+    @Operation(summary = "Get contract review status", description = "Get review status for a specific contract")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contract review status retrieved successfully")
+    })
+    public ResponseEntity<Map<String, Object>> getContractReviewStatus(
+            @Parameter(description = "Contract ID") @PathVariable UUID contractId) {
+        
+        List<ReviewOpportunity> opportunities = reviewService.getContractReviewStatuses(contractId);
+        List<ReviewOpportunityResponse> responses = opportunities.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("contractId", contractId);
+        result.put("reviews", responses);
+        result.put("totalReviewsNeeded", responses.size());
+        result.put("completedReviews", responses.stream().filter(ReviewOpportunityResponse::getReviewSubmitted).count());
+        result.put("pendingReviews", responses.stream().filter(r -> !r.getReviewSubmitted()).count());
+        
+        return ResponseEntity.ok(result);
+    }
+
+    private ReviewOpportunityResponse convertToResponse(ReviewOpportunity opportunity) {
+        ReviewOpportunityResponse response = new ReviewOpportunityResponse();
+        response.setId(opportunity.getId());
+        response.setContractId(opportunity.getContract().getId());
+        response.setReviewerId(opportunity.getReviewer().getId());
+        response.setReviewerName(opportunity.getReviewer().getFirstName() + " " + opportunity.getReviewer().getLastName());
+        response.setRevieweeId(opportunity.getReviewee().getId());
+        response.setRevieweeName(opportunity.getReviewee().getFirstName() + " " + opportunity.getReviewee().getLastName());
+        response.setReviewSubmitted(opportunity.getReviewSubmitted());
+        response.setInvitationEmailSent(opportunity.getInvitationEmailSent());
+        response.setProjectTitle(opportunity.getContract().getProject().getTitle());
+        response.setCreatedAt(opportunity.getCreatedAt());
+        response.setReviewSubmittedAt(opportunity.getReviewSubmittedAt());
+        return response;
     }
 }

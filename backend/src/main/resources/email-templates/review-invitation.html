@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Completed - Share Your Review | {{platformName}}</title>
+    <style>
+        :root {
+            color-scheme: light only;
+            --primary: #047857;
+            --primary-dark: #065f46;
+            --card-bg: #ffffff;
+            --body-bg: #f3f9f6;
+            --text-main: #1f2933;
+            --text-muted: #4b5563;
+            --divider: rgba(4, 120, 87, 0.12);
+            --shadow: 0 18px 45px -20px rgba(4, 120, 87, 0.45);
+        }
+
+        body {
+            margin: 0;
+            padding: 32px 12px;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                Helvetica, Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-main);
+        }
+
+        .wrapper {
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .brand-bar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 28px 32px;
+            text-align: center;
+        }
+
+        .brand-bar h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #ecfdf5;
+        }
+
+        .body {
+            padding: 36px 32px 28px;
+        }
+
+        .body h2 {
+            margin: 0 0 12px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .body p {
+            margin: 0 0 16px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .project-info {
+            background: rgba(4, 120, 87, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .project-title {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .project-details {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .highlights {
+            list-style: none;
+            padding: 16px 0;
+            margin: 0;
+        }
+
+        .highlights li {
+            padding: 8px 0;
+            font-size: 14px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--divider);
+        }
+
+        .highlights li:last-child {
+            border-bottom: none;
+        }
+
+        .highlights li:before {
+            content: "✓ ";
+            color: var(--primary);
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .cta-section {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 14px 36px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .secondary-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        .meta {
+            padding: 24px 32px 32px;
+            border-top: 1px solid var(--divider);
+            text-align: center;
+        }
+
+        .meta p {
+            margin: 6px 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 12px;
+            color: rgba(31, 41, 51, 0.6);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 14px;
+            }
+
+            .body,
+            .meta {
+                padding: 28px 20px;
+            }
+
+            .cta-button {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="card">
+            <div class="brand-bar">
+                <h1>{{platformName}}</h1>
+            </div>
+            <div class="body">
+                <h2>Project Completed! ⭐</h2>
+                <p>Hi {{firstName}},</p>
+                <p>Great news! The project with {{otherPartyName}} has been completed. Now it's time to share your experience and help build the community.</p>
+                
+                <div class="project-info">
+                    <div class="project-title">{{projectTitle}}</div>
+                    <div class="project-details">
+                        <strong>Other Party:</strong> {{otherPartyName}}<br>
+                        <strong>Contract Amount:</strong> {{amount}} {{currency}}<br>
+                        <strong>Completed:</strong> {{completionDate}}
+                    </div>
+                </div>
+
+                <p>Your feedback helps {{otherPartyName}} improve their services and helps other clients/freelancers make informed decisions.</p>
+
+                <ul class="highlights">
+                    <li>Share your honest experience working on this project</li>
+                    <li>Rate {{otherPartyName}} on a scale of 1-5 stars</li>
+                    <li>Leave optional detailed comments about the collaboration</li>
+                </ul>
+
+                <div class="cta-section">
+                    <a href="{{reviewUrl}}" class="cta-button">Review {{otherPartyName}}</a>
+                    <p class="secondary-text">This link will take you directly to the review form</p>
+                </div>
+
+                <p>Reviews are a crucial part of our platform and help maintain trust and quality. Both you and {{otherPartyName}} can leave one review per project.</p>
+            </div>
+            <div class="meta">
+                <p>
+                    Thank you for using {{platformName}}! Your feedback matters and helps us maintain the highest standards of quality and trust.
+                </p>
+            </div>
+        </div>
+        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+    </div>
+</body>
+</html>

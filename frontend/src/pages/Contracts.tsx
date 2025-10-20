@@ -54,6 +54,7 @@ import { MilestoneCard } from '@/components/contracts/MilestoneCard';
 import { PaymentRequestCard } from '@/components/contracts/PaymentRequestCard';
 import { ContractDetailsModal } from '@/components/modals/ContractDetailsModal';
 import { ContractAcceptanceFlow } from '@/components/contracts/ContractAcceptanceFlow';
+import { ReviewPromptsList } from '@/components/reviews/ReviewPrompt';
 import { 
   Contract, 
   Milestone, 
@@ -83,6 +84,7 @@ import {
   useAcceptContract,
   useRejectContract
 } from '@/hooks/useContracts';
+import { usePendingReviews } from '@/hooks/useReviewOpportunities';
 
 export default function ContractsPage() {
   const { isRTL, toggleLanguage } = useLocalization();
@@ -128,11 +130,16 @@ export default function ContractsPage() {
     error: myPaymentRequestsError 
   } = useMyPaymentRequests(0, 20, 'requestedAt,desc', isFreelancer);
   
-  const { 
-    data: receivedPaymentRequestsData, 
-    isLoading: receivedPaymentRequestsLoading, 
-    error: receivedPaymentRequestsError 
-  } = useReceivedPaymentRequests(0, 20, 'requestedAt,desc', isClient);
+   const { 
+     data: receivedPaymentRequestsData, 
+     isLoading: receivedPaymentRequestsLoading, 
+     error: receivedPaymentRequestsError 
+   } = useReceivedPaymentRequests(0, 20, 'requestedAt,desc', isClient);
+
+   const {
+     data: pendingReviewsData,
+     isLoading: pendingReviewsLoading
+   } = usePendingReviews(0, 100, true);
 
     // Mutation hooks
     const createMilestoneMutation = useCreateMilestone();
@@ -607,14 +614,20 @@ export default function ContractsPage() {
           </Card>
         </div>
 
-        {/* Search and Filters */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              {isRTL ? "البحث والتصفية" : "Search & Filter"}
-            </CardTitle>
-          </CardHeader>
+         {/* Review Prompts Section */}
+         <ReviewPromptsList 
+           opportunities={pendingReviewsData?.content || []}
+           className="mb-8"
+         />
+
+         {/* Search and Filters */}
+         <Card className="mb-8">
+           <CardHeader>
+             <CardTitle className="flex items-center gap-2">
+               <Search className="h-5 w-5" />
+               {isRTL ? "البحث والتصفية" : "Search & Filter"}
+             </CardTitle>
+           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">

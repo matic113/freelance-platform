@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { ReviewPromptsList } from "@/components/reviews/ReviewPrompt";
+import { usePendingReviews } from "@/hooks/useReviewOpportunities";
 import { 
   Eye, 
   MessageCircle, 
@@ -30,8 +32,13 @@ import {
 } from "lucide-react";
 
 export default function FreelancerDashboard() {
-  const { isRTL, toggleLanguage } = useLocalization();
-  const { data: dashboardData, isLoading, error } = useFreelancerDashboard();
+   const { isRTL, toggleLanguage } = useLocalization();
+   const { data: dashboardData, isLoading, error } = useFreelancerDashboard();
+   
+   const {
+     data: pendingReviewsData,
+     isLoading: pendingReviewsLoading
+   } = usePendingReviews(0, 100, true);
 
   const stats = dashboardData ? [
     {
@@ -173,22 +180,28 @@ export default function FreelancerDashboard() {
          </p>
        </div>
 
-        {/* Stats Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
-                    <p className="text-xl font-bold text-[#0A2540]">{stat.value}</p>
-                  </div>
-                  <stat.icon className={`h-5 w-5 flex-shrink-0 ml-2 ${stat.color}`} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+         {/* Stats Cards Row */}
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+           {stats.map((stat, index) => (
+             <Card key={index} className="hover:shadow-md transition-shadow duration-300">
+               <CardContent className="p-4">
+                 <div className="flex items-center justify-between">
+                   <div className="flex-1 min-w-0">
+                     <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
+                     <p className="text-xl font-bold text-[#0A2540]">{stat.value}</p>
+                   </div>
+                   <stat.icon className={`h-5 w-5 flex-shrink-0 ml-2 ${stat.color}`} />
+                 </div>
+               </CardContent>
+             </Card>
+           ))}
+         </div>
+
+         {/* Review Prompts Section */}
+         <ReviewPromptsList 
+           opportunities={pendingReviewsData?.content || []}
+           className="mb-6"
+         />
 
          {/* Main Content Area */}
          <div className="space-y-6">

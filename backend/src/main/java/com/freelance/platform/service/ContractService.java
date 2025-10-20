@@ -49,6 +49,12 @@ public class ContractService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private ReviewService reviewService;
+
+    @Autowired
+    private EmailNotificationService emailNotificationService;
+
     public ContractResponse createContract(CreateContractRequest request, UUID clientId) {
         User client = userRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -217,7 +223,8 @@ public class ContractService {
 
         Contract completedContract = contractRepository.save(contract);
 
-        // Send notification to freelancer
+        reviewService.createReviewOpportunities(contract);
+
         notificationService.createNotificationForUser(
                 contract.getFreelancer().getId(),
                 "CONTRACT_COMPLETED",
@@ -226,6 +233,34 @@ public class ContractService {
                 "high",
                 String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}", 
                              contract.getId(), contract.getProject().getId(), contract.getClient().getId())
+        );
+
+        notificationService.createNotificationForUser(
+                contract.getClient().getId(),
+                "CONTRACT_COMPLETED",
+                "Contract Completed",
+                String.format("Your contract for project '%s' has been completed", contract.getProject().getTitle()),
+                "high",
+                String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
+                             contract.getId(), contract.getProject().getId())
+        );
+
+        emailNotificationService.sendReviewInvitationEmail(
+                contract.getClient(),
+                contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
+                contract.getProject().getTitle(),
+                contract.getTotalAmount().toString(),
+                contract.getCurrency(),
+                "/reviews/pending"
+        );
+
+        emailNotificationService.sendReviewInvitationEmail(
+                contract.getFreelancer(),
+                contract.getClient().getFirstName() + " " + contract.getClient().getLastName(),
+                contract.getProject().getTitle(),
+                contract.getTotalAmount().toString(),
+                contract.getCurrency(),
+                "/reviews/pending"
         );
 
         return mapToContractResponse(completedContract);

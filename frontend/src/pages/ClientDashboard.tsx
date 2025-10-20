@@ -12,6 +12,8 @@ import { ProjectResponse, ProjectStatus } from "@/types/api";
 import { useReceivedProposals } from "@/hooks/useProposals";
 import { useAuth } from "@/contexts/AuthContext";
 import { config } from "@/config/env";
+import { ReviewPromptsList } from "@/components/reviews/ReviewPrompt";
+import { usePendingReviews } from "@/hooks/useReviewOpportunities";
 
 interface ProjectStage {
   name: string;
@@ -84,14 +86,19 @@ import {
 } from "lucide-react";
 
 export default function ClientDashboard() {
-  const { isRTL, toggleLanguage } = useLocalization();
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<ProjectResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+   const { isRTL, toggleLanguage } = useLocalization();
+   const { user } = useAuth();
+   const [projects, setProjects] = useState<ProjectResponse[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
 
-  const isClient = user?.userType === 'CLIENT' || user?.activeRole === 'CLIENT';
-  const { data: receivedProposalsData, isLoading: proposalsLoading } = useReceivedProposals(0, 5, 'submittedAt,desc', isClient);
+   const isClient = user?.userType === 'CLIENT' || user?.activeRole === 'CLIENT';
+   const { data: receivedProposalsData, isLoading: proposalsLoading } = useReceivedProposals(0, 5, 'submittedAt,desc', isClient);
+
+   const {
+     data: pendingReviewsData,
+     isLoading: pendingReviewsLoading
+   } = usePendingReviews(0, 100, true);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -265,22 +272,30 @@ export default function ClientDashboard() {
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-6">
             {/* Sidebar with Stats and Quick Actions */}
             <div className="lg:col-span-1 space-y-3">
-              {/* Stats Cards - Compact */}
-              <div className="space-y-2">
-                {stats.map((stat, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow duration-300">
-                    <CardContent className="p-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
-                          <p className="text-base font-bold text-[#0A2540]">{stat.value}</p>
-                        </div>
-                        <stat.icon className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+               {/* Stats Cards - Compact */}
+               <div className="space-y-2">
+                 {stats.map((stat, index) => (
+                   <Card key={index} className="hover:shadow-md transition-shadow duration-300">
+                     <CardContent className="p-2">
+                       <div className="flex items-center justify-between">
+                         <div className="flex-1 min-w-0">
+                           <p className="text-xs text-muted-foreground truncate">{stat.title}</p>
+                           <p className="text-base font-bold text-[#0A2540]">{stat.value}</p>
+                         </div>
+                         <stat.icon className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
+                       </div>
+                     </CardContent>
+                   </Card>
+                 ))}
+               </div>
+
+               {/* Review Prompts */}
+               <div className="hidden lg:block">
+                 <ReviewPromptsList 
+                   opportunities={pendingReviewsData?.content || []}
+                   className=""
+                 />
+               </div>
 
               {/* Quick Actions */}
               <Card>

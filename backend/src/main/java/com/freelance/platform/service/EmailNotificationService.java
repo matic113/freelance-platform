@@ -114,6 +114,42 @@ public class EmailNotificationService {
         }
     }
 
+    public void sendReviewInvitationEmail(User reviewer, String otherPartyName, String projectTitle, 
+                                         String amount, String currency, String reviewUrl) {
+        if (shouldSendEmail(reviewer.getId(), "emailNewReviews")) {
+            try {
+                Map<String, Object> variables = new HashMap<>();
+                variables.put("firstName", reviewer.getFirstName());
+                variables.put("otherPartyName", otherPartyName);
+                variables.put("projectTitle", projectTitle);
+                variables.put("amount", amount);
+                variables.put("currency", currency);
+                variables.put("completionDate", LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+                variables.put("reviewUrl", reviewUrl);
+                emailService.sendTemplateEmail(reviewer.getEmail(), "REVIEW_INVITATION", variables);
+            } catch (Exception e) {
+                System.err.println("Failed to send review invitation email to " + reviewer.getEmail() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    public void sendReviewReminderEmail(User reviewer, String otherPartyName, String projectTitle, 
+                                       String reviewUrl, long daysAgo) {
+        if (shouldSendEmail(reviewer.getId(), "emailNewReviews")) {
+            try {
+                Map<String, Object> variables = new HashMap<>();
+                variables.put("firstName", reviewer.getFirstName());
+                variables.put("otherPartyName", otherPartyName);
+                variables.put("projectTitle", projectTitle);
+                variables.put("reviewUrl", reviewUrl);
+                variables.put("daysAgo", String.valueOf(daysAgo));
+                emailService.sendTemplateEmail(reviewer.getEmail(), "REVIEW_REMINDER", variables);
+            } catch (Exception e) {
+                System.err.println("Failed to send review reminder email to " + reviewer.getEmail() + ": " + e.getMessage());
+            }
+        }
+    }
+
     public void sendSystemNotificationEmail(User user, String subject, String message) {
         if (shouldSendEmail(user.getId(), "emailSystemNotifications")) {
             try {
