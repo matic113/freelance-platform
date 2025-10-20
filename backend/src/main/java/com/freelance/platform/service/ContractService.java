@@ -46,6 +46,9 @@ public class ContractService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private EmailService emailService;
+
     public ContractResponse createContract(CreateContractRequest request, UUID clientId) {
         User client = userRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -103,82 +106,92 @@ public class ContractService {
     }
 
     public ContractResponse acceptContract(UUID contractId, UUID freelancerId) {
-        Contract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+         Contract contract = contractRepository.findById(contractId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-        if (!contract.getFreelancer().getId().equals(freelancerId)) {
-            throw new UnauthorizedException("You can only accept your own contracts");
-        }
+         if (!contract.getFreelancer().getId().equals(freelancerId)) {
+             throw new UnauthorizedException("You can only accept your own contracts");
+         }
 
-        if (contract.getStatus() != ContractStatus.PENDING) {
-            throw new UnauthorizedException("Only pending contracts can be accepted");
-        }
+         if (contract.getStatus() != ContractStatus.PENDING) {
+             throw new UnauthorizedException("Only pending contracts can be accepted");
+         }
 
-        contract.setStatus(ContractStatus.ACTIVE);
-        contract.setUpdatedAt(LocalDateTime.now());
+         contract.setStatus(ContractStatus.ACTIVE);
+         contract.setUpdatedAt(LocalDateTime.now());
 
-        Contract acceptedContract = contractRepository.save(contract);
+         Contract acceptedContract = contractRepository.save(contract);
 
-        Project project = contract.getProject();
-        if (project.getStatus() == ProjectStatus.PUBLISHED) {
-            project.setStatus(ProjectStatus.IN_PROGRESS);
-            project.setUpdatedAt(LocalDateTime.now());
-            projectRepository.save(project);
+         Project project = contract.getProject();
+         if (project.getStatus() == ProjectStatus.PUBLISHED) {
+             project.setStatus(ProjectStatus.IN_PROGRESS);
+             project.setUpdatedAt(LocalDateTime.now());
+             projectRepository.save(project);
 
-            notificationService.createNotificationForUser(
-                    contract.getClient().getId(),
-                    "PROJECT_STARTED",
-                    "Project Started",
-                    String.format("Your project '%s' is now in progress", project.getTitle()),
-                    "high",
-                    String.format("{\"projectId\":\"%s\"}", project.getId())
-            );
-        }
+             notificationService.createNotificationForUser(
+                     contract.getClient().getId(),
+                     "PROJECT_STARTED",
+                     "Project Started",
+                     String.format("Your project '%s' is now in progress", project.getTitle()),
+                     "high",
+                     String.format("{\"projectId\":\"%s\"}", project.getId())
+             );
+         }
 
-        // Send notification to client
-        notificationService.createNotificationForUser(
-                contract.getClient().getId(),
-                "CONTRACT_ACCEPTED",
-                "Contract Accepted",
-                String.format("Your contract for project '%s' has been accepted by the freelancer", contract.getProject().getTitle()),
-                "high",
-                String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
-                             contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
-        );
+         notificationService.createNotificationForUser(
+                 contract.getClient().getId(),
+                 "CONTRACT_ACCEPTED",
+                 "Contract Accepted",
+                 String.format("Your contract for project '%s' has been accepted by the freelancer", contract.getProject().getTitle()),
+                 "high",
+                 String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
+                              contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
+         );
 
-        return mapToContractResponse(acceptedContract);
-    }
+         emailService.sendContractAcceptedEmail(
+                 contract.getClient(),
+                 contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
+                 contract.getProject().getTitle()
+         );
+
+         return mapToContractResponse(acceptedContract);
+     }
 
     public ContractResponse rejectContract(UUID contractId, UUID freelancerId) {
-        Contract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+         Contract contract = contractRepository.findById(contractId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-        if (!contract.getFreelancer().getId().equals(freelancerId)) {
-            throw new UnauthorizedException("You can only reject your own contracts");
-        }
+         if (!contract.getFreelancer().getId().equals(freelancerId)) {
+             throw new UnauthorizedException("You can only reject your own contracts");
+         }
 
-        if (contract.getStatus() != ContractStatus.PENDING) {
-            throw new UnauthorizedException("Only pending contracts can be rejected");
-        }
+         if (contract.getStatus() != ContractStatus.PENDING) {
+             throw new UnauthorizedException("Only pending contracts can be rejected");
+         }
 
-        contract.setStatus(ContractStatus.CANCELLED);
-        contract.setUpdatedAt(LocalDateTime.now());
+         contract.setStatus(ContractStatus.CANCELLED);
+         contract.setUpdatedAt(LocalDateTime.now());
 
-        Contract rejectedContract = contractRepository.save(contract);
+         Contract rejectedContract = contractRepository.save(contract);
 
-        // Send notification to client
-        notificationService.createNotificationForUser(
-                contract.getClient().getId(),
-                "CONTRACT_REJECTED",
-                "Contract Rejected",
-                String.format("Your contract for project '%s' was rejected by the freelancer", contract.getProject().getTitle()),
-                "medium",
-                String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
-                             contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
-        );
+         notificationService.createNotificationForUser(
+                 contract.getClient().getId(),
+                 "CONTRACT_REJECTED",
+                 "Contract Rejected",
+                 String.format("Your contract for project '%s' was rejected by the freelancer", contract.getProject().getTitle()),
+                 "medium",
+                 String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
+                              contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
+         );
 
-        return mapToContractResponse(rejectedContract);
-    }
+         emailService.sendContractRejectedEmail(
+                 contract.getClient(),
+                 contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
+                 contract.getProject().getTitle()
+         );
+
+         return mapToContractResponse(rejectedContract);
+     }
 
     public ContractResponse completeContract(UUID contractId, UUID clientId) {
         Contract contract = contractRepository.findById(contractId)
@@ -327,45 +340,53 @@ public class ContractService {
          return mapToMilestoneResponse(startedMilestone);
      }
 
-      public MilestoneResponse completeMilestone(UUID contractId, UUID milestoneId, UUID freelancerId) {
-          Contract contract = contractRepository.findById(contractId)
-                  .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+       public MilestoneResponse completeMilestone(UUID contractId, UUID milestoneId, UUID freelancerId) {
+           Contract contract = contractRepository.findById(contractId)
+                   .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
 
-          if (!contract.getFreelancer().getId().equals(freelancerId)) {
-              throw new UnauthorizedException("You can only complete milestones for your own contracts");
-          }
+           if (!contract.getFreelancer().getId().equals(freelancerId)) {
+               throw new UnauthorizedException("You can only complete milestones for your own contracts");
+           }
 
-          Milestone milestone = milestoneRepository.findById(milestoneId)
-                  .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
+           Milestone milestone = milestoneRepository.findById(milestoneId)
+                   .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
 
-          if (!milestone.getContract().getId().equals(contractId)) {
-              throw new UnauthorizedException("Milestone does not belong to this contract");
-          }
+           if (!milestone.getContract().getId().equals(contractId)) {
+               throw new UnauthorizedException("Milestone does not belong to this contract");
+           }
 
-          if (milestone.getStatus() != MilestoneStatus.PENDING && milestone.getStatus() != MilestoneStatus.IN_PROGRESS) {
-              throw new UnauthorizedException("Only pending or in-progress milestones can be completed");
-          }
+           if (milestone.getStatus() != MilestoneStatus.PENDING && milestone.getStatus() != MilestoneStatus.IN_PROGRESS) {
+               throw new UnauthorizedException("Only pending or in-progress milestones can be completed");
+           }
 
-          milestone.setStatus(MilestoneStatus.COMPLETED);
-          milestone.setCompletedDate(LocalDateTime.now());
+           milestone.setStatus(MilestoneStatus.COMPLETED);
+           milestone.setCompletedDate(LocalDateTime.now());
 
-          Milestone completedMilestone = milestoneRepository.save(milestone);
+           Milestone completedMilestone = milestoneRepository.save(milestone);
 
-          // Send notification to client
-          notificationService.createNotificationForUser(
-                  contract.getClient().getId(),
-                  "MILESTONE_COMPLETED",
-                  "Milestone Completed",
-                  String.format("Milestone '%s' has been completed by the freelancer", milestone.getTitle()),
-                  "medium",
-                  String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
-                               milestone.getId(), contract.getId(), contract.getProject().getId())
-          );
+           notificationService.createNotificationForUser(
+                   contract.getClient().getId(),
+                   "MILESTONE_COMPLETED",
+                   "Milestone Completed",
+                   String.format("Milestone '%s' has been completed by the freelancer", milestone.getTitle()),
+                   "medium",
+                   String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
+                                milestone.getId(), contract.getId(), contract.getProject().getId())
+           );
 
-          checkAndAutoCompleteContract(contract);
+           emailService.sendMilestoneCompletedEmail(
+                   contract.getClient(),
+                   contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
+                   milestone.getTitle(),
+                   contract.getProject().getTitle(),
+                   milestone.getAmount().toString(),
+                   contract.getCurrency()
+           );
 
-          return mapToMilestoneResponse(completedMilestone);
-      }
+           checkAndAutoCompleteContract(contract);
+
+           return mapToMilestoneResponse(completedMilestone);
+       }
 
        private void checkAndAutoCompleteContract(Contract contract) {
            List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
@@ -402,27 +423,55 @@ public class ContractService {
            }
        }
 
-       private void checkAndAutoCompleteProject(Project project) {
-           List<Contract> projectContracts = contractRepository.findByProject(project);
-           
-           boolean allContractsCompleted = projectContracts.stream()
-                   .allMatch(c -> c.getStatus() == ContractStatus.COMPLETED);
-           
-           if (allContractsCompleted && project.getStatus() == ProjectStatus.IN_PROGRESS) {
-               project.setStatus(ProjectStatus.COMPLETED);
-               project.setUpdatedAt(LocalDateTime.now());
-               projectRepository.save(project);
+        private void checkAndAutoCompleteProject(Project project) {
+            List<Contract> projectContracts = contractRepository.findByProject(project);
+            
+            boolean allContractsCompleted = projectContracts.stream()
+                    .allMatch(c -> c.getStatus() == ContractStatus.COMPLETED);
+            
+            if (allContractsCompleted && project.getStatus() == ProjectStatus.IN_PROGRESS) {
+                project.setStatus(ProjectStatus.COMPLETED);
+                project.setUpdatedAt(LocalDateTime.now());
+                projectRepository.save(project);
 
-               notificationService.createNotificationForUser(
-                       project.getClient().getId(),
-                       "PROJECT_COMPLETED",
-                       "Project Auto-Completed",
-                       String.format("Congratulations! Your project '%s' has been completed", project.getTitle()),
-                       "high",
-                       String.format("{\"projectId\":\"%s\"}", project.getId())
-               );
-           }
-       }
+                notificationService.createNotificationForUser(
+                        project.getClient().getId(),
+                        "PROJECT_COMPLETED",
+                        "Project Auto-Completed",
+                        String.format("Congratulations! Your project '%s' has been completed", project.getTitle()),
+                        "high",
+                        String.format("{\"projectId\":\"%s\"}", project.getId())
+                );
+
+                for (Contract contract : projectContracts) {
+                    notificationService.createNotificationForUser(
+                            contract.getFreelancer().getId(),
+                            "PROJECT_COMPLETED",
+                            "Project Auto-Completed",
+                            String.format("Congratulations! Project '%s' has been completed successfully", project.getTitle()),
+                            "high",
+                            String.format("{\"projectId\":\"%s\",\"contractId\":\"%s\"}", 
+                                         project.getId(), contract.getId())
+                    );
+
+                    emailService.sendProjectCompletedEmail(
+                            project.getClient(),
+                            contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
+                            project.getTitle(),
+                            "CLIENT",
+                            "Freelancer"
+                    );
+
+                    emailService.sendProjectCompletedEmail(
+                            contract.getFreelancer(),
+                            project.getClient().getFirstName() + " " + project.getClient().getLastName(),
+                            project.getTitle(),
+                            "FREELANCER",
+                            "Client"
+                    );
+                }
+            }
+        }
 
     public ContractResponse getContractById(UUID contractId) {
         Contract contract = contractRepository.findById(contractId)

@@ -276,20 +276,66 @@ public class EmailService {
          sendTemplateEmail(reviewee.getEmail(), "NEW_REVIEW", variables);
      }
 
+     public void sendContractAcceptedEmail(User client, String freelancerName, String projectTitle) {
+         Map<String, Object> variables = new HashMap<>();
+         variables.put("firstName", client.getFirstName());
+         variables.put("freelancerName", freelancerName);
+         variables.put("projectTitle", projectTitle);
+         variables.put("frontendUrl", frontendUrl);
+
+         sendTemplateEmail(client.getEmail(), "CONTRACT_ACCEPTED", variables);
+     }
+
+     public void sendContractRejectedEmail(User client, String freelancerName, String projectTitle) {
+         Map<String, Object> variables = new HashMap<>();
+         variables.put("firstName", client.getFirstName());
+         variables.put("freelancerName", freelancerName);
+         variables.put("projectTitle", projectTitle);
+         variables.put("frontendUrl", frontendUrl);
+
+         sendTemplateEmail(client.getEmail(), "CONTRACT_REJECTED", variables);
+     }
+
+     public void sendMilestoneCompletedEmail(User recipient, String otherPartyName, String milestoneTitle, String projectTitle, String amount, String currency) {
+         Map<String, Object> variables = new HashMap<>();
+         variables.put("firstName", recipient.getFirstName());
+         variables.put("otherPartyName", otherPartyName);
+         variables.put("milestoneTitle", milestoneTitle);
+         variables.put("projectTitle", projectTitle);
+         variables.put("amount", amount);
+         variables.put("currency", currency);
+         variables.put("frontendUrl", frontendUrl);
+
+         sendTemplateEmail(recipient.getEmail(), "MILESTONE_COMPLETED", variables);
+     }
+
+     public void sendProjectCompletedEmail(User user, String otherPartyName, String projectTitle, String userType, String otherPartyType) {
+         Map<String, Object> variables = new HashMap<>();
+         variables.put("firstName", user.getFirstName());
+         variables.put("otherPartyName", otherPartyName);
+         variables.put("projectTitle", projectTitle);
+         variables.put("frontendUrl", frontendUrl);
+         variables.put("isClient", "CLIENT".equals(userType) ? "true" : "false");
+         variables.put("isFreelancer", "FREELANCER".equals(userType) ? "true" : "false");
+         variables.put("otherPartyType", otherPartyType);
+
+         sendTemplateEmail(user.getEmail(), "PROJECT_COMPLETED", variables);
+     }
+
      private String replaceTemplateVariables(String template, Map<String, Object> variables) {
-        if (template == null || variables == null) {
-            return template;
-        }
+         if (template == null || variables == null) {
+             return template;
+         }
 
-        String result = template;
-        for (Map.Entry<String, Object> entry : variables.entrySet()) {
-            String placeholder = "{{" + entry.getKey() + "}}";
-            String value = entry.getValue() != null ? entry.getValue().toString() : "";
-            result = result.replace(placeholder, value);
-        }
+         String result = template;
+         for (Map.Entry<String, Object> entry : variables.entrySet()) {
+             String placeholder = "{{" + entry.getKey() + "}}";
+             String value = entry.getValue() != null ? entry.getValue().toString() : "";
+             result = result.replace(placeholder, value);
+         }
 
-        return result;
-    }
+         return result;
+     }
 
     public void createDefaultEmailTemplates() {
         createTemplateIfNotExists("WELCOME", "Welcome to Freelancer Platform", 
@@ -304,73 +350,97 @@ public class EmailService {
         createTemplateIfNotExists("NOTIFICATION", "{{notificationTitle}}", 
                 "<h1>{{notificationTitle}}</h1><p>{{notificationMessage}}</p>");
         
-        try {
-            createTemplateIfNotExists("PROPOSAL_RECEIVED", "New Proposal Received", 
-                    loadHtmlTemplate("proposal-received.html"));
-            
-            createTemplateIfNotExists("PROPOSAL_ACCEPTED", "Proposal Accepted!", 
-                    loadHtmlTemplate("proposal-accepted.html"));
-            
-            createTemplateIfNotExists("CONTRACT_CREATED", "New Contract Created", 
-                    loadHtmlTemplate("contract-created.html"));
-            
-            createTemplateIfNotExists("PAYMENT_REQUEST", "Payment Request Received", 
-                    loadHtmlTemplate("payment-request.html"));
-            
-            createTemplateIfNotExists("PAYMENT_RECEIVED", "Payment Received", 
-                    loadHtmlTemplate("payment-received.html"));
-            
-            createTemplateIfNotExists("NEW_MESSAGE", "New Message Received", 
-                    loadHtmlTemplate("new-message.html"));
-            
-            createTemplateIfNotExists("PROPOSAL_REJECTED", "Proposal Not Accepted", 
-                    loadHtmlTemplate("proposal-rejected.html"));
-            
-            createTemplateIfNotExists("PAYMENT_APPROVED", "Payment Approved", 
-                    loadHtmlTemplate("payment-approved.html"));
-            
-            createTemplateIfNotExists("NEW_REVIEW", "You Received a New Review", 
-                    loadHtmlTemplate("new-review.html"));
-            
-            createTemplateIfNotExists("SYSTEM_NOTIFICATION", "{{subject}}", 
-                    "<h1>{{subject}}</h1><p>{{message}}</p>");
-        } catch (Exception e) {
-            System.err.println("Warning: Failed to load some email templates from files: " + e.getMessage());
-            createBackupTemplates();
-        }
+         try {
+             createTemplateIfNotExists("PROPOSAL_RECEIVED", "New Proposal Received", 
+                     loadHtmlTemplate("proposal-received.html"));
+             
+             createTemplateIfNotExists("PROPOSAL_ACCEPTED", "Proposal Accepted!", 
+                     loadHtmlTemplate("proposal-accepted.html"));
+             
+             createTemplateIfNotExists("CONTRACT_CREATED", "New Contract Created", 
+                     loadHtmlTemplate("contract-created.html"));
+             
+             createTemplateIfNotExists("CONTRACT_ACCEPTED", "Contract Accepted!", 
+                     loadHtmlTemplate("contract-accepted.html"));
+             
+             createTemplateIfNotExists("CONTRACT_REJECTED", "Contract Rejected", 
+                     loadHtmlTemplate("contract-rejected.html"));
+             
+             createTemplateIfNotExists("MILESTONE_COMPLETED", "Milestone Completed!", 
+                     loadHtmlTemplate("milestone-completed.html"));
+             
+             createTemplateIfNotExists("PROJECT_COMPLETED", "Project Completed!", 
+                     loadHtmlTemplate("project-completed.html"));
+             
+             createTemplateIfNotExists("PAYMENT_REQUEST", "Payment Request Received", 
+                     loadHtmlTemplate("payment-request.html"));
+             
+             createTemplateIfNotExists("PAYMENT_RECEIVED", "Payment Received", 
+                     loadHtmlTemplate("payment-received.html"));
+             
+             createTemplateIfNotExists("NEW_MESSAGE", "New Message Received", 
+                     loadHtmlTemplate("new-message.html"));
+             
+             createTemplateIfNotExists("PROPOSAL_REJECTED", "Proposal Not Accepted", 
+                     loadHtmlTemplate("proposal-rejected.html"));
+             
+             createTemplateIfNotExists("PAYMENT_APPROVED", "Payment Approved", 
+                     loadHtmlTemplate("payment-approved.html"));
+             
+             createTemplateIfNotExists("NEW_REVIEW", "You Received a New Review", 
+                     loadHtmlTemplate("new-review.html"));
+             
+             createTemplateIfNotExists("SYSTEM_NOTIFICATION", "{{subject}}", 
+                     "<h1>{{subject}}</h1><p>{{message}}</p>");
+         } catch (Exception e) {
+             System.err.println("Warning: Failed to load some email templates from files: " + e.getMessage());
+             createBackupTemplates();
+         }
     }
 
-    private void createBackupTemplates() {
-        createTemplateIfNotExists("PROPOSAL_RECEIVED", "New Proposal Received", 
-                "<h1>New Proposal Received</h1><p>{{freelancerName}} has submitted a proposal for your project: {{projectTitle}}</p>");
-        
-        createTemplateIfNotExists("PROPOSAL_ACCEPTED", "Proposal Accepted!", 
-                "<h1>Congratulations!</h1><p>Your proposal for project {{projectTitle}} has been accepted by {{clientName}}.</p>");
-        
-        createTemplateIfNotExists("CONTRACT_CREATED", "New Contract Created", 
-                "<h1>New Contract Created</h1><p>{{clientName}} has created a contract for project: {{projectTitle}}</p>");
-        
-        createTemplateIfNotExists("PAYMENT_REQUEST", "Payment Request Received", 
-                "<h1>Payment Request</h1><p>{{freelancerName}} has requested payment of {{amount}} {{currency}}.</p>");
-        
-        createTemplateIfNotExists("PAYMENT_RECEIVED", "Payment Received", 
-                "<h1>Payment Received</h1><p>You have received a payment of {{amount}} {{currency}} from {{clientName}}.</p>");
-        
-        createTemplateIfNotExists("NEW_MESSAGE", "New Message Received", 
-                "<h1>New Message</h1><p>You have received a new message from {{senderName}} regarding project: {{projectTitle}}</p>");
-        
-        createTemplateIfNotExists("PROPOSAL_REJECTED", "Proposal Not Accepted", 
-                "<h1>Proposal Update</h1><p>Unfortunately, your proposal for project {{projectTitle}} was not accepted at this time.</p>");
-        
-        createTemplateIfNotExists("PAYMENT_APPROVED", "Payment Approved", 
-                "<h1>Payment Approved!</h1><p>Your payment request of {{amount}} {{currency}} has been approved.</p>");
-        
-        createTemplateIfNotExists("NEW_REVIEW", "You Received a New Review", 
-                "<h1>New Review</h1><p>{{reviewerName}} has left you a {{rating}}-star review.</p>");
-        
-        createTemplateIfNotExists("SYSTEM_NOTIFICATION", "{{subject}}", 
-                "<h1>{{subject}}</h1><p>{{message}}</p>");
-    }
+     private void createBackupTemplates() {
+         createTemplateIfNotExists("PROPOSAL_RECEIVED", "New Proposal Received", 
+                 "<h1>New Proposal Received</h1><p>{{freelancerName}} has submitted a proposal for your project: {{projectTitle}}</p>");
+         
+         createTemplateIfNotExists("PROPOSAL_ACCEPTED", "Proposal Accepted!", 
+                 "<h1>Congratulations!</h1><p>Your proposal for project {{projectTitle}} has been accepted by {{clientName}}.</p>");
+         
+         createTemplateIfNotExists("CONTRACT_CREATED", "New Contract Created", 
+                 "<h1>New Contract Created</h1><p>{{clientName}} has created a contract for project: {{projectTitle}}</p>");
+         
+         createTemplateIfNotExists("CONTRACT_ACCEPTED", "Contract Accepted!", 
+                 "<h1>Contract Accepted!</h1><p>{{freelancerName}} has accepted your contract for project: {{projectTitle}}</p>");
+         
+         createTemplateIfNotExists("CONTRACT_REJECTED", "Contract Rejected", 
+                 "<h1>Contract Rejected</h1><p>Unfortunately, {{freelancerName}} has rejected your contract for project: {{projectTitle}}</p>");
+         
+         createTemplateIfNotExists("MILESTONE_COMPLETED", "Milestone Completed!", 
+                 "<h1>Milestone Completed!</h1><p>{{otherPartyName}} has completed the milestone '{{milestoneTitle}}' for {{amount}} {{currency}} on project: {{projectTitle}}</p>");
+         
+         createTemplateIfNotExists("PROJECT_COMPLETED", "Project Completed!", 
+                 "<h1>Project Completed!</h1><p>Congratulations! All milestones for project '{{projectTitle}}' have been successfully completed and paid.</p>");
+         
+         createTemplateIfNotExists("PAYMENT_REQUEST", "Payment Request Received", 
+                 "<h1>Payment Request</h1><p>{{freelancerName}} has requested payment of {{amount}} {{currency}}.</p>");
+         
+         createTemplateIfNotExists("PAYMENT_RECEIVED", "Payment Received", 
+                 "<h1>Payment Received</h1><p>You have received a payment of {{amount}} {{currency}} from {{clientName}}.</p>");
+         
+         createTemplateIfNotExists("NEW_MESSAGE", "New Message Received", 
+                 "<h1>New Message</h1><p>You have received a new message from {{senderName}} regarding project: {{projectTitle}}</p>");
+         
+         createTemplateIfNotExists("PROPOSAL_REJECTED", "Proposal Not Accepted", 
+                 "<h1>Proposal Update</h1><p>Unfortunately, your proposal for project {{projectTitle}} was not accepted at this time.</p>");
+         
+         createTemplateIfNotExists("PAYMENT_APPROVED", "Payment Approved", 
+                 "<h1>Payment Approved!</h1><p>Your payment request of {{amount}} {{currency}} has been approved.</p>");
+         
+         createTemplateIfNotExists("NEW_REVIEW", "You Received a New Review", 
+                 "<h1>New Review</h1><p>{{reviewerName}} has left you a {{rating}}-star review.</p>");
+         
+         createTemplateIfNotExists("SYSTEM_NOTIFICATION", "{{subject}}", 
+                 "<h1>{{subject}}</h1><p>{{message}}</p>");
+     }
 
     private void createTemplateIfNotExists(String templateKey, String subject, String htmlContent) {
         if (!emailTemplateRepository.existsByTemplateKey(templateKey)) {
