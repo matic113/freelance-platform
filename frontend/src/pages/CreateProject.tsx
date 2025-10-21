@@ -38,14 +38,19 @@ import {
   Briefcase,
   EyeOff
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useMyProjects, useCreateProject, useUpdateProject, useDeleteProject, usePublishProject, useUnpublishProject } from '@/hooks/useProjects';
 import { CreateProjectRequest, UpdateProjectRequest, ProjectType, ProjectResponse } from '@/types/api';
 import { toast } from 'sonner';
+import { FileUploadInput } from '@/components/FileUploadInput';
+import { AttachmentList, AttachmentItem } from '@/components/AttachmentList';
+import { projectService } from '@/services/project.service';
+import { presignedUploadService, fileUploadService, type CompleteUploadRequest } from '@/services/fileUpload.service';
 
 export default function CreateProjectPage() {
   const { isRTL, toggleLanguage } = useLocalization();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [activeTab, setActiveTab] = useState('create');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -65,8 +70,10 @@ export default function CreateProjectPage() {
     skillsRequired: [] as string[],
   });
   
-  const [newSkill, setNewSkill] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+   const [newSkill, setNewSkill] = useState('');
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
    const { data: projectsData, isLoading: isLoadingProjects } = useMyProjects(0, 50, 'createdAt,desc');
    const createProjectMutation = useCreateProject();
@@ -161,6 +168,67 @@ export default function CreateProjectPage() {
     }));
   };
 
+   const handleFileSelect = async (file: File) => {
+     if (!editingProjectId) {
+       toast.error(isRTL ? 'يجب إنشاء المشروع أولاً' : 'Please create the project first');
+       return;
+     }
+
+     if (!fileUploadService.validateFileSize(file, 20)) {
+       toast.error(isRTL ? 'حجم الملف كبير جداً' : 'File size exceeds limit');
+       return;
+     }
+
+     setIsUploadingFile(true);
+     try {
+       const presignedResponse = await presignedUploadService.getPresignedUploadUrl(
+         editingProjectId,
+         file.name,
+         'files'
+       );
+
+       await presignedUploadService.uploadToPresignedUrl(
+         presignedResponse.uploadUrl,
+         file
+       );
+
+       const completeRequest: CompleteUploadRequest = {
+         objectName: presignedResponse.objectName,
+         filename: presignedResponse.filename,
+         fileSize: file.size,
+         contentType: file.type || 'application/octet-stream',
+         folder: 'files',
+       };
+
+       const projectResponse = await presignedUploadService.completeUpload(
+         editingProjectId,
+         completeRequest
+       );
+
+       if (projectResponse.attachments && projectResponse.attachments.length > 0) {
+         setAttachments(projectResponse.attachments.map((att: any) => ({
+           id: att.id,
+           filename: att.fileName,
+           url: att.fileUrl,
+           size: att.fileSize,
+           type: att.fileType,
+         })));
+       }
+
+       toast.success(isRTL ? 'تم تحميل الملف بنجاح' : `File ${file.name} uploaded successfully`);
+     } catch (error) {
+       console.error('Error uploading file:', error);
+       const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
+       toast.error(isRTL ? `خطأ: ${errorMessage}` : `Error: ${errorMessage}`);
+     } finally {
+       setIsUploadingFile(false);
+     }
+   };
+
+  const handleRemoveAttachment = (filename: string) => {
+    setAttachments(prev => prev.filter(att => att.filename !== filename));
+  };
+
   const validateForm = (): string | null => {
     if (!formData.title.trim()) return isRTL ? 'العنوان مطلوب' : 'Title is required';
     if (formData.title.length < 5) return isRTL ? 'العنوان يجب أن يكون 5 أحرف على الأقل' : 'Title must be at least 5 characters';
@@ -201,18 +269,21 @@ export default function CreateProjectPage() {
          deadline: formData.deadline,
        };
 
+      let createdProjectId: string | null = null;
       if (editingProjectId) {
-        await updateProjectMutation.mutateAsync({
+        const updated = await updateProjectMutation.mutateAsync({
           id: editingProjectId,
           data: requestData as UpdateProjectRequest
         });
+        createdProjectId = updated.id;
         toast.success(isRTL ? 'تم تحديث المشروع بنجاح' : 'Project updated successfully');
       } else {
-        await createProjectMutation.mutateAsync(requestData);
-        toast.success(isRTL ? 'تم إنشاء المشروع بنجاح' : 'Project created successfully');
-      }
+        const created = await createProjectMutation.mutateAsync(requestData);
+       createdProjectId = created.id;
+         toast.success(isRTL ? 'تم إنشاء المشروع بنجاح' : 'Project created successfully');
+       }
 
-      setFormData({
+       setFormData({
         title: '',
         description: '',
         category: '',
@@ -285,6 +356,18 @@ export default function CreateProjectPage() {
       deadline: project.deadline,
       skillsRequired: project.skillsRequired,
     });
+    // Load existing attachments
+    if (project.attachments && project.attachments.length > 0) {
+      setAttachments(project.attachments.map(att => ({
+        id: att.id,
+        filename: att.fileName,
+        url: att.fileUrl,
+        size: att.fileSize,
+        type: att.fileType,
+      })));
+    } else {
+      setAttachments([]);
+    }
     setEditingProjectId(project.id);
     setActiveTab('create');
   };
@@ -302,6 +385,7 @@ export default function CreateProjectPage() {
       deadline: '',
       skillsRequired: [],
     });
+    setAttachments([]);
     setEditingProjectId(null);
     navigate('/client-dashboard');
   };
@@ -316,6 +400,42 @@ export default function CreateProjectPage() {
   };
 
   const stats = getProjectStats();
+
+  useEffect(() => {
+    const state = location.state as { editProjectId?: string } | null;
+    if (state?.editProjectId) {
+      setEditingProjectId(state.editProjectId);
+      setActiveTab('create');
+      
+      // Find and load the project data
+      const projectToEdit = projects.find(p => p.id === state.editProjectId);
+      if (projectToEdit) {
+        // Trigger edit - the existing handleEditProject function will load the data
+        // We can manually call the logic here
+        setFormData({
+          title: projectToEdit.title,
+          description: projectToEdit.description,
+          category: projectToEdit.category,
+          budgetMin: projectToEdit.budgetMin.toString(),
+          budgetMax: projectToEdit.budgetMax.toString(),
+          currency: projectToEdit.currency,
+          projectType: projectToEdit.projectType as ProjectType,
+          duration: projectToEdit.duration,
+          deadline: projectToEdit.deadline,
+          skillsRequired: projectToEdit.skillsRequired,
+        });
+        if (projectToEdit.attachments && projectToEdit.attachments.length > 0) {
+          setAttachments(projectToEdit.attachments.map(att => ({
+            id: att.id,
+            filename: att.fileName,
+            url: att.fileUrl,
+            size: att.fileSize,
+            type: att.fileType,
+          })));
+        }
+      }
+    }
+  }, [location.state, projects]);
 
   return (
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
@@ -495,36 +615,74 @@ export default function CreateProjectPage() {
                     />
                   </div>
 
-                  <div className="space-y-4">
-                    <Label>{isRTL ? "المهارات المطلوبة" : "Required Skills"} *</Label>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {formData.skillsRequired.map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="px-3 py-1 flex items-center gap-2">
-                          {skill}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-4 w-4 p-0 hover:bg-red-100"
-                            onClick={() => handleRemoveSkill(skill)}
-                            type="button"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Skills Column */}
+                    <div className="space-y-4">
+                      <Label>{isRTL ? "المهارات المطلوبة" : "Required Skills"} *</Label>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {formData.skillsRequired.map((skill, index) => (
+                          <Badge key={index} variant="secondary" className="px-3 py-1 flex items-center gap-2">
+                            {skill}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-4 w-4 p-0 hover:bg-red-100"
+                              onClick={() => handleRemoveSkill(skill)}
+                              type="button"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newSkill}
+                          onChange={(e) => setNewSkill(e.target.value)}
+                          placeholder={isRTL ? "أدخل مهارة جديدة..." : "Enter new skill..."}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                        />
+                        <Button type="button" onClick={handleAddSkill} variant="outline">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newSkill}
-                        onChange={(e) => setNewSkill(e.target.value)}
-                        placeholder={isRTL ? "أدخل مهارة جديدة..." : "Enter new skill..."}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
-                      />
-                      <Button type="button" onClick={handleAddSkill} variant="outline">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
+
+                    {/* Attachments Column */}
+                     <div className="space-y-4 flex flex-col">
+                       <Label>{isRTL ? "المرفقات" : "Attachments"}</Label>
+                       <div className={cn("border-2 border-dashed rounded-lg p-6 min-h-[200px] flex items-center justify-center flex-1", isRTL && "rtl")}>
+                         <FileUploadInput
+                           onFileSelect={handleFileSelect}
+                           isUploading={isUploadingFile}
+                           disabled={!editingProjectId}
+                           maxFileSizeMB={20}
+                           acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.zip,.rar"
+                           fullArea={true}
+                           allowMultiple={true}
+                         />
+                       </div>
+                       {!editingProjectId && (
+                         <p className="text-xs text-muted-foreground">
+                           {isRTL ? "يجب إنشاء المشروع أولاً قبل إضافة المرفقات" : "Create the project first to add attachments"}
+                         </p>
+                       )}
+                     </div>
                   </div>
+
+                  {attachments.length > 0 && (
+                    <div className={cn("mt-6", isRTL && "rtl")}>
+                      <p className="text-sm font-medium mb-4 text-muted-foreground">
+                        {isRTL ? "المرفقات المرفوعة" : "Uploaded Attachments"} ({attachments.length})
+                      </p>
+                      <AttachmentList
+                        attachments={attachments}
+                        onRemove={handleRemoveAttachment}
+                        isRTL={isRTL}
+                        canRemove={true}
+                      />
+                    </div>
+                  )}
 
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" className="bg-[#0A2540] hover:bg-[#142b52]" disabled={isSubmitting}>
