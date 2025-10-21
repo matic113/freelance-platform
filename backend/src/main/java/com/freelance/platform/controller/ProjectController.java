@@ -200,6 +200,45 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/upload")
+    @Operation(summary = "Upload file to project", description = "Upload a file to Minio for a project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid file"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to upload files to this project"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
+    public ResponseEntity<com.freelance.platform.dto.response.FileUploadResponse> uploadFileToProject(
+            @Parameter(description = "Project ID") @PathVariable UUID id,
+            @Parameter(description = "File to upload") @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "folder", defaultValue = "files") String folder,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ProjectResponse projectResponse = projectService.getProjectById(id);
+        
+        // Verify user is the project owner
+        if (!projectResponse.getClientId().equals(currentUser.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to upload files to this project");
+        }
+
+        String objectName = projectService.uploadFileToProject(id, file, folder, currentUser.getId());
+        String downloadUrl = projectService.getPresignedDownloadUrl(objectName, 24);
+
+        com.freelance.platform.dto.response.FileUploadResponse response = 
+                new com.freelance.platform.dto.response.FileUploadResponse(
+                objectName,
+                file.getOriginalFilename(),
+                downloadUrl,
+                file.getSize(),
+                file.getContentType(),
+                folder
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/attachments")
     @Operation(summary = "Add attachment to project", description = "Upload and attach a file to a project")
     @ApiResponses(value = {
@@ -240,6 +279,51 @@ public class ProjectController {
         
         projectService.removeAttachment(id, attachmentId, currentUser.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/presigned-upload")
+    @Operation(summary = "Get presigned upload URL", description = "Get a presigned URL to upload files directly to Minio")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Presigned URL generated successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to upload files to this project"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
+    public ResponseEntity<com.freelance.platform.dto.response.PresignedUploadResponse> getPresignedUploadUrl(
+            @Parameter(description = "Project ID") @PathVariable UUID id,
+            @RequestParam String filename,
+            @RequestParam(value = "folder", defaultValue = "files") String folder,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ProjectResponse projectResponse = projectService.getProjectById(id);
+        
+        // Verify user is the project owner
+        if (!projectResponse.getClientId().equals(currentUser.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to upload files to this project");
+        }
+
+        com.freelance.platform.dto.response.PresignedUploadResponse response = 
+                projectService.getPresignedUploadUrl(id, filename, folder, currentUser.getId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/complete-upload")
+    @Operation(summary = "Complete file upload", description = "Register uploaded file as project attachment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Attachment registered successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not authorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
+    public ResponseEntity<ProjectResponse> completeFileUpload(
+            @Parameter(description = "Project ID") @PathVariable UUID id,
+            @RequestBody com.freelance.platform.dto.request.CompleteUploadRequest request,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ProjectResponse response = projectService.completeFileUpload(id, request, currentUser.getId());
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/status")

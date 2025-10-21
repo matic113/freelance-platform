@@ -17,10 +17,10 @@ public class ProjectAttachment {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
     
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String fileName;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String fileUrl;
     
     private Long fileSize;

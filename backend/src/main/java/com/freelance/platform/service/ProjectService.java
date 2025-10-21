@@ -45,6 +45,9 @@ public class ProjectService {
     private FileService fileService;
 
     @Autowired
+    private StorageService storageService;
+
+    @Autowired
     private EntityManager entityManager;
     
     private static final Set<String> VALID_SORT_FIELDS = new HashSet<>(
@@ -339,7 +342,21 @@ public class ProjectService {
                         ProjectResponse.AttachmentInfo attachmentInfo = new ProjectResponse.AttachmentInfo();
                         attachmentInfo.setId(attachment.getId());
                         attachmentInfo.setFileName(attachment.getFileName());
-                        attachmentInfo.setFileUrl(attachment.getFileUrl());
+
+                        // If the stored fileUrl is an object name in MinIO, generate a presigned download URL
+                        String storedUrl = attachment.getFileUrl();
+                        try {
+                            if (storedUrl != null && !storedUrl.startsWith("http")) {
+                                String presigned = storageService.getPresignedDownloadUrl(storedUrl, 24);
+                                attachmentInfo.setFileUrl(presigned);
+                            } else {
+                                attachmentInfo.setFileUrl(storedUrl);
+                            }
+                        } catch (Exception e) {
+                            // On error, fallback to stored value
+                            attachmentInfo.setFileUrl(storedUrl);
+                        }
+
                         attachmentInfo.setFileSize(attachment.getFileSize());
                         attachmentInfo.setFileType(attachment.getFileType());
                         attachmentInfo.setUploadedAt(attachment.getUploadedAt());
@@ -349,5 +366,70 @@ public class ProjectService {
         }
         
         return response;
+    }
+
+    public String uploadFileToProject(UUID projectId, MultipartFile file, String folder, UUID clientId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        if (!project.getClient().getId().equals(clientId)) {
+            throw new UnauthorizedException("You can only upload files to your own projects");
+        }
+
+        String objectName = storageService.uploadFile(file, "projects/" + projectId + "/" + folder);
+        return objectName;
+    }
+
+    public String getPresignedDownloadUrl(String objectName, int expirationHours) {
+        return storageService.getPresignedDownloadUrl(objectName, expirationHours);
+    }
+
+    public com.freelance.platform.dto.response.PresignedUploadResponse getPresignedUploadUrl(UUID projectId, String filename, String folder, UUID clientId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        if (!project.getClient().getId().equals(clientId)) {
+            throw new UnauthorizedException("You can only upload files to your own projects");
+        }
+
+        // Generate object name with project ID and folder
+        String sanitizedFilename = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String objectName = "projects/" + projectId + "/" + folder + "/" + System.currentTimeMillis() + "_" + sanitizedFilename;
+
+        // Generate presigned upload URL (24 hours expiration)
+        String uploadUrl = storageService.getPresignedUploadUrl(objectName, 24);
+
+        return new com.freelance.platform.dto.response.PresignedUploadResponse(
+                uploadUrl,
+                objectName,
+                filename,
+                24 * 60 * 60 * 1000  // 24 hours in milliseconds
+        );
+    }
+
+    public ProjectResponse completeFileUpload(UUID projectId, com.freelance.platform.dto.request.CompleteUploadRequest request, UUID clientId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        if (!project.getClient().getId().equals(clientId)) {
+            throw new UnauthorizedException("You can only upload files to your own projects");
+        }
+
+        // Generate presigned download URL
+        String downloadUrl = storageService.getPresignedDownloadUrl(request.getObjectName(), 24);
+
+        // Create and save the attachment
+        ProjectAttachment attachment = new ProjectAttachment();
+        attachment.setProject(project);
+        attachment.setFileName(request.getFilename());
+        attachment.setFileSize(request.getFileSize());
+        attachment.setFileType(request.getContentType());
+        attachment.setFileUrl(downloadUrl);
+        attachment.setUploadedAt(LocalDateTime.now());
+        
+        projectAttachmentRepository.save(attachment);
+
+        // Return updated project response with all attachments
+        return mapToProjectResponse(project);
     }
 }
