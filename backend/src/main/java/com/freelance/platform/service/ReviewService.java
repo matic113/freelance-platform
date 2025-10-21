@@ -44,6 +44,9 @@ public class ReviewService {
     @Autowired
     private EmailNotificationService emailNotificationService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public Page<ReviewResponse> getReviews(UUID userId, UUID contractId, Integer minRating, Integer maxRating, Pageable pageable) {
         System.out.println("ReviewService.getReviews called with userId: " + userId + ", contractId: " + contractId);
         
@@ -118,7 +121,18 @@ public class ReviewService {
         
         emailNotificationService.sendNewReviewEmail(review.getReviewee(), 
                 review.getReviewer().getFirstName() + " " + review.getReviewer().getLastName(), 
-                review.getRating());
+                review.getRating(),
+                review.getComment());
+        
+        notificationService.createNotificationForUser(
+                review.getReviewee().getId(),
+                "NEW_REVIEW",
+                "New Review Received",
+                review.getReviewer().getFirstName() + " " + review.getReviewer().getLastName() + 
+                        " left you a " + review.getRating() + "-star review",
+                "medium",
+                String.format("{\"reviewId\":\"%s\",\"rating\":%d}", savedReview.getId(), review.getRating())
+        );
         
         return convertToResponse(savedReview);
     }

@@ -382,21 +382,29 @@ public class ContractService {
              String notificationMessage = String.format("Milestone '%s' status has been updated to %s", 
                      milestone.getTitle(), newStatus);
 
-             notificationService.createNotificationForUser(
-                     contract.getClient().getId(),
-                     "MILESTONE_STATUS_CHANGED",
-                     notificationTitle,
-                     notificationMessage,
-                     "medium",
-                     String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
-                                  milestone.getId(), contract.getId(), contract.getProject().getId())
-             );
+              notificationService.createNotificationForUser(
+                      contract.getClient().getId(),
+                      "MILESTONE_STATUS_CHANGED",
+                      notificationTitle,
+                      notificationMessage,
+                      "medium",
+                      String.format("{\"milestoneId\":\"%s\",\"contractId\":\"%s\",\"projectId\":\"%s\"}", 
+                                   milestone.getId(), contract.getId(), contract.getProject().getId())
+              );
 
-             if (newStatus == MilestoneStatus.COMPLETED) {
-                 checkAndAutoCompleteContract(contract);
-             } else if (newStatus == MilestoneStatus.PAID) {
-                 checkAndCompleteProjectOnAllMilestonesPaid(contract);
-             }
+              if (newStatus == MilestoneStatus.COMPLETED) {
+                  emailService.sendMilestoneCompletedEmail(
+                          contract.getClient(),
+                          contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
+                          milestone.getTitle(),
+                          contract.getProject().getTitle(),
+                          milestone.getAmount().toString(),
+                          contract.getCurrency()
+                  );
+                  checkAndAutoCompleteContract(contract);
+              } else if (newStatus == MilestoneStatus.PAID) {
+                  checkAndCompleteProjectOnAllMilestonesPaid(contract);
+              }
 
              return mapToMilestoneResponse(updatedMilestone);
          }
@@ -495,7 +503,8 @@ public class ContractService {
                              contract.getFreelancer().getFirstName() + " " + contract.getFreelancer().getLastName(),
                              project.getTitle(),
                              "CLIENT",
-                             "Freelancer"
+                             "Freelancer",
+                             project.getId()
                      );
 
                      emailService.sendProjectCompletedEmail(
@@ -503,7 +512,8 @@ public class ContractService {
                              project.getClient().getFirstName() + " " + project.getClient().getLastName(),
                              project.getTitle(),
                              "FREELANCER",
-                             "Client"
+                             "Client",
+                             project.getId()
                      );
                  }
              }
@@ -580,7 +590,8 @@ public class ContractService {
                                       projectContract.getFreelancer().getFirstName() + " " + projectContract.getFreelancer().getLastName(),
                                       project.getTitle(),
                                       "CLIENT",
-                                      "Freelancer"
+                                      "Freelancer",
+                                      project.getId()
                               );
 
                               emailService.sendProjectCompletedEmail(
@@ -588,7 +599,8 @@ public class ContractService {
                                       project.getClient().getFirstName() + " " + project.getClient().getLastName(),
                                       project.getTitle(),
                                       "FREELANCER",
-                                      "Client"
+                                      "Client",
+                                      project.getId()
                               );
                           }
                       }

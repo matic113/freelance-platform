@@ -226,36 +226,40 @@ export default function NotificationsPage() {
     };
 
    const handleNotificationClick = (notification: NotificationResponse) => {
-     if (!notification.isRead) {
-       markAsRead(notification.id);
-     }
+      if (!notification.isRead) {
+        markAsRead(notification.id);
+      }
 
-     if (!notification.data) return;
+      if (!notification.data) return;
 
-     try {
-       const data = JSON.parse(notification.data);
-       
-       if (notification.type.includes('PROPOSAL')) {
-         if (data.projectId) {
-           navigate(`/project-details/${data.projectId}`);
-         }
-       } else if (notification.type.includes('CONTRACT')) {
-         if (data.contractId) {
-           navigate(`/contracts`);
-         }
-       } else if (notification.type.includes('MESSAGE')) {
-         if (data.conversationId) {
-           navigate(`/messages?conversationId=${data.conversationId}`);
-         }
-       } else if (notification.type.includes('PROJECT')) {
-         if (data.projectId) {
-           navigate(`/project-details/${data.projectId}`);
-         }
-       }
-     } catch (e) {
-       console.error('Error parsing notification data:', e);
-     }
-   };
+      try {
+        const data = JSON.parse(notification.data);
+        
+        if (notification.type.includes('PROPOSAL')) {
+          if (data.projectId) {
+            navigate(`/projects/${data.projectId}`);
+          }
+        } else if (notification.type.includes('CONTRACT') || notification.type.includes('MILESTONE')) {
+          if (data.projectId) {
+            navigate(`/projects/${data.projectId}`);
+          } else if (data.contractId) {
+            navigate(`/contracts`);
+          }
+        } else if (notification.type.includes('MESSAGE')) {
+          if (data.conversationId) {
+            navigate(`/messages?conversationId=${data.conversationId}`);
+          }
+        } else if (notification.type.includes('PROJECT')) {
+          if (data.projectId) {
+            navigate(`/projects/${data.projectId}`);
+          }
+        } else if (notification.type.includes('REVIEW')) {
+          navigate('/profile');
+        }
+      } catch (e) {
+        console.error('Error parsing notification data:', e);
+      }
+    };
 
   return (
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>

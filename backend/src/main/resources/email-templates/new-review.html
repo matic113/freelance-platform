@@ -145,6 +145,11 @@
                     <div class="stars">★ {{rating}}</div>
                     <div class="reviewer-name">{{reviewerName}}</div>
                 </div>
+                {{#hasComment}}
+                <div style="background-color: #f8f9fa; border-left: 4px solid #4F46E5; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                    <p style="margin: 0; font-style: italic; color: #495057;">"{{comment}}"</p>
+                </div>
+                {{/hasComment}}
                 <p>Reviews help build your reputation and attract more clients. View your profile to see what they said and manage all your reviews in one place.</p>
                 <a href="{{frontendUrl}}/profile" class="cta-button">View Your Reviews</a>
             </div>

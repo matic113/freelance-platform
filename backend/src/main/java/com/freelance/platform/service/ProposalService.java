@@ -106,11 +106,12 @@ public class ProposalService {
         System.out.println("DEBUG: Notification created");
 
         // Send email notification to client if enabled
-        emailNotificationService.sendNewProposalEmail(
-                project.getClient(),
-                freelancer.getFirstName() + " " + freelancer.getLastName(),
-                project.getTitle()
-        );
+         emailNotificationService.sendNewProposalEmail(
+                 project.getClient(),
+                 freelancer.getFirstName() + " " + freelancer.getLastName(),
+                 project.getTitle(),
+                 project.getId().toString()
+         );
 
         System.out.println("DEBUG: Mapping to response...");
         return mapToProposalResponse(savedProposal);

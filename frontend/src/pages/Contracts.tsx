@@ -380,6 +380,7 @@ export default function ContractsPage() {
         toast({
           title: isRTL ? "تم تحديث حالة المرحلة" : "Milestone Status Updated",
           description: isRTL ? "تم تحديث حالة المرحلة بنجاح" : "Milestone status has been updated successfully",
+          duration: 2000,
         });
       } catch (error) {
         toast({
@@ -1014,9 +1015,9 @@ export default function ContractsPage() {
                                      onValueChange={(value) => handleUpdateMilestoneStatus(contract.id, milestone.id, value)}
                                      disabled={!isContractActive}
                                    >
-                                     <SelectTrigger className={cn("w-32", !isContractActive && "opacity-50 cursor-not-allowed")}>
-                                       <SelectValue />
-                                     </SelectTrigger>
+                                      <SelectTrigger className={cn("w-40", !isContractActive && "opacity-50 cursor-not-allowed")}>
+                                        <SelectValue />
+                                      </SelectTrigger>
                                      <SelectContent>
                                        <SelectItem value="PENDING" disabled={milestone.status !== 'PENDING'}>
                                          <div className="flex items-center gap-2">

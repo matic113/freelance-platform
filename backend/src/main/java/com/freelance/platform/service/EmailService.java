@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -195,11 +196,12 @@ public class EmailService {
         sendTemplateEmail(user.getEmail(), "NOTIFICATION", variables);
     }
 
-    public void sendProposalReceivedEmail(User client, String freelancerName, String projectTitle) {
+    public void sendProposalReceivedEmail(User client, String freelancerName, String projectTitle, String projectId) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("firstName", client.getFirstName());
         variables.put("freelancerName", freelancerName);
         variables.put("projectTitle", projectTitle);
+        variables.put("projectId", projectId);
         variables.put("frontendUrl", frontendUrl);
 
         sendTemplateEmail(client.getEmail(), "PROPOSAL_RECEIVED", variables);
@@ -310,18 +312,19 @@ public class EmailService {
          sendTemplateEmail(recipient.getEmail(), "MILESTONE_COMPLETED", variables);
      }
 
-     public void sendProjectCompletedEmail(User user, String otherPartyName, String projectTitle, String userType, String otherPartyType) {
-         Map<String, Object> variables = new HashMap<>();
-         variables.put("firstName", user.getFirstName());
-         variables.put("otherPartyName", otherPartyName);
-         variables.put("projectTitle", projectTitle);
-         variables.put("frontendUrl", frontendUrl);
-         variables.put("isClient", "CLIENT".equals(userType) ? "true" : "false");
-         variables.put("isFreelancer", "FREELANCER".equals(userType) ? "true" : "false");
-         variables.put("otherPartyType", otherPartyType);
+    public void sendProjectCompletedEmail(User user, String otherPartyName, String projectTitle, String userType, String otherPartyType, UUID projectId) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("firstName", user.getFirstName());
+        variables.put("otherPartyName", otherPartyName);
+        variables.put("projectTitle", projectTitle);
+        variables.put("frontendUrl", frontendUrl);
+        variables.put("isClient", "CLIENT".equals(userType));
+        variables.put("isFreelancer", "FREELANCER".equals(userType));
+        variables.put("otherPartyType", otherPartyType);
+        variables.put("projectId", projectId);
 
-         sendTemplateEmail(user.getEmail(), "PROJECT_COMPLETED", variables);
-     }
+        sendTemplateEmail(user.getEmail(), "PROJECT_COMPLETED", variables);
+    }
 
       private String replaceTemplateVariables(String template, Map<String, Object> variables) {
           if (template == null || variables == null) {

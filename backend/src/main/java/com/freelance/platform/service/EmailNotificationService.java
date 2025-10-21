@@ -23,10 +23,10 @@ public class EmailNotificationService {
     @Autowired
     private EmailService emailService;
 
-    public void sendNewProposalEmail(User client, String freelancerName, String projectTitle) {
+    public void sendNewProposalEmail(User client, String freelancerName, String projectTitle, String projectId) {
         if (shouldSendEmail(client.getId(), "emailNewProposals")) {
             try {
-                emailService.sendProposalReceivedEmail(client, freelancerName, projectTitle);
+                emailService.sendProposalReceivedEmail(client, freelancerName, projectTitle, projectId);
             } catch (Exception e) {
                 System.err.println("Failed to send new proposal email to " + client.getEmail() + ": " + e.getMessage());
             }
@@ -100,13 +100,15 @@ public class EmailNotificationService {
         }
     }
 
-    public void sendNewReviewEmail(User reviewee, String reviewerName, int rating) {
+    public void sendNewReviewEmail(User reviewee, String reviewerName, int rating, String comment) {
         if (shouldSendEmail(reviewee.getId(), "emailNewReviews")) {
             try {
                 Map<String, Object> variables = new HashMap<>();
                 variables.put("firstName", reviewee.getFirstName());
                 variables.put("reviewerName", reviewerName);
                 variables.put("rating", String.valueOf(rating));
+                variables.put("comment", comment != null ? comment : "");
+                variables.put("hasComment", comment != null && !comment.trim().isEmpty());
                 emailService.sendTemplateEmail(reviewee.getEmail(), "NEW_REVIEW", variables);
             } catch (Exception e) {
                 System.err.println("Failed to send new review email to " + reviewee.getEmail() + ": " + e.getMessage());
