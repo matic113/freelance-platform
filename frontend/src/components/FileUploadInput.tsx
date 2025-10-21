@@ -11,6 +11,8 @@ interface FileUploadInputProps {
   maxFileSizeMB?: number;
   acceptedFileTypes?: string;
   className?: string;
+  fullArea?: boolean;
+  allowMultiple?: boolean;
 }
 
 export const FileUploadInput: React.FC<FileUploadInputProps> = ({
@@ -21,10 +23,12 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   maxFileSizeMB = 10,
   acceptedFileTypes = '*',
   className,
+  fullArea = false,
+  allowMultiple = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  // Note: we do not maintain a persistent selected file name so multiple uploads are allowed
 
   const handleFileSelect = (file: File) => {
     const maxSizeBytes = maxFileSizeMB * 1024 * 1024;
@@ -34,13 +38,19 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
       return;
     }
 
-    setSelectedFileName(file.name);
     onFileSelect(file);
+
+    // clear the input so the same file can be selected again and multiple uploads can occur
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      handleFileSelect(e.target.files[0]);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    for (let i = 0; i < files.length; i++) {
+      handleFileSelect(files[i]);
     }
   };
 
@@ -65,9 +75,20 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   };
 
   const handleClear = () => {
-    setSelectedFileName(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Click handler for full area
+  const handleAreaClick = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      e.preventDefault();
+      // @ts-ignore stopPropagation exists on both mouse and keyboard events
+      e.stopPropagation();
+    }
+    if (!disabled && !isUploading) {
+      fileInputRef.current?.click();
     }
   };
 
@@ -89,26 +110,12 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
         onChange={handleInputChange}
         disabled={disabled || isUploading}
         accept={acceptedFileTypes}
+        multiple={allowMultiple}
         className="hidden"
         aria-label="File upload"
       />
 
-      {selectedFileName && !isUploading ? (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground truncate max-w-[150px]">
-            {selectedFileName}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClear}
-            className="h-6 w-6 p-0"
-            disabled={disabled}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : isUploading ? (
+      {isUploading ? (
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <span className="text-xs text-muted-foreground">
@@ -116,16 +123,39 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
           </span>
         </div>
       ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isUploading}
-          className="h-8 w-8 p-0"
-          title="Attach file"
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
+        // If fullArea is true, render a large clickable area instead of a small button
+        fullArea ? (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={(e) => handleAreaClick(e)}
+            onKeyDown={(e) => {
+              // Prevent Enter from submitting parent forms and stop propagation
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleAreaClick(e);
+              }
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-muted-foreground"
+            title="Attach file"
+          >
+            <Paperclip className="h-6 w-6 mb-2" />
+            <span className="text-sm">Click or drop files here to attach</span>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
+            disabled={disabled || isUploading}
+            className="h-8 w-8 p-0"
+            title="Attach file"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+        )
       )}
     </div>
   );
