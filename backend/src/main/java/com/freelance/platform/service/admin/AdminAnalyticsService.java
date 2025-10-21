@@ -157,11 +157,6 @@ public class AdminAnalyticsService {
         Double totalRevenue = transactionRepository.getTotalAmountByStatus(TransactionStatus.COMPLETED);
         response.setTotalRevenue(totalRevenue != null ? BigDecimal.valueOf(totalRevenue) : BigDecimal.ZERO);
 
-        // Recent activity
-        response.setRecentUsers(userRepository.findTop10ByOrderByCreatedAtDesc());
-        response.setRecentProjects(projectRepository.findTop10ByOrderByCreatedAtDesc());
-        response.setRecentContracts(contractRepository.findTop10ByOrderByCreatedAtDesc());
-
         return response;
     }
 
@@ -185,8 +180,8 @@ public class AdminAnalyticsService {
             // Zero-fill missing months
             Map<String, Long> userGrowth = zeroFillLast12Months(dbCounts);
             
-            // Set response data
-            response.setData(new HashMap<>(userGrowth));
+            // Set response data (preserve LinkedHashMap ordering)
+            response.setData(new LinkedHashMap<>(userGrowth));
             long nativeCount = 0L;
             try {
                 nativeCount = userRepository.countActiveUsersExcludingSoftDeleted();
@@ -237,8 +232,8 @@ public class AdminAnalyticsService {
             // Zero-fill missing months
             Map<String, Long> projectGrowth = zeroFillLast12Months(dbCounts);
             
-            // Set response data
-            response.setData(new HashMap<>(projectGrowth));
+            // Set response data (preserve LinkedHashMap ordering)
+            response.setData(new LinkedHashMap<>(projectGrowth));
             response.setTotal(projectRepository.count());
             response.setPeriod("last12months");
             
@@ -272,8 +267,8 @@ public class AdminAnalyticsService {
             // Zero-fill missing months (with BigDecimal)
             Map<String, BigDecimal> monthlyRevenue = zeroFillLast12MonthsBigDecimal(dbRevenue);
             
-            // Set response data
-            response.setData(new HashMap<>(monthlyRevenue));
+            // Set response data (preserve LinkedHashMap ordering)
+            response.setData(new LinkedHashMap<>(monthlyRevenue));
             Double totalRevenue = transactionRepository.getTotalAmountByStatus(
                 TransactionStatus.COMPLETED);
             response.setTotal(totalRevenue != null ? totalRevenue.longValue() : 0L);

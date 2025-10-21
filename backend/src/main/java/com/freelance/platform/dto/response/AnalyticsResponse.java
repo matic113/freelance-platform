@@ -1,10 +1,16 @@
 package com.freelance.platform.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class AnalyticsResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class AnalyticsResponse implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
 
     private Integer activeProjects;
     private Integer happyClients;

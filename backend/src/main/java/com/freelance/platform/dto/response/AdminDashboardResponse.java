@@ -1,10 +1,6 @@
 package com.freelance.platform.dto.response;
 
-import com.freelance.platform.entity.User;
-
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 public class AdminDashboardResponse {
 
@@ -51,11 +47,6 @@ public class AdminDashboardResponse {
 
     // Revenue statistics
     private BigDecimal totalRevenue;
-
-    // Recent activity
-    private List<User> recentUsers;
-    private List<com.freelance.platform.entity.Project> recentProjects;
-    private List<com.freelance.platform.entity.Contract> recentContracts;
 
     // Constructors
     public AdminDashboardResponse() {}
@@ -284,28 +275,5 @@ public class AdminDashboardResponse {
     public void setTotalRevenue(BigDecimal totalRevenue) {
         this.totalRevenue = totalRevenue;
     }
-
-    public List<User> getRecentUsers() {
-        return recentUsers;
-    }
-
-    public void setRecentUsers(List<User> recentUsers) {
-        this.recentUsers = recentUsers;
-    }
-
-    public List<com.freelance.platform.entity.Project> getRecentProjects() {
-        return recentProjects;
-    }
-
-    public void setRecentProjects(List<com.freelance.platform.entity.Project> recentProjects) {
-        this.recentProjects = recentProjects;
-    }
-
-    public List<com.freelance.platform.entity.Contract> getRecentContracts() {
-        return recentContracts;
-    }
-
-    public void setRecentContracts(List<com.freelance.platform.entity.Contract> recentContracts) {
-        this.recentContracts = recentContracts;
-    }
 }
+

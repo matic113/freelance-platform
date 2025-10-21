@@ -1,5 +1,6 @@
 package com.freelance.platform.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -21,6 +22,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
     
+    @JsonIgnore
     @Column(nullable = false)
     private String passwordHash;
     
@@ -59,21 +61,27 @@ public class User {
     private LocalDateTime deletedAt;
     
     // Relationships
+    @JsonIgnore
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private FreelancerProfile freelancerProfile;
     
+    @JsonIgnore
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Project> clientProjects = new ArrayList<>();
     
+    @JsonIgnore
     @OneToMany(mappedBy = "freelancer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Proposal> freelancerProposals = new ArrayList<>();
     
+    @JsonIgnore
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Message> sentMessages = new ArrayList<>();
     
+    @JsonIgnore
     @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Message> receivedMessages = new ArrayList<>();
     
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications = new ArrayList<>();
     

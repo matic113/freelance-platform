@@ -159,7 +159,7 @@ public class EmailService {
         variables.put("firstName", user.getFirstName());
         variables.put("lastName", user.getLastName());
         variables.put("email", user.getEmail());
-        variables.put("userType", user.getRoles().toString());
+        variables.put("roles", user.getRoles().toString());
         variables.put("frontendUrl", frontendUrl);
 
         sendTemplateEmail(user.getEmail(), "WELCOME", variables);
