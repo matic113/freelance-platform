@@ -21,7 +21,7 @@ export default function ClientExperiences() {
       clientName: "Sarah Johnson",
       clientTitle: "CEO, TechStart",
       rating: 5,
-      comment: "Working with AhmedMA was a game-changer for our startup. They delivered a stunning website that perfectly represents our brand and helped us secure our first major client.",
+      comment: "Working with Freint was a game-changer for our startup. They delivered a stunning website that perfectly represents our brand and helped us secure our first major client.",
       project: "Web Development",
       date: "2024-01-15T10:30:00Z"
     },
@@ -30,7 +30,7 @@ export default function ClientExperiences() {
       clientName: "Ahmed Al-Rashid",
       clientTitle: "Founder, E-commerce Plus",
       rating: 5,
-      comment: "AhmedMA transformed our traditional business into a modern e-commerce powerhouse. Sales increased by 400% in the first quarter after launch.",
+      comment: "Freint transformed our traditional business into a modern e-commerce powerhouse. Sales increased by 400% in the first quarter after launch.",
       project: "E-commerce Platform",
       date: "2024-02-10T14:20:00Z"
     },
@@ -39,7 +39,7 @@ export default function ClientExperiences() {
       clientName: "Maria Rodriguez",
       clientTitle: "Marketing Director, Creative Agency",
       rating: 5,
-      comment: "The brand identity AhmedMA created for us is absolutely perfect. It captures our essence and has helped us stand out in a competitive market.",
+      comment: "The brand identity Freint created for us is absolutely perfect. It captures our essence and has helped us stand out in a competitive market.",
       project: "Brand Design",
       date: "2024-03-05T09:15:00Z"
     }

@@ -54,7 +54,7 @@ public class SecurityConfig {
         "http://localhost:*",
         "http://127.0.0.1:*",
         "https://*.example.com",
-        "https://freelancer-platform.com"
+        "https://freint.com"
     ));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));

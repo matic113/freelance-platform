@@ -77,7 +77,7 @@ export default function CookiePolicy() {
     {
       icon: Mail,
       title: isRTL ? "البريد الإلكتروني" : "Email",
-      value: "cookies@ahmedma.com"
+      value: "cookies@freint.com"
     },
     {
       icon: Phone,

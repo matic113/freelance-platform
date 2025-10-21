@@ -126,13 +126,13 @@ export const Header = ({ isRTL = false, onLanguageToggle }: HeaderProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <Link
-              to="/"
-              className="text-2xl font-bold tracking-wide"
-              style={{ color: textColor }}
-            >
-              {isRTL ? "أحمد" : "AhmedMA"}
-            </Link>
+             <Link
+               to="/"
+               className="text-2xl font-bold tracking-wide"
+               style={{ color: textColor }}
+             >
+               {isRTL ? "فريينت" : "Freint"}
+             </Link>
           </div>
 
           <HeaderDesktop

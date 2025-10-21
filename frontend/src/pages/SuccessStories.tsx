@@ -20,13 +20,13 @@ export default function SuccessStories() {
       title: "E-commerce Platform Revolution",
       description: "Built a complete e-commerce solution that increased client sales by 300% in just 6 months.",
       client: "TechCorp Solutions",
-      freelancer: "AhmedMA",
+      freelancer: "Freint",
       project: "Web Development",
       duration: "6 months",
       budget: "$15,000",
       image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
       rating: 5,
-      testimonial: "AhmedMA delivered beyond our expectations. The platform is robust, scalable, and user-friendly.",
+      testimonial: "Freint delivered beyond our expectations. The platform is robust, scalable, and user-friendly.",
       results: ["300% increase in sales", "50% reduction in cart abandonment", "99.9% uptime achieved"]
     },
     {
@@ -34,13 +34,13 @@ export default function SuccessStories() {
       title: "Mobile App Success Story",
       description: "Developed a mobile app that reached 100K downloads in the first month of launch.",
       client: "StartupXYZ",
-      freelancer: "AhmedMA",
+      freelancer: "Freint",
       project: "Mobile Development",
       duration: "4 months",
       budget: "$25,000",
       image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop",
       rating: 5,
-      testimonial: "The app exceeded all our KPIs. AhmedMA's attention to detail is remarkable.",
+      testimonial: "The app exceeded all our KPIs. Freint's attention to detail is remarkable.",
       results: ["100K downloads in 30 days", "4.8 app store rating", "95% user retention"]
     },
     {
@@ -48,13 +48,13 @@ export default function SuccessStories() {
       title: "Digital Transformation Journey",
       description: "Transformed a traditional business into a digital-first company with modern solutions.",
       client: "Legacy Industries",
-      freelancer: "AhmedMA",
+      freelancer: "Freint",
       project: "Digital Transformation",
       duration: "8 months",
       budget: "$50,000",
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
       rating: 5,
-      testimonial: "AhmedMA guided us through our digital transformation with expertise and patience.",
+      testimonial: "Freint guided us through our digital transformation with expertise and patience.",
       results: ["40% increase in efficiency", "60% cost reduction", "Complete digital workflow"]
     }
   ];

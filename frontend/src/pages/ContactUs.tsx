@@ -113,7 +113,7 @@ export default function ContactUs() {
     {
       icon: Mail,
       title: isRTL ? "البريد الإلكتروني" : "Email",
-      value: "info@ahmedma.com",
+      value: "info@freint.com",
       description: isRTL ? "راسلنا على مدار الساعة" : "Email us anytime"
     },
     {

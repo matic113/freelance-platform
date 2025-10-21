@@ -34,7 +34,7 @@ public class EmailService {
     @Autowired
     private EmailTemplateRepository emailTemplateRepository;
 
-    @Value("${app.email.from-address:noreply@freelanceplatform.local}")
+     @Value("${app.email.from-address:noreply@freint.local}")
     private String fromEmail;
 
     @Value("${app.frontend.url}")
@@ -360,9 +360,9 @@ public class EmailService {
            return result;
        }
 
-    public void createDefaultEmailTemplates() {
-        createTemplateIfNotExists("WELCOME", "Welcome to Freelancer Platform", 
-                "<h1>Welcome {{firstName}}!</h1><p>Thank you for joining our platform.</p>");
+     public void createDefaultEmailTemplates() {
+         createTemplateIfNotExists("WELCOME", "Welcome to Freint", 
+                 "<h1>Welcome {{firstName}}!</h1><p>Thank you for joining our platform.</p>");
         
         createTemplateIfNotExists("EMAIL_VERIFICATION", "Verify Your Email Address", 
                 "<h1>Verify Your Email</h1><p>Please click <a href=\"{{frontendUrl}}/verify-email?token={{verificationToken}}\">here</a> to verify your email.</p>");

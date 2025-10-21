@@ -16,7 +16,7 @@ export const Footer = ({ isRTL = false }: FooterProps) => {
           {/* Company Info */}
           <div className={cn("space-y-4", isRTL && "text-right")}>
             <div className="italic text-2xl font-bold text-white">
-              {isRTL ? "احمد" : "AhmadMA"}
+              {isRTL ? "فريينت" : "Freint"}
             </div>
 
             <p className="text-[#E0E6ED] leading-relaxed">
@@ -98,9 +98,9 @@ export const Footer = ({ isRTL = false }: FooterProps) => {
             <div className="space-y-3">
               <div className={cn("flex items-center space-x-3", isRTL && "space-x-reverse")}>
                 <Mail className="w-5 h-5 text-[#00C897] flex-shrink-0" />
-                <a href="mailto:info@ahmedma.com" className="text-[#E0E6ED]/80 hover:text-[#00E0B8] transition-colors duration-300">
-                  info@ahmedma.com
-                </a>
+               <a href="mailto:info@freint.com" className="text-[#E0E6ED]/80 hover:text-[#00E0B8] transition-colors duration-300">
+                   info@freint.com
+                 </a>
               </div>
               <div className={cn("flex items-center space-x-3", isRTL && "space-x-reverse")}>
                 <Phone className="w-5 h-5 text-[#00C897] flex-shrink-0" />
@@ -147,12 +147,12 @@ export const Footer = ({ isRTL = false }: FooterProps) => {
           "border-t border-white/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0",
           isRTL && "md:flex-row-reverse"
         )}>
-          <div className="text-[#E0E6ED]/60 text-sm">
-            {isRTL 
-              ? "© 2025 منصة أحمد. جميع الحقوق محفوظة."
-              : "© 2025 AhmedMA Platform. All rights reserved."
-            }
-          </div>
+           <div className="text-[#E0E6ED]/60 text-sm">
+             {isRTL 
+               ? "© 2025 منصة فريينت. جميع الحقوق محفوظة."
+               : "© 2025 Freint Platform. All rights reserved."
+             }
+           </div>
           
           <div className={cn("flex space-x-6", isRTL && "space-x-reverse")}>
             <Link to="/privacy-policy" className="text-[#E0E6ED]/60 hover:text-[#00E0B8] text-sm transition-colors duration-300">

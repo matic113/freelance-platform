@@ -31,7 +31,7 @@ public class HealthController {
         response.put("platform", platformName);
         response.put("version", platformVersion);
         response.put("timestamp", LocalDateTime.now());
-        response.put("message", "Freelancer Platform API is running");
+         response.put("message", "Freint API is running");
         
         return ResponseEntity.ok(response);
     }

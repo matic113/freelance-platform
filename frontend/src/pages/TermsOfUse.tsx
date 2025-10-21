@@ -44,12 +44,12 @@ export default function TermsOfUse() {
     {
       title: "Acceptance of Terms",
       icon: CheckCircle,
-      content: "By using AhmedMA platform, you agree to be bound by these terms of use. If you do not agree to these terms, please do not use our platform."
+      content: "By using Freint platform, you agree to be bound by these terms of use. If you do not agree to these terms, please do not use our platform."
     },
     {
       title: "Service Description",
       icon: FileText,
-      content: "AhmedMA is a talent-to-project platform that allows clients to post projects and freelancers to offer their services. We facilitate communication between parties but are not a party to direct contracts."
+      content: "Freint is a talent-to-project platform that allows clients to post projects and freelancers to offer their services. We facilitate communication between parties but are not a party to direct contracts."
     },
     {
       title: "User Responsibilities",
@@ -77,7 +77,7 @@ export default function TermsOfUse() {
     {
       icon: Mail,
       title: isRTL ? "البريد الإلكتروني" : "Email",
-      value: "legal@ahmedma.com"
+      value: "legal@freint.com"
     },
     {
       icon: Phone,

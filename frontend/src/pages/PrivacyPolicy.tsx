@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
     {
       title: "Introduction",
       icon: Eye,
-      content: "At AhmedMA platform, we respect your privacy and are committed to protecting your personal information. This policy explains how we collect, use, and protect your information when using our platform."
+      content: "At Freint platform, we respect your privacy and are committed to protecting your personal information. This policy explains how we collect, use, and protect your information when using our platform."
     },
     {
       title: "Information We Collect",
@@ -77,7 +77,7 @@ export default function PrivacyPolicy() {
     {
       icon: Mail,
       title: isRTL ? "البريد الإلكتروني" : "Email",
-      value: "privacy@ahmedma.com"
+      value: "privacy@freint.com"
     },
     {
       icon: Phone,

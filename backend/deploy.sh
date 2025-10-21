@@ -6,12 +6,12 @@
 set -e
 
 # Configuration
-APP_NAME="freelancer-platform"
-DOCKER_IMAGE="freelancer-platform:latest"
-DOCKER_CONTAINER="freelancer-platform-container"
+APP_NAME="freint"
+DOCKER_IMAGE="freint:latest"
+DOCKER_CONTAINER="freint-container"
 DOCKER_COMPOSE_FILE="docker-compose.yml"
 BACKUP_DIR="/backups"
-LOG_FILE="/var/log/freelancer-platform-deployment.log"
+LOG_FILE="/var/log/freint-deployment.log"
 
 # Colors for output
 RED='\033[0;31m'
@@ -85,8 +85,8 @@ backup_data() {
     
     # Backup database if container exists
     if docker ps -a --format 'table {{.Names}}' | grep -q "postgres"; then
-        log "Backing up PostgreSQL database..."
-        docker exec postgres pg_dump -U postgres freelancer_platform > "$BACKUP_PATH/database_backup.sql"
+         log "Backing up PostgreSQL database..."
+         docker exec postgres pg_dump -U postgres freint > "$BACKUP_PATH/database_backup.sql"
     fi
     
     # Backup uploaded files
@@ -249,10 +249,10 @@ rollback() {
     
     # Restore database
     if [ -f "$BACKUP_DIR/$LATEST_BACKUP/database_backup.sql" ]; then
-        log "Restoring database..."
-        docker-compose up -d postgres
-        sleep 30
-        docker exec -i postgres psql -U postgres freelancer_platform < "$BACKUP_DIR/$LATEST_BACKUP/database_backup.sql"
+         log "Restoring database..."
+         docker-compose up -d postgres
+         sleep 30
+         docker exec -i postgres psql -U postgres freint < "$BACKUP_DIR/$LATEST_BACKUP/database_backup.sql"
     fi
     
     # Restore files
