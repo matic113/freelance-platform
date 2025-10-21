@@ -26,7 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getRoleBadgeClass, getStatusBadgeClass } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface UsersTableProps {
@@ -68,36 +68,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({ onStartChat }) => {
   const totalElements = data?.totalElements || 0;
   const totalPages = data?.totalPages || 0;
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return 'bg-red-100 text-red-800';
-      case 'CLIENT':
-        return 'bg-blue-100 text-blue-800';
-      case 'FREELANCER':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  const getStatusBadge = (isActive: boolean) => {
-    return isActive ? (
-      <Badge variant="outline" className="bg-green-50 text-green-700">
-        🟢 Active
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="bg-gray-50 text-gray-700">
-        ⚪ Inactive
-      </Badge>
-    );
-  };
 
   return (
     <Card className="w-full">
-      <div className="p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Platform Users</h2>
+      <div className="p-4">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold mb-3">Platform Users</h2>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -107,7 +84,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({ onStartChat }) => {
               className="pl-10"
             />
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Total users: <strong>{totalElements}</strong>
           </p>
         </div>
@@ -176,16 +153,20 @@ export const UsersTable: React.FC<UsersTableProps> = ({ onStartChat }) => {
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-sm">{user.email}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {user.roles?.map((role) => (
-                          <Badge key={role} className={cn('text-xs', getRoleColor(role))}>
-                            {role}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(user.isActive)}</TableCell>
+                     <TableCell>
+                       <div className="flex gap-1 flex-wrap">
+                         {user.roles?.map((role) => (
+                           <Badge key={role} variant="outline" className={cn('text-xs border', getRoleBadgeClass(role))}>
+                             {role}
+                           </Badge>
+                         ))}
+                       </div>
+                     </TableCell>
+                     <TableCell>
+                       <Badge variant="outline" className={cn('text-xs border', getStatusBadgeClass(user.isActive))}>
+                         {user.isActive ? '🟢 Active' : '⚪ Inactive'}
+                       </Badge>
+                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -216,8 +197,8 @@ export const UsersTable: React.FC<UsersTableProps> = ({ onStartChat }) => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-6 border-t">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            <p className="text-xs text-muted-foreground">
               Page {page + 1} of {totalPages}
             </p>
             <div className="flex gap-2">
