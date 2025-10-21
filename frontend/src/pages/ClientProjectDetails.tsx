@@ -34,6 +34,7 @@ import { proposalService } from '@/services/proposal.service';
 import { ProjectResponse, ProposalResponse } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcceptProposal, useRejectProposal } from '@/hooks/useProposals';
+import { AttachmentList } from '@/components/AttachmentList';
 
 export default function ClientProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +50,8 @@ export default function ClientProjectDetailsPage() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<ProposalResponse | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const acceptProposalMutation = useAcceptProposal();
   const rejectProposalMutation = useRejectProposal();
@@ -71,6 +74,13 @@ export default function ClientProjectDetailsPage() {
           projectService.getProject(id),
           proposalService.getProposalsForProject(id, 0, 20)
         ]);
+
+        try {
+          const attachments = await projectService.getProjectAttachments(id);
+          projectData.attachments = attachments as any;
+        } catch (attErr) {
+          console.warn('Could not fetch project attachments:', attErr);
+        }
 
         setProject(projectData);
         setProposals(proposalsData.content || []);
@@ -192,6 +202,30 @@ export default function ClientProjectDetailsPage() {
           variant: 'destructive'
         });
       }
+    }
+  };
+
+  const handleEditProject = () => {
+    if (!project) return;
+    console.log('Navigating to edit project', project.id);
+    toast({ title: isRTL ? 'جاري التحويل' : 'Opening editor', description: isRTL ? 'جارٍ تحميل المشروع للتحرير' : 'Loading project for editing' });
+    navigate('/create-project', { state: { editProjectId: project.id } });
+  };
+
+  const handleDeleteProject = async () => {
+    if (!project?.id) return;
+    setIsDeleting(true);
+    try {
+      await projectService.deleteProject(project.id);
+      toast({ title: isRTL ? 'نجح' : 'Success', description: isRTL ? 'تم حذف المشروع بنجاح' : 'Project deleted successfully', variant: 'default' });
+      setShowDeleteDialog(false);
+      navigate('/client-dashboard');
+    } catch (error: unknown) {
+      console.error('Error deleting project:', error);
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || (isRTL ? 'فشل حذف المشروع' : 'Failed to delete project');
+      toast({ title: isRTL ? 'خطأ' : 'Error', description: errorMessage, variant: 'destructive' });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -319,6 +353,30 @@ export default function ClientProjectDetailsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Attachments Card */}
+              {project.attachments && project.attachments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{isRTL ? 'المرفقات' : 'Attachments'}</CardTitle>
+                    <CardDescription>
+                      {isRTL ? 'ملفات المشروع' : 'Project files'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AttachmentList
+                      attachments={project.attachments.map((att) => ({
+                        filename: att.fileName,
+                        url: att.fileUrl,
+                        size: att.fileSize,
+                        type: att.fileType,
+                      }))}
+                      isRTL={isRTL}
+                      canRemove={false}
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Received Proposals Card */}
               <Card>
@@ -480,15 +538,11 @@ export default function ClientProjectDetailsPage() {
               {/* Action Buttons */}
               <Card>
                 <CardContent className="pt-6 space-y-2">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={handleEditProject}>
                     <Edit className={cn("h-4 w-4", isRTL && "ml-2")} />
                     {isRTL ? 'تعديل المشروع' : 'Edit Project'}
                   </Button>
-                  <Button variant="outline" className="w-full">
-                    <MessageCircle className={cn("h-4 w-4", isRTL && "ml-2")} />
-                    {isRTL ? 'مراسلة المستقلين' : 'Contact Freelancers'}
-                  </Button>
-                  <Button variant="outline" className="w-full text-red-600 hover:text-red-700">
+                  <Button variant="outline" className="w-full text-red-600 hover:text-red-700" onClick={() => setShowDeleteDialog(true)}>
                     <Trash2 className={cn("h-4 w-4", isRTL && "ml-2")} />
                     {isRTL ? 'حذف المشروع' : 'Delete Project'}
                   </Button>
@@ -581,6 +635,40 @@ export default function ClientProjectDetailsPage() {
                 {isRTL ? "رفض العرض" : "Reject Proposal"}
               </Button>
               <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
+                {isRTL ? "إلغاء" : "Cancel"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Project Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isRTL ? "تأكيد حذف المشروع" : "Confirm Project Deletion"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              {isRTL 
+                ? "هل أنت متأكد من أنك تريد حذف هذا المشروع؟ سيتم حذف جميع العروض المرتبطة به ولا يمكن التراجع عن هذا الإجراء."
+                : "Are you sure you want to delete this project? This will delete all proposals associated with it and cannot be undone."
+              }
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                onClick={handleDeleteProject}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : null}
+                {isRTL ? "حذف المشروع" : "Delete Project"}
+              </Button>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
                 {isRTL ? "إلغاء" : "Cancel"}
               </Button>
             </div>

@@ -29,6 +29,7 @@ import { ProjectResponse, ProposalResponse } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProposalModal } from '@/components/modals/ProposalModal';
 import { ContactClientModal } from '@/components/modals/ContactClientModal';
+import { AttachmentList } from '@/components/AttachmentList';
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,6 +63,14 @@ export default function ProjectDetailsPage() {
           projectService.getProject(id),
           proposalService.getProposalsForProject(id, 0, 3)
         ]);
+
+        // fetch attachments separately to ensure URLs are present
+        try {
+          const attachments = await projectService.getProjectAttachments(id);
+          projectData.attachments = attachments as any;
+        } catch (attErr) {
+          console.warn('Could not fetch project attachments:', attErr);
+        }
 
         setProject(projectData);
         setProposals(proposalsData.content || []);
@@ -326,6 +335,30 @@ export default function ProjectDetailsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Attachments Card */}
+              {project.attachments && project.attachments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{isRTL ? 'المرفقات' : 'Attachments'}</CardTitle>
+                    <CardDescription>
+                      {isRTL ? 'ملفات المشروع' : 'Project files'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AttachmentList
+                      attachments={project.attachments.map((att) => ({
+                        filename: att.fileName,
+                        url: att.fileUrl,
+                        size: att.fileSize,
+                        type: att.fileType,
+                      }))}
+                      isRTL={isRTL}
+                      canRemove={false}
+                    />
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Recent Proposals Card */}
               <Card>
