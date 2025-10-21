@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Proposal Received | {{platformName}}</title>
+    <title th:text="'New Proposal Received | ' + ${platformName}">New Proposal Received | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -129,18 +129,18 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>New Proposal Received!</h2>
-                <p>Hi {{firstName}},</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
                 <p>Great news! You've received a new proposal for your project.</p>
                 <div class="highlight">
-                    <p><strong>Project:</strong> {{projectTitle}}</p>
-                    <p><strong>From:</strong> {{freelancerName}}</p>
+                    <p><strong>Project:</strong> <span th:text="${projectTitle}">Project Name</span></p>
+                    <p><strong>From:</strong> <span th:text="${freelancerName}">Freelancer Name</span></p>
                 </div>
                 <p>Review the proposal details and accept or decline it. The sooner you respond, the faster your project can move forward.</p>
-                <a href="{{frontendUrl}}/projects/{{projectId}}" class="cta-button">View Proposal</a>
+                <a th:href="${frontendUrl} + '/client/project/' + ${projectId}" class="cta-button">View Proposal</a>
             </div>
             <div class="meta">
                 <p>
@@ -148,7 +148,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer"><span th:text="'&copy; 2025 ' + ${platformName} + '. All rights reserved.'">© 2025 Freint. All rights reserved.</span></div>
     </div>
 </body>
 </html>

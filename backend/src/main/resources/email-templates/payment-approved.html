@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Payment Approved | {{platformName}}</title>
+    <title th:text="'Payment Approved | ' + ${platformName}">Payment Approved | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -137,13 +137,13 @@
             </div>
             <div class="body">
                 <h2>Your Payment Has Been Approved!</h2>
-                <p>Hi {{firstName}},</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
                 <p>Great news! Your payment request has been approved by the client.</p>
                 <div class="amount-box">
-                    <div class="currency">{{amount}} {{currency}}</div>
+                    <div class="currency"><span th:text="${amount + ' ' + currency}">0 USD</span></div>
                 </div>
                 <p>The payment will be processed shortly. You'll receive a confirmation email once the funds have been transferred to your account.</p>
-                <a href="{{frontendUrl}}/payments" class="cta-button">View Payment Details</a>
+                <a th:href="${frontendUrl} + '/payments'" class="cta-button">View Payment Details</a>
             </div>
             <div class="meta">
                 <p>
@@ -151,7 +151,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

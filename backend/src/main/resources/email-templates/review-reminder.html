@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reminder: Share Your Review | {{platformName}}</title>
+    <title th:text="'Reminder: Share Your Review | ' + ${platformName}">Reminder: Share Your Review | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -137,32 +137,30 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>Friendly Reminder: Share Your Review 📝</h2>
-                <p>Hi {{firstName}},</p>
-                <p>We noticed you haven't shared your review for the completed project with {{otherPartyName}} yet.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>We noticed you haven't shared your review for the completed project with <span th:text="${otherPartyName}">Other Party</span> yet.</p>
                 
                 <div class="reminder-box">
-                    <p>⏰ Project: {{projectTitle}} - Completed {{daysAgo}} days ago</p>
+                    <p>⏰ Project: <span th:text="${projectTitle}">Project</span> - Completed <span th:text="${daysAgo}">7</span> days ago</p>
                 </div>
 
-                <p>Your feedback is valuable and helps {{otherPartyName}} build their reputation. It also helps other users make informed decisions about working together.</p>
+                <p>Your feedback is valuable and helps <span th:text="${otherPartyName}">Other Party</span> build their reputation. It also helps other users make informed decisions about working together.</p>
 
                 <p>Sharing a review takes just a minute, and your honest feedback makes a big difference to our community!</p>
 
-                <a href="{{reviewUrl}}" class="cta-button">Leave Your Review Now</a>
+                <a th:href="${reviewUrl}" class="cta-button">Leave Your Review Now</a>
 
                 <p style="font-size: 13px; color: var(--text-muted);">Remember, you can share one review per completed project.</p>
             </div>
             <div class="meta">
-                <p>
-                    Thank you for being part of the {{platformName}} community!
-                </p>
+                <p>Thank you for being part of the <span th:text="${platformName}">Freint</span> community!</p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

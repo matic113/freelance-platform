@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project Completed - Share Your Review | {{platformName}}</title>
+    <title th:text="'Project Completed - Share Your Review | ' + ${platformName}">Project Completed - Share Your Review | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -179,44 +179,42 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>Project Completed! ⭐</h2>
-                <p>Hi {{firstName}},</p>
-                <p>Great news! The project with {{otherPartyName}} has been completed. Now it's time to share your experience and help build the community.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>Great news! The project with <span th:text="${otherPartyName}">Other Party</span> has been completed. Now it's time to share your experience and help build the community.</p>
                 
                 <div class="project-info">
-                    <div class="project-title">{{projectTitle}}</div>
+                    <div class="project-title" th:text="${projectTitle}">Project</div>
                     <div class="project-details">
-                        <strong>Other Party:</strong> {{otherPartyName}}<br>
-                        <strong>Contract Amount:</strong> {{amount}} {{currency}}<br>
-                        <strong>Completed:</strong> {{completionDate}}
+                        <strong>Other Party:</strong> <span th:text="${otherPartyName}">Other Party</span><br>
+                        <strong>Contract Amount:</strong> <span th:text="${amount + ' ' + currency}">0 USD</span><br>
+                        <strong>Completed:</strong> <span th:text="${completionDate}">Date</span>
                     </div>
                 </div>
 
-                <p>Your feedback helps {{otherPartyName}} improve their services and helps other clients/freelancers make informed decisions.</p>
+                <p>Your feedback helps <span th:text="${otherPartyName}">Other Party</span> improve their services and helps other clients/freelancers make informed decisions.</p>
 
                 <ul class="highlights">
                     <li>Share your honest experience working on this project</li>
-                    <li>Rate {{otherPartyName}} on a scale of 1-5 stars</li>
+                    <li>Rate <span th:text="${otherPartyName}">Other Party</span> on a scale of 1-5 stars</li>
                     <li>Leave optional detailed comments about the collaboration</li>
                 </ul>
 
                 <div class="cta-section">
-                    <a href="{{reviewUrl}}" class="cta-button">Review {{otherPartyName}}</a>
+                    <a th:href="${reviewUrl}" class="cta-button">Review <span th:text="${otherPartyName}">Other Party</span></a>
                     <p class="secondary-text">This link will take you directly to the review form</p>
                 </div>
 
-                <p>Reviews are a crucial part of our platform and help maintain trust and quality. Both you and {{otherPartyName}} can leave one review per project.</p>
+                <p>Reviews are a crucial part of our platform and help maintain trust and quality. Both you and <span th:text="${otherPartyName}">Other Party</span> can leave one review per project.</p>
             </div>
             <div class="meta">
-                <p>
-                    Thank you for using {{platformName}}! Your feedback matters and helps us maintain the highest standards of quality and trust.
-                </p>
+                <p>Thank you for using <span th:text="${platformName}">Freint</span>! Your feedback matters and helps us maintain the highest standards of quality and trust.</p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

@@ -13,6 +13,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +46,9 @@ public class EmailTemplateService {
 
     @Autowired
     private ResourceLoader resourceLoader;
+
+    @Autowired(required = false)
+    private SpringTemplateEngine emailTemplateEngine;
 
     @Value("${app.email.from-address:noreply@freelanceplatform.local}")
     private String fromEmail;
@@ -83,6 +88,24 @@ public class EmailTemplateService {
     }
 
     public void sendTemplateEmail(String to, String templateKey, String language, Map<String, Object> variables) {
+        if (emailTemplateEngine != null) {
+            try {
+                Context context = new Context(Locale.forLanguageTag(language != null ? language : DEFAULT_TEMPLATE_LANGUAGE));
+                context.setVariables(variables);
+                
+                String htmlContent = emailTemplateEngine.process(templateKey, context);
+                String subject = extractSubject(htmlContent);
+                if (subject == null || subject.isBlank()) {
+                    subject = defaultSubject;
+                }
+                
+                sendEmail(to, subject, htmlContent, true);
+                return;
+            } catch (Exception e) {
+                logger.warn("Failed to render Thymeleaf template '{}', falling back to simple replacement: {}", templateKey, e.getMessage());
+            }
+        }
+        
         TemplateDescriptor template = resolveTemplate(templateKey, language);
         String subject = replaceVariables(template.subject(), variables);
         String content = replaceVariables(template.htmlContent(), variables);

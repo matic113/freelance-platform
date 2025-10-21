@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contract Rejected | {{platformName}}</title>
+    <title th:text="'Contract Rejected | ' + ${platformName}">Contract Rejected | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -135,14 +135,14 @@
             </div>
             <div class="body">
                 <h2>Contract Update</h2>
-                <p>Hi {{firstName}},</p>
-                <p>Unfortunately, {{freelancerName}} has rejected your contract.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>Unfortunately, <span th:text="${freelancerName}">Freelancer</span> has rejected your contract.</p>
                 <div class="highlight">
-                    <p><strong>Project:</strong> {{projectTitle}}</p>
-                    <p><strong>Freelancer:</strong> {{freelancerName}}</p>
+                    <p><strong>Project:</strong> <span th:text="${projectTitle}">Project Name</span></p>
+                    <p><strong>Freelancer:</strong> <span th:text="${freelancerName}">Freelancer Name</span></p>
                 </div>
                 <p>This may be due to various reasons such as scheduling conflicts, workload, or project scope concerns. You can try adjusting the contract terms and sending a new proposal to another freelancer, or reach out to the freelancer directly for more information.</p>
-                <a href="{{frontendUrl}}/my-projects" class="cta-button">View Your Projects</a>
+                <a th:href="${frontendUrl} + '/my-projects'" class="cta-button">View Your Projects</a>
             </div>
             <div class="meta">
                 <p>
@@ -150,7 +150,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer"><span th:text="'&copy; 2025 ' + ${platformName} + '. All rights reserved.'">© 2025 Freint. All rights reserved.</span></div>
     </div>
 </body>
 </html>

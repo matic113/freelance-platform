@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Payment Request | {{platformName}}</title>
+    <title th:text="'Payment Request | ' + ${platformName}">Payment Request | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -131,17 +131,17 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>Payment Request Received</h2>
-                <p>Hi {{firstName}},</p>
-                <p>{{freelancerName}} has submitted a payment request for completed work.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p><span th:text="${freelancerName}">Freelancer</span> has submitted a payment request for completed work.</p>
                 <div class="amount-box">
-                    <div class="currency">{{amount}} {{currency}}</div>
+                    <div class="currency"><span th:text="${amount + ' ' + currency}">0 USD</span></div>
                 </div>
                 <p>Please review the request and approve or decline accordingly. Your prompt response helps keep the project moving smoothly.</p>
-                <a href="{{frontendUrl}}/payments" class="cta-button">Review Payment</a>
+                <a th:href="${frontendUrl} + '/payments'" class="cta-button">Review Payment</a>
             </div>
             <div class="meta">
                 <p>
@@ -149,7 +149,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer"><span th:text="'&copy; 2025 ' + ${platformName} + '. All rights reserved.'">© 2025 Freint. All rights reserved.</span></div>
     </div>
 </body>
 </html>

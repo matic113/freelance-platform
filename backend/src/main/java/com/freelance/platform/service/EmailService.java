@@ -12,6 +12,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -20,9 +22,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class EmailService {
@@ -30,15 +32,20 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-
     @Autowired
     private EmailTemplateRepository emailTemplateRepository;
 
-     @Value("${app.email.from-address:noreply@freint.local}")
+    @Autowired(required = false)
+    private TemplateEngine emailTemplateEngine;
+
+    @Value("${app.email.from-address:noreply@freint.local}")
     private String fromEmail;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
+
+    @Value("${app.platform.name:Freint}")
+    private String platformName;
 
     private String loadHtmlTemplate(String filename) {
         try {
@@ -91,6 +98,30 @@ public class EmailService {
                 metadata.put("file", "new-review.html");
                 metadata.put("subject", "You Received a New Review");
                 break;
+            case "CONTRACT_ACCEPTED":
+                metadata.put("file", "contract-accepted.html");
+                metadata.put("subject", "Contract Accepted!");
+                break;
+            case "CONTRACT_REJECTED":
+                metadata.put("file", "contract-rejected.html");
+                metadata.put("subject", "Contract Rejected");
+                break;
+            case "MILESTONE_COMPLETED":
+                metadata.put("file", "milestone-completed.html");
+                metadata.put("subject", "Milestone Completed!");
+                break;
+            case "PROJECT_COMPLETED":
+                metadata.put("file", "project-completed.html");
+                metadata.put("subject", "Project Completed!");
+                break;
+            case "REVIEW_INVITATION":
+                metadata.put("file", "review-invitation.html");
+                metadata.put("subject", "Review Invitation");
+                break;
+            case "REVIEW_REMINDER":
+                metadata.put("file", "review-reminder.html");
+                metadata.put("subject", "Review Reminder");
+                break;
             default:
                 return null;
         }
@@ -126,18 +157,19 @@ public class EmailService {
     public void sendTemplateEmail(String to, String templateKey, Map<String, Object> variables) {
         Map<String, String> metadata = getTemplateMetadata(templateKey);
         
-        if (metadata != null) {
+        variables.putIfAbsent("platformName", platformName);
+        
+        if (metadata != null && emailTemplateEngine != null) {
             try {
-                String htmlContent = loadHtmlTemplate(metadata.get("file"));
+                String templateName = metadata.get("file").replace(".html", "");
+                Context context = new Context(Locale.ENGLISH, variables);
+                String htmlContent = emailTemplateEngine.process(templateName, context);
                 String subject = metadata.get("subject");
-                
-                htmlContent = replaceTemplateVariables(htmlContent, variables);
-                subject = replaceTemplateVariables(subject, variables);
                 
                 sendHtmlEmail(to, subject, htmlContent);
                 return;
             } catch (Exception e) {
-                System.err.println("Warning: Failed to load file-based template " + templateKey + ": " + e.getMessage());
+                System.err.println("Warning: Failed to render Thymeleaf template " + templateKey + ": " + e.getMessage());
             }
         }
         
@@ -326,37 +358,18 @@ public class EmailService {
         sendTemplateEmail(user.getEmail(), "PROJECT_COMPLETED", variables);
     }
 
-      private String replaceTemplateVariables(String template, Map<String, Object> variables) {
-          if (template == null || variables == null) {
-              return template;
-          }
-
-          String result = template;
-          for (Map.Entry<String, Object> entry : variables.entrySet()) {
-              String placeholder = "{{" + entry.getKey() + "}}";
-              String value = entry.getValue() != null ? entry.getValue().toString() : "";
-              result = result.replace(placeholder, value);
-          }
-
-          result = replaceConditionals(result, variables);
-
-          return result;
-      }
-
-       private String replaceConditionals(String template, Map<String, Object> variables) {
-           String result = template;
-           
-           for (Map.Entry<String, Object> entry : variables.entrySet()) {
-               String conditionalPattern = "\\{\\{#" + Pattern.quote(entry.getKey()) + "\\}\\}(.*?)\\{\\{/" + Pattern.quote(entry.getKey()) + "\\}\\}";
-               boolean conditionValue = entry.getValue() != null && !entry.getValue().toString().equals("false");
-               
-               if (conditionValue) {
-                   result = result.replaceAll(conditionalPattern, "$1");
-               } else {
-                   result = result.replaceAll(conditionalPattern, "");
-               }
+       private String replaceTemplateVariables(String template, Map<String, Object> variables) {
+           if (template == null || variables == null) {
+               return template;
            }
-           
+
+           String result = template;
+           for (Map.Entry<String, Object> entry : variables.entrySet()) {
+               String placeholder = "{{" + entry.getKey() + "}}";
+               String value = entry.getValue() != null ? entry.getValue().toString() : "";
+               result = result.replace(placeholder, value);
+           }
+
            return result;
        }
 

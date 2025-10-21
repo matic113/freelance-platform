@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proposal Not Accepted | {{platformName}}</title>
+    <title th:text="'Proposal Not Accepted | ' + ${platformName}">Proposal Not Accepted | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -129,17 +129,17 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>Proposal Update</h2>
-                <p>Hi {{firstName}},</p>
-                <p>Unfortunately, your proposal for {{projectTitle}} was not selected at this time.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>Unfortunately, your proposal for <span th:text="${projectTitle}">Project</span> was not selected at this time.</p>
                 <div class="highlight">
-                    <p><strong>Project:</strong> {{projectTitle}}</p>
+                    <p><strong>Project:</strong> <span th:text="${projectTitle}">Project</span></p>
                 </div>
                 <p>Don't be discouraged! There are many other opportunities on our platform. We encourage you to keep applying and improving your proposals.</p>
-                <a href="{{frontendUrl}}/projects" class="cta-button">Explore More Projects</a>
+                <a th:href="${frontendUrl} + '/projects'" class="cta-button">Explore More Projects</a>
             </div>
             <div class="meta">
                 <p>
@@ -147,7 +147,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

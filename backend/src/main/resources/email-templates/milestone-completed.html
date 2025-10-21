@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Milestone Completed | {{platformName}}</title>
+    <title th:text="'Milestone Completed | ' + ${platformName}">Milestone Completed | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -141,15 +141,15 @@
             </div>
             <div class="body">
                 <h2>Great Progress!</h2>
-                <p>Hi {{firstName}},</p>
-                <p>{{otherPartyName}} has successfully completed a milestone on your contract.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p><span th:text="${otherPartyName}">Party</span> has successfully completed a milestone on your contract.</p>
                 <div class="milestone-box">
-                    <p class="milestone-title">{{milestoneTitle}}</p>
-                    <p><strong>Amount:</strong> {{amount}} {{currency}}</p>
-                    <p><strong>Project:</strong> {{projectTitle}}</p>
+                    <p class="milestone-title" th:text="${milestoneTitle}">Milestone Title</p>
+                    <p><strong>Amount:</strong> <span th:text="${amount + ' ' + currency}">0 USD</span></p>
+                    <p><strong>Project:</strong> <span th:text="${projectTitle}">Project Name</span></p>
                 </div>
                 <p>Review the completed work and ensure it meets your expectations. Once you approve, you can process the payment and move to the next milestone if available.</p>
-                <a href="{{frontendUrl}}/contracts" class="cta-button">View Contract</a>
+                <a th:href="${frontendUrl} + '/contracts'" class="cta-button">View Contract</a>
             </div>
             <div class="meta">
                 <p>
@@ -157,7 +157,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer"><span th:text="'&copy; 2025 ' + ${platformName} + '. All rights reserved.'">© 2025 Freint. All rights reserved.</span></div>
     </div>
 </body>
 </html>

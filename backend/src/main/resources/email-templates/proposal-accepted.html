@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proposal Accepted | {{platformName}}</title>
+    <title th:text="'Proposal Accepted | ' + ${platformName}">Proposal Accepted | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -135,14 +135,14 @@
             </div>
             <div class="body">
                 <h2>Your Proposal Was Accepted!</h2>
-                <p>Hi {{firstName}},</p>
-                <p>Excellent news! {{clientName}} has accepted your proposal.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>Excellent news! <span th:text="${clientName}">Client</span> has accepted your proposal.</p>
                 <div class="highlight">
-                    <p><strong>Project:</strong> {{projectTitle}}</p>
-                    <p><strong>Client:</strong> {{clientName}}</p>
+                    <p><strong>Project:</strong> <span th:text="${projectTitle}">Project</span></p>
+                    <p><strong>Client:</strong> <span th:text="${clientName}">Client</span></p>
                 </div>
                 <p>The next step is to review the contract details and begin work. You can now start collaborating with your client on this project.</p>
-                <a href="{{frontendUrl}}/contracts" class="cta-button">View Contract</a>
+                <a th:href="${frontendUrl} + '/contracts'" class="cta-button">View Contract</a>
             </div>
             <div class="meta">
                 <p>
@@ -150,7 +150,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

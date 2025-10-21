@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Message | {{platformName}}</title>
+    <title th:text="'New Message | ' + ${platformName}">New Message | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -126,17 +126,17 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>You Have a New Message</h2>
-                <p>Hi {{firstName}},</p>
-                <p>You received a new message from {{senderName}} regarding {{projectTitle}}.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>You received a new message from <span th:text="${senderName}">Sender</span> regarding <span th:text="${projectTitle}">Project</span>.</p>
                 <div class="message-preview">
-                    "New message from {{senderName}}"
+                    "New message from <span th:text="${senderName}">Sender</span>"
                 </div>
                 <p>Don't miss important communication about your project. Log in to your dashboard to read the full message and respond.</p>
-                <a href="{{frontendUrl}}/messages" class="cta-button">View Messages</a>
+                <a th:href="${frontendUrl} + '/messages'" class="cta-button">View Messages</a>
             </div>
             <div class="meta">
                 <p>
@@ -144,7 +144,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

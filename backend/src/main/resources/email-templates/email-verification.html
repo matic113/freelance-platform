@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verify your email | {{platformName}}</title>
+  <title th:text="'Verify your email | ' + ${platformName}">Verify your email | Freint</title>
     <style>
       :root {
         color-scheme: light only;
@@ -125,17 +125,17 @@
   <body>
     <div class="wrapper">
       <div class="card">
-        <div class="brand-bar">
-          <h1>{{platformName}}</h1>
-        </div>
+         <div class="brand-bar">
+            <h1 th:text="${platformName}">Freint</h1>
+         </div>
         <div class="body">
-          <h2>Welcome to {{platformName}}</h2>
+          <h2>Welcome to <span th:text="${platformName}">Freint</span></h2>
           <p>
             We’re excited to have you on board! To activate your new account,
             please confirm that this is your email address by entering the
             verification code below.
           </p>
-          <div class="code">{{otp}}</div>
+          <div class="code" th:text="${otp}">000000</div>
           <p>
             Enter this code in the signup window to finish verifying your email.
             For your security, the code expires in 10 minutes and can only be used
@@ -153,7 +153,7 @@
           </p>
         </div>
       </div>
-      <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+       <div class="footer"><span th:text="'&copy; 2025 ' + ${platformName} + '. All rights reserved.'">© 2025 Freint. All rights reserved.</span></div>
     </div>
   </body>
 </html>

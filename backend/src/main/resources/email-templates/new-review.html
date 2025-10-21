@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Review | {{platformName}}</title>
+    <title th:text="'New Review | ' + ${platformName}">New Review | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -135,23 +135,21 @@
     <div class="wrapper">
         <div class="card">
             <div class="brand-bar">
-                <h1>{{platformName}}</h1>
+                <h1 th:text="${platformName}">Freint</h1>
             </div>
             <div class="body">
                 <h2>You Have a New Review!</h2>
-                <p>Hi {{firstName}},</p>
-                <p>Great news! {{reviewerName}} has left you a review.</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
+                <p>Great news! <span th:text="${reviewerName}">Reviewer</span> has left you a review.</p>
                 <div class="rating-box">
-                    <div class="stars">★ {{rating}}</div>
-                    <div class="reviewer-name">{{reviewerName}}</div>
+                    <div class="stars">★ <span th:text="${rating}">5</span></div>
+                    <div class="reviewer-name" th:text="${reviewerName}">Reviewer</div>
                 </div>
-                {{#hasComment}}
-                <div style="background-color: #f8f9fa; border-left: 4px solid #4F46E5; padding: 15px; margin: 20px 0; border-radius: 4px;">
-                    <p style="margin: 0; font-style: italic; color: #495057;">"{{comment}}"</p>
+                <div th:if="${hasComment}" style="background-color: #f8f9fa; border-left: 4px solid #4F46E5; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                    <p style="margin: 0; font-style: italic; color: #495057;" th:text="'&quot;' + ${comment} + '&quot;'"></p>
                 </div>
-                {{/hasComment}}
                 <p>Reviews help build your reputation and attract more clients. View your profile to see what they said and manage all your reviews in one place.</p>
-                <a href="{{frontendUrl}}/profile" class="cta-button">View Your Reviews</a>
+                <a th:href="${frontendUrl} + '/profile'" class="cta-button">View Your Reviews</a>
             </div>
             <div class="meta">
                 <p>
@@ -159,7 +157,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>

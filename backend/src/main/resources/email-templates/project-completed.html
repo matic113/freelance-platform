@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project Completed | {{platformName}}</title>
+    <title th:text="'Project Completed | ' + ${platformName}">Project Completed | Freint</title>
     <style>
         :root {
             color-scheme: light only;
@@ -148,33 +148,35 @@
             </div>
             <div class="body">
                 <h2>Success!</h2>
-                <p>Hi {{firstName}},</p>
+                <p>Hi <span th:text="${firstName}">User</span>,</p>
                 <div class="congratulations-box">
                     <div class="emoji">🎊</div>
                     <p>Congratulations!</p>
-                    <p class="project-name">{{projectTitle}}</p>
+                    <p class="project-name" th:text="${projectTitle}">Project</p>
                     <p>All milestones have been successfully completed and paid!</p>
                 </div>
-                {{#isClient}}
-                <p>Thank you for your business! Your freelancer has delivered excellent work and fulfilled all project requirements. All payments have been processed successfully.</p>
-                <p>This is a great opportunity to rate your freelancer's performance and help them build a strong reputation on the platform.</p>
-                <a href="{{frontendUrl}}/reviews/project/{{projectId}}" class="cta-button">Leave a Review</a>
-                {{/isClient}}
-                {{#isFreelancer}}
-                <p>Excellent work! Your client is satisfied with the deliverables and all payments have been completed. Thank you for providing professional service throughout this project.</p>
-                <p>You can now mark this as complete and showcase it in your portfolio. Consider requesting a testimonial from your client!</p>
-                <a href="{{frontendUrl}}/contracts" class="cta-button">View Your Contracts</a>
-                {{/isFreelancer}}
+                <th:block th:if="${isClient}">
+                    <p>Thank you for your business! Your freelancer has delivered excellent work and fulfilled all project requirements. All payments have been processed successfully.</p>
+                    <p>This is a great opportunity to rate your freelancer's performance and help them build a strong reputation on the platform.</p>
+                    <a th:href="${frontendUrl} + '/reviews/project/' + ${projectId}" class="cta-button">Leave a Review</a>
+                </th:block>
+                <th:block th:if="${isFreelancer}">
+                    <p>Excellent work! Your client is satisfied with the deliverables and all payments have been completed. Thank you for providing professional service throughout this project.</p>
+                    <p>You can now mark this as complete and showcase it in your portfolio. Consider requesting a testimonial from your client!</p>
+                    <a th:href="${frontendUrl} + '/contracts'" class="cta-button">View Your Contracts</a>
+                </th:block>
                 <p style="margin-top: 24px; font-size: 14px; font-style: italic; color: var(--text-muted);">We hope this was a great experience and look forward to future collaborations on the platform.</p>
             </div>
             <div class="meta">
-                <p>
-                    {{#isClient}}Your freelancer would appreciate your feedback about this project.{{/isClient}}
-                    {{#isFreelancer}}Help build trust in our community by requesting a review from your client.{{/isFreelancer}}
-                </p>
+                <th:block th:if="${isClient}">
+                    <p>Your freelancer would appreciate your feedback about this project.</p>
+                </th:block>
+                <th:block th:if="${isFreelancer}">
+                    <p>Help build trust in our community by requesting a review from your client.</p>
+                </th:block>
             </div>
         </div>
-        <div class="footer">&copy; 2025 {{platformName}}. All rights reserved.</div>
+        <div class="footer">&copy; 2025 <span th:text="${platformName}">Freint</span>. All rights reserved.</div>
     </div>
 </body>
 </html>
