@@ -52,6 +52,40 @@ export const fileUploadService = {
     return fileUploadService.uploadFileToConversation(conversationId, file, 'documents');
   },
 
+  uploadFileToProject: async (
+    projectId: string,
+    file: File,
+    folder: string = 'files'
+  ): Promise<FileUploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+
+    return apiService.post<FileUploadResponse>(
+      `/projects/${projectId}/upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+  },
+
+  uploadImageToProject: async (
+    projectId: string,
+    file: File
+  ): Promise<FileUploadResponse> => {
+    return fileUploadService.uploadFileToProject(projectId, file, 'images');
+  },
+
+  uploadDocumentToProject: async (
+    projectId: string,
+    file: File
+  ): Promise<FileUploadResponse> => {
+    return fileUploadService.uploadFileToProject(projectId, file, 'documents');
+  },
+
   validateFileSize: (file: File, maxSizeMB: number = 10): boolean => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     return file.size <= maxSizeBytes;
@@ -101,5 +135,63 @@ export const fileUploadService = {
       size: response.fileSize,
       type: response.contentType,
     };
+  },
+};
+
+export interface PresignedUploadResponse {
+  uploadUrl: string;
+  objectName: string;
+  filename: string;
+  expirationMs: number;
+}
+
+export interface CompleteUploadRequest {
+  objectName: string;
+  filename: string;
+  fileSize: number;
+  contentType: string;
+  folder: string;
+}
+
+export const presignedUploadService = {
+  getPresignedUploadUrl: async (
+    projectId: string,
+    filename: string,
+    folder: string = 'files'
+  ): Promise<PresignedUploadResponse> => {
+    return apiService.post<PresignedUploadResponse>(
+      `/projects/${projectId}/presigned-upload`,
+      null,
+      {
+        params: {
+          filename,
+          folder,
+        },
+      }
+    );
+  },
+
+  uploadToPresignedUrl: async (
+    uploadUrl: string,
+    file: File
+  ): Promise<void> => {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upload failed with status ${response.status}`);
+    }
+  },
+
+  completeUpload: async (
+    projectId: string,
+    request: CompleteUploadRequest
+  ): Promise<any> => {
+    return apiService.post(`/projects/${projectId}/complete-upload`, request);
   },
 };

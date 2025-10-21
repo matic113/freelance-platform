@@ -84,6 +84,12 @@ export const projectService = {
     return apiService.get<ProjectAttachment[]>(`/projects/${projectId}/attachments`);
   },
 
+  // Get presigned download url for an attachment/file id
+  getAttachmentDownloadUrl: async (attachmentId: string): Promise<string> => {
+    const res = await apiService.get<{ downloadUrl: string }>(`/files/download/${attachmentId}`);
+    return res?.downloadUrl || '';
+  },
+
   // Upload file (generic)
   uploadFile: async (file: File): Promise<FileUploadResponse> => {
     const formData = new FormData();
