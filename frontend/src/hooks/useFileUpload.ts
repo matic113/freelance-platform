@@ -80,10 +80,71 @@ export const useFileUpload = (options: UseFileUploadOptions = {}) => {
     return uploadFile(conversationId, file);
   };
 
+  const uploadFileToProject = async (projectId: string, file: File) => {
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      if (!fileUploadService.validateFileSize(file, maxFileSizeMB)) {
+        throw new Error(
+          `File size exceeds ${maxFileSizeMB}MB limit. Your file is ${fileUploadService.getFileSizeInMB(file.size)}MB`
+        );
+      }
+
+      if (allowedTypes.length > 0 && !fileUploadService.validateFileType(file, allowedTypes)) {
+        throw new Error(
+          `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`
+        );
+      }
+
+      setUploadProgress(30);
+
+      const response = await fileUploadService.uploadFileToProject(
+        projectId,
+        file
+      );
+
+      setUploadProgress(100);
+
+      toast({
+        title: 'Success',
+        description: `File ${file.name} uploaded successfully`,
+      });
+
+      options.onSuccess?.(response);
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
+      
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+
+      options.onError?.(errorMessage);
+      throw error;
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const uploadImageToProject = async (projectId: string, file: File) => {
+    return uploadFileToProject(projectId, file);
+  };
+
+  const uploadDocumentToProject = async (projectId: string, file: File) => {
+    return uploadFileToProject(projectId, file);
+  };
+
   return {
     uploadFile,
     uploadImage,
     uploadDocument,
+    uploadFileToProject,
+    uploadImageToProject,
+    uploadDocumentToProject,
     isUploading,
     uploadProgress,
   };
