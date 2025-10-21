@@ -22,7 +22,8 @@ import {
   Users,
   Clock,
   DollarSign,
-  ChevronRight
+  ChevronRight,
+  Star
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ReviewPromptsList } from "@/components/reviews/ReviewPrompt";
@@ -294,79 +295,92 @@ export default function MyProjects() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredProjects.map((project) => {
-                const stage = PROJECT_STAGES[project.status];
-                const stageIndex = STAGE_SEQUENCE.indexOf(project.status);
-                const percentage = getStagePercentage(project.status);
+               {filteredProjects.map((project) => {
+                 const stage = PROJECT_STAGES[project.status];
+                 const stageIndex = STAGE_SEQUENCE.indexOf(project.status);
+                 const percentage = getStagePercentage(project.status);
+                 const isCompleted = project.status === ProjectStatus.COMPLETED;
 
-                return (
-                  <Link key={project.id} to={`/client/project/${project.id}`}>
-                    <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-[#0A2540] truncate text-lg">
-                              {project.title}
-                            </h3>
-                            <Badge className={cn("flex-shrink-0 text-xs font-medium", stage.bgColor, stage.color)}>
-                              {stage.label}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {project.description}
-                          </p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
-                      </div>
+                 return (
+                   <div key={project.id}>
+                     <Link to={`/client/project/${project.id}`}>
+                       <div className="border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                         <div className="flex items-start justify-between mb-3">
+                           <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-2 mb-2">
+                               <h3 className="font-semibold text-[#0A2540] truncate text-lg">
+                                 {project.title}
+                               </h3>
+                               <Badge className={cn("flex-shrink-0 text-xs font-medium", stage.bgColor, stage.color)}>
+                                 {stage.label}
+                               </Badge>
+                             </div>
+                             <p className="text-sm text-gray-600 line-clamp-2">
+                               {project.description}
+                             </p>
+                           </div>
+                           <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
+                         </div>
 
-                      {/* Stage Progress */}
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-muted-foreground">
-                            {isRTL ? "المرحلة:" : "Stage:"}
-                          </span>
-                          <span className="text-xs font-medium text-[#0A2540]">
-                            {stageIndex + 1} / {STAGE_SEQUENCE.length}
-                          </span>
-                        </div>
-                        <div className="flex gap-1">
-                          {STAGE_SEQUENCE.map((status, idx) => (
-                            <div
-                              key={status}
-                              className={cn(
-                                "flex-1 h-2 rounded-full transition-colors",
-                                idx < stageIndex + 1 ? PROJECT_STAGES[status].bgColor : "bg-gray-200"
-                              )}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex justify-between mt-1 text-xs text-gray-500">
-                          <span>{isRTL ? "مسودة" : "Draft"}</span>
-                          <span>{isRTL ? "منشور" : "Published"}</span>
-                          <span>{isRTL ? "قيد التنفيذ" : "In Progress"}</span>
-                          <span>{isRTL ? "مكتمل" : "Completed"}</span>
-                        </div>
-                      </div>
+                         {/* Stage Progress */}
+                         <div className="mb-3">
+                           <div className="flex items-center justify-between mb-2">
+                             <span className="text-xs text-muted-foreground">
+                               {isRTL ? "المرحلة:" : "Stage:"}
+                             </span>
+                             <span className="text-xs font-medium text-[#0A2540]">
+                               {stageIndex + 1} / {STAGE_SEQUENCE.length}
+                             </span>
+                           </div>
+                           <div className="flex gap-1">
+                             {STAGE_SEQUENCE.map((status, idx) => (
+                               <div
+                                 key={status}
+                                 className={cn(
+                                   "flex-1 h-2 rounded-full transition-colors",
+                                   idx < stageIndex + 1 ? PROJECT_STAGES[status].bgColor : "bg-gray-200"
+                                 )}
+                               />
+                             ))}
+                           </div>
+                           <div className="flex justify-between mt-1 text-xs text-gray-500">
+                             <span>{isRTL ? "مسودة" : "Draft"}</span>
+                             <span>{isRTL ? "منشور" : "Published"}</span>
+                             <span>{isRTL ? "قيد التنفيذ" : "In Progress"}</span>
+                             <span>{isRTL ? "مكتمل" : "Completed"}</span>
+                           </div>
+                         </div>
 
-                      {/* Project Details */}
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          ${project.budgetMax.toLocaleString()}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {new Date(project.deadline).toLocaleDateString()}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {project.skillsRequired?.length || 0} {isRTL ? "مهارة" : "skills"}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+                         {/* Project Details */}
+                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                           <span className="flex items-center gap-1">
+                             <DollarSign className="h-4 w-4" />
+                             ${project.budgetMax.toLocaleString()}
+                           </span>
+                           <span className="flex items-center gap-1">
+                             <Clock className="h-4 w-4" />
+                             {new Date(project.deadline).toLocaleDateString()}
+                           </span>
+                           <span className="flex items-center gap-1">
+                             <Users className="h-4 w-4" />
+                             {project.skillsRequired?.length || 0} {isRTL ? "مهارة" : "skills"}
+                           </span>
+                         </div>
+                       </div>
+                     </Link>
+                     {isCompleted && (
+                       <div className="mt-2 flex justify-end">
+                         <Link to={`/reviews/project/${project.id}`}>
+                           <Button variant="outline" size="sm">
+                             <Star className="h-4 w-4 mr-2" />
+                             {isRTL ? "اترك تقييماً" : "Leave Review"}
+                           </Button>
+                         </Link>
+                       </div>
+                     )}
+                   </div>
+                 );
+               })}
             </div>
           )}
         </CardContent>

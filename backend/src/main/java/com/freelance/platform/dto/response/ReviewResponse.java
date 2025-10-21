@@ -36,6 +36,12 @@ public class ReviewResponse {
     @Schema(description = "Additional feedback", example = "Great communication and delivered on time.")
     private String additionalFeedback;
 
+    @Schema(description = "Project name", example = "Mobile App Development")
+    private String projectName;
+
+    @Schema(description = "Project category", example = "Mobile Development")
+    private String projectCategory;
+
     @Schema(description = "Review creation date")
     private LocalDateTime createdAt;
 
@@ -128,6 +134,22 @@ public class ReviewResponse {
 
     public void setAdditionalFeedback(String additionalFeedback) {
         this.additionalFeedback = additionalFeedback;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
+    public String getProjectCategory() {
+        return projectCategory;
+    }
+
+    public void setProjectCategory(String projectCategory) {
+        this.projectCategory = projectCategory;
     }
 
     public LocalDateTime getCreatedAt() {

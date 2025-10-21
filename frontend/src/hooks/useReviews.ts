@@ -112,7 +112,9 @@ export const useCreateReview = () => {
     onSuccess: (data) => {
       // Add review to cache
       queryClient.setQueryData(reviewKeys.detail(data.id), data);
-      // Invalidate related queries
+      // Invalidate related queries used across the UI
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'my-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'search'] });
       queryClient.invalidateQueries({ queryKey: reviewKeys.user(data.revieweeId) });
       queryClient.invalidateQueries({ queryKey: reviewKeys.contract(data.contractId) });
       queryClient.invalidateQueries({ queryKey: reviewKeys.statistics(data.revieweeId) });
@@ -133,7 +135,9 @@ export const useUpdateReview = () => {
     onSuccess: (data, variables) => {
       // Update review in cache
       queryClient.setQueryData(reviewKeys.detail(variables.id), data);
-      // Invalidate related queries
+      // Invalidate related queries used across the UI
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'my-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'search'] });
       queryClient.invalidateQueries({ queryKey: reviewKeys.user(data.revieweeId) });
       queryClient.invalidateQueries({ queryKey: reviewKeys.contract(data.contractId) });
       queryClient.invalidateQueries({ queryKey: reviewKeys.statistics(data.revieweeId) });
@@ -153,7 +157,9 @@ export const useDeleteReview = () => {
     onSuccess: (_, reviewId) => {
       // Remove review from cache
       queryClient.removeQueries({ queryKey: reviewKeys.detail(reviewId) });
-      // Invalidate related queries
+      // Invalidate related queries used across the UI
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'my-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'search'] });
       queryClient.invalidateQueries({ queryKey: reviewKeys.all });
     },
     onError: (error) => {

@@ -229,18 +229,20 @@ public class ReviewService {
 
     private ReviewResponse convertToResponse(Review review) {
         ReviewResponse response = new ReviewResponse();
-        response.setId(review.getId());
-        response.setContractId(review.getContract().getId());
-        response.setReviewerId(review.getReviewer().getId());
-        response.setReviewerName(review.getReviewer().getFirstName() + " " + review.getReviewer().getLastName());
-        response.setRevieweeId(review.getReviewee().getId());
-        response.setRevieweeName(review.getReviewee().getFirstName() + " " + review.getReviewee().getLastName());
-        response.setRating(review.getRating());
-        response.setComment(review.getComment());
-        response.setAdditionalFeedback(review.getAdditionalFeedback());
-        response.setCreatedAt(review.getCreatedAt());
-        response.setUpdatedAt(review.getUpdatedAt());
-        
-        return response;
+         response.setId(review.getId());
+         response.setContractId(review.getContract().getId());
+         response.setReviewerId(review.getReviewer().getId());
+         response.setReviewerName(review.getReviewer().getFirstName() + " " + review.getReviewer().getLastName());
+         response.setRevieweeId(review.getReviewee().getId());
+         response.setRevieweeName(review.getReviewee().getFirstName() + " " + review.getReviewee().getLastName());
+         response.setRating(review.getRating());
+         response.setComment(review.getComment());
+         response.setAdditionalFeedback(review.getAdditionalFeedback());
+         response.setProjectName(review.getProjectName());
+         response.setProjectCategory(review.getProjectCategory());
+         response.setCreatedAt(review.getCreatedAt());
+         response.setUpdatedAt(review.getUpdatedAt());
+         
+         return response;
     }
 }

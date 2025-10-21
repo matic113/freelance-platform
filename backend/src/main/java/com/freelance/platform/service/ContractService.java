@@ -509,67 +509,92 @@ public class ContractService {
              }
          }
 
-         private void checkAndCompleteProjectOnAllMilestonesPaid(Contract contract) {
-             List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
-             
-             boolean allMilestonesPaid = allMilestones.stream()
-                     .allMatch(m -> m.getStatus() == MilestoneStatus.PAID);
-             
-             if (allMilestonesPaid) {
-                 Project project = contract.getProject();
-                 
-                 if (project.getStatus() != ProjectStatus.COMPLETED) {
-                     List<Contract> projectContracts = contractRepository.findByProject(project);
-                     
-                     boolean allProjectMilestonesPaid = projectContracts.stream()
-                             .flatMap(c -> milestoneRepository.findByContractIdOrderByOrderIndexAsc(c.getId()).stream())
-                             .allMatch(m -> m.getStatus() == MilestoneStatus.PAID);
-                     
-                     if (allProjectMilestonesPaid) {
-                         project.setStatus(ProjectStatus.COMPLETED);
-                         project.setUpdatedAt(LocalDateTime.now());
-                         projectRepository.save(project);
+        private void checkAndCompleteProjectOnAllMilestonesPaid(Contract contract) {
+              List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
+              
+              boolean allMilestonesPaid = allMilestones.stream()
+                      .allMatch(m -> m.getStatus() == MilestoneStatus.PAID);
+              
+              if (allMilestonesPaid) {
+                  if (contract.getStatus() != ContractStatus.COMPLETED) {
+                      contract.setStatus(ContractStatus.COMPLETED);
+                      contract.setUpdatedAt(LocalDateTime.now());
+                      contractRepository.save(contract);
 
-                         notificationService.createNotificationForUser(
-                                 project.getClient().getId(),
-                                 "PROJECT_COMPLETED",
-                                 "Project Completed",
-                                 String.format("Congratulations! All milestones for your project '%s' have been paid. Project is now complete!", project.getTitle()),
-                                 "high",
-                                 String.format("{\"projectId\":\"%s\"}", project.getId())
-                         );
+                      notificationService.createNotificationForUser(
+                              contract.getClient().getId(),
+                              "CONTRACT_COMPLETED",
+                              "Contract Completed",
+                              String.format("Congratulations! All milestones for your contract have been paid and the contract is now complete!"),
+                              "high",
+                              String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"freelancerId\":\"%s\"}", 
+                                           contract.getId(), contract.getProject().getId(), contract.getFreelancer().getId())
+                      );
 
-                         for (Contract projectContract : projectContracts) {
-                             notificationService.createNotificationForUser(
-                                     projectContract.getFreelancer().getId(),
-                                     "PROJECT_COMPLETED",
-                                     "Project Completed",
-                                     String.format("Congratulations! All milestones for project '%s' have been paid. Project is now complete!", project.getTitle()),
-                                     "high",
-                                     String.format("{\"projectId\":\"%s\",\"contractId\":\"%s\"}", 
-                                                  project.getId(), projectContract.getId())
-                             );
+                      notificationService.createNotificationForUser(
+                              contract.getFreelancer().getId(),
+                              "CONTRACT_COMPLETED",
+                              "Contract Completed",
+                              String.format("Congratulations! All milestones for your contract have been paid and the contract is now complete!"),
+                              "high",
+                              String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}", 
+                                           contract.getId(), contract.getProject().getId(), contract.getClient().getId())
+                      );
+                  }
 
-                             emailService.sendProjectCompletedEmail(
-                                     project.getClient(),
-                                     projectContract.getFreelancer().getFirstName() + " " + projectContract.getFreelancer().getLastName(),
-                                     project.getTitle(),
-                                     "CLIENT",
-                                     "Freelancer"
-                             );
+                  Project project = contract.getProject();
+                  
+                  if (project.getStatus() != ProjectStatus.COMPLETED) {
+                      List<Contract> projectContracts = contractRepository.findByProject(project);
+                      
+                      boolean allProjectContractsCompleted = projectContracts.stream()
+                              .allMatch(c -> c.getStatus() == ContractStatus.COMPLETED);
+                      
+                      if (allProjectContractsCompleted) {
+                          project.setStatus(ProjectStatus.COMPLETED);
+                          project.setUpdatedAt(LocalDateTime.now());
+                          projectRepository.save(project);
 
-                             emailService.sendProjectCompletedEmail(
-                                     projectContract.getFreelancer(),
-                                     project.getClient().getFirstName() + " " + project.getClient().getLastName(),
-                                     project.getTitle(),
-                                     "FREELANCER",
-                                     "Client"
-                             );
-                         }
-                     }
-                 }
-             }
-         }
+                          notificationService.createNotificationForUser(
+                                  project.getClient().getId(),
+                                  "PROJECT_COMPLETED",
+                                  "Project Completed",
+                                  String.format("Congratulations! All milestones for your project '%s' have been paid. Project is now complete!", project.getTitle()),
+                                  "high",
+                                  String.format("{\"projectId\":\"%s\"}", project.getId())
+                          );
+
+                          for (Contract projectContract : projectContracts) {
+                              notificationService.createNotificationForUser(
+                                      projectContract.getFreelancer().getId(),
+                                      "PROJECT_COMPLETED",
+                                      "Project Completed",
+                                      String.format("Congratulations! All milestones for project '%s' have been paid. Project is now complete!", project.getTitle()),
+                                      "high",
+                                      String.format("{\"projectId\":\"%s\",\"contractId\":\"%s\"}", 
+                                                   project.getId(), projectContract.getId())
+                              );
+
+                              emailService.sendProjectCompletedEmail(
+                                      project.getClient(),
+                                      projectContract.getFreelancer().getFirstName() + " " + projectContract.getFreelancer().getLastName(),
+                                      project.getTitle(),
+                                      "CLIENT",
+                                      "Freelancer"
+                              );
+
+                              emailService.sendProjectCompletedEmail(
+                                      projectContract.getFreelancer(),
+                                      project.getClient().getFirstName() + " " + project.getClient().getLastName(),
+                                      project.getTitle(),
+                                      "FREELANCER",
+                                      "Client"
+                              );
+                          }
+                      }
+                  }
+              }
+          }
 
     public ContractResponse getContractById(UUID contractId) {
         Contract contract = contractRepository.findById(contractId)

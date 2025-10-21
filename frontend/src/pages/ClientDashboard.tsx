@@ -82,7 +82,8 @@ import {
   Calendar,
   Eye,
   TrendingUp,
-  Loader2
+  Loader2,
+  Star
 } from "lucide-react";
 
 export default function ClientDashboard() {
@@ -393,40 +394,47 @@ export default function ClientDashboard() {
                     </Button>
                   </Link>
                 </div>
-             ) : (
-               <div className="space-y-4">
-                  {recentProjects.map((project) => (
-                    <Link key={project.id} to={`/client/project/${project.id}`}>
-                       <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                         <div className="flex items-center gap-3 mb-2">
-                           <h3 className="font-semibold text-[#0A2540]">{project.title}</h3>
-                           <Badge className={cn("text-xs", getStatusColor(project.status))}>
-                             {getStatusText(project.status)}
-                           </Badge>
-                         </div>
-                         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                           <span className="flex items-center gap-1">
-                             <DollarSign className="h-4 w-4" />
-                             {project.budget}
-                           </span>
-                           <span className="flex items-center gap-1">
-                             <Clock className="h-4 w-4" />
-                             {project.deadline}
-                           </span>
-                         </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {isRTL ? "المرحلة:" : "Stage:"}
-                            </span>
-                            <span className="text-xs font-medium text-[#0A2540] whitespace-nowrap">
-                              {project.stageIndex + 1} / {STAGE_SEQUENCE.length}
-                            </span>
-                          </div>
-                       </div>
-                    </Link>
-                  ))}
-               </div>
-             )}
+              ) : (
+                 <div className="space-y-4">
+                    {recentProjects.map((project) => (
+                      <div key={project.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors flex items-start justify-between gap-3">
+                        <Link to={`/client/project/${project.id}`} className="block flex-1">
+                           <div className="flex items-center gap-3 mb-2">
+                             <h3 className="font-semibold text-[#0A2540]">{project.title}</h3>
+                             <Badge className={cn("text-xs", getStatusColor(project.status))}>
+                               {getStatusText(project.status)}
+                             </Badge>
+                           </div>
+                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                             <span className="flex items-center gap-1">
+                               <DollarSign className="h-4 w-4" />
+                               {project.budget}
+                             </span>
+                             <span className="flex items-center gap-1">
+                               <Clock className="h-4 w-4" />
+                               {project.deadline}
+                             </span>
+                           </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {isRTL ? "المرحلة:" : "Stage:"}
+                              </span>
+                              <span className="text-xs font-medium text-[#0A2540] whitespace-nowrap">
+                                {project.stageIndex + 1} / {STAGE_SEQUENCE.length}
+                              </span>
+                            </div>
+                        </Link>
+                        {project.status === 'completed' && (
+                          <Link to={`/reviews/project/${project.id}`}>
+                            <Button size="sm" variant="ghost" className="flex-shrink-0" title={isRTL ? "اترك تقييماً" : "Leave Review"}>
+                              <Star className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                 </div>
+              )}
            </CardContent>
          </Card>
 

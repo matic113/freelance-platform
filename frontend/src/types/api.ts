@@ -766,17 +766,19 @@ export interface Review {
 }
 
 export interface ReviewResponse {
-  id: string;
-  contractId: string;
-  reviewerId: string;
-  reviewerName: string;
-  revieweeId: string;
-  revieweeName: string;
-  rating: number;
-  comment: string;
-  additionalFeedback?: string;
-  createdAt: string;
-  updatedAt?: string;
+   id: string;
+   contractId: string;
+   reviewerId: string;
+   reviewerName: string;
+   revieweeId: string;
+   revieweeName: string;
+   rating: number;
+   comment: string;
+   additionalFeedback?: string;
+   projectName: string;
+   projectCategory?: string;
+   createdAt: string;
+   updatedAt?: string;
 }
 
 export interface CreateReviewRequest {

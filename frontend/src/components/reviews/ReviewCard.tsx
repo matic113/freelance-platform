@@ -7,13 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Star, 
-  Calendar, 
-  User,
-  ThumbsUp,
-  MessageCircle
+  Calendar
 } from 'lucide-react';
-import { Review } from '@/types/contract';
+import type { ReviewResponse } from '@/types/api';
 import { cn } from '@/lib/utils';
+
+type Review = ReviewResponse & { type: 'client_to_freelancer' | 'freelancer_to_client' };
 
 interface ReviewCardProps {
   review: Review;
@@ -57,32 +56,45 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
             </AvatarFallback>
           </Avatar>
           
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <CardTitle className="text-base font-semibold text-[#0A2540]">
-                {reviewerName}
-              </CardTitle>
-              <Badge variant="outline" className="text-xs">
-                {getReviewTypeText(review.type)}
-              </Badge>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-1">
-                {renderStars(review.rating)}
-              </div>
-              <span className="text-sm text-gray-600">
-                {review.rating}/5
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Calendar className="h-3 w-3" />
-              <span>
-                {new Date(review.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
+           <div className="flex-1">
+             <div className="flex items-center justify-between mb-1">
+               <CardTitle className="text-base font-semibold text-[#0A2540]">
+                 {reviewerName}
+               </CardTitle>
+               <Badge variant="outline" className="text-xs">
+                 {getReviewTypeText(review.type)}
+               </Badge>
+             </div>
+             
+             <div className="flex items-center gap-2 mb-2">
+               <div className="flex items-center gap-1">
+                 {renderStars(review.rating)}
+               </div>
+               <span className="text-sm text-gray-600">
+                 {review.rating}/5
+               </span>
+             </div>
+
+             {review.projectName && (
+               <div className="flex items-center gap-2 flex-wrap mb-2">
+                 <span className="text-xs text-gray-600 font-medium">
+                   {review.projectName}
+                 </span>
+                 {review.projectCategory && (
+                   <Badge variant="secondary" className="text-xs">
+                     {review.projectCategory}
+                   </Badge>
+                 )}
+               </div>
+             )}
+             
+             <div className="flex items-center gap-2 text-xs text-gray-500">
+               <Calendar className="h-3 w-3" />
+               <span>
+                 {new Date(review.createdAt).toLocaleDateString()}
+               </span>
+             </div>
+           </div>
         </div>
       </CardHeader>
       
@@ -109,7 +121,7 @@ interface ReviewFormProps {
   reviewType: 'client_to_freelancer' | 'freelancer_to_client';
   revieweeName: string;
   isRTL?: boolean;
-  onSubmit?: (review: Omit<Review, 'id' | 'createdAt'>) => void;
+  onSubmit?: (review: { contractId: string; rating: number; comment: string }) => void;
   onCancel?: () => void;
 }
 
@@ -127,16 +139,16 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   const [comment, setComment] = useState('');
   const [hoveredRating, setHoveredRating] = useState(0);
 
+  const isCommentValid = comment.trim().length >= 10;
+  const canSubmit = rating > 0 && isCommentValid;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating > 0) {
+    if (canSubmit) {
       onSubmit?.({
         contractId,
-        reviewerId,
-        revieweeId,
         rating,
-        comment: comment.trim(),
-        type: reviewType
+        comment: comment.trim()
       });
     }
   };
@@ -218,7 +230,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           {/* Comment */}
           <div className="space-y-2">
             <Label htmlFor="comment">
-              {isRTL ? 'التعليق (اختياري)' : 'Comment (Optional)'}
+              {isRTL ? 'التعليق (حد أدنى 10 أحرف)' : 'Comment (min 10 characters)'}
             </Label>
             <Textarea
               id="comment"
@@ -230,6 +242,11 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
               }
               rows={4}
             />
+            <div className={cn("text-xs", isCommentValid ? "text-gray-500" : "text-red-600")}> 
+              {isRTL 
+                ? `${comment.trim().length}/10 أحرف` 
+                : `${comment.trim().length}/10 characters`}
+            </div>
           </div>
 
           {/* Actions */}
@@ -237,7 +254,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
             <Button
               type="submit"
               className="bg-[#0A2540] hover:bg-[#142b52] flex-1"
-              disabled={rating === 0}
+              disabled={!canSubmit}
             >
               <Star className="h-4 w-4 mr-2" />
               {isRTL ? 'إرسال التقييم' : 'Submit Review'}
@@ -283,9 +300,9 @@ export const ReviewsSummary: React.FC<ReviewsSummaryProps> = ({
   };
 
   const getRatingDistribution = () => {
-    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } as Record<number, number>;
     reviews.forEach(review => {
-      distribution[review.rating as keyof typeof distribution]++;
+      distribution[review.rating] = (distribution[review.rating] || 0) + 1;
     });
     return distribution;
   };
@@ -334,13 +351,13 @@ export const ReviewsSummary: React.FC<ReviewsSummaryProps> = ({
                 <div
                   className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
                   style={{
-                    width: `${totalReviews > 0 ? (distribution[star as keyof typeof distribution] / totalReviews) * 100 : 0}%`
+                    width: `${totalReviews > 0 ? ((distribution[star] || 0) / totalReviews) * 100 : 0}%`
                   }}
                 />
               </div>
               
               <span className="text-sm text-gray-600 w-8 text-right">
-                {distribution[star as keyof typeof distribution]}
+                {distribution[star] || 0}
               </span>
             </div>
           ))}

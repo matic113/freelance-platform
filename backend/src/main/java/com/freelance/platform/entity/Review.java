@@ -37,6 +37,12 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String additionalFeedback;
     
+    @Column
+    private String projectName;
+    
+    @Column
+    private String projectCategory;
+    
     @CreationTimestamp
     private LocalDateTime createdAt;
     
@@ -51,6 +57,10 @@ public class Review {
         this.reviewee = reviewee;
         this.rating = rating;
         this.comment = comment;
+        if (contract != null && contract.getProject() != null) {
+            this.projectName = contract.getProject().getTitle();
+            this.projectCategory = contract.getProject().getCategory();
+        }
     }
     
     // Getters and Setters
@@ -108,6 +118,22 @@ public class Review {
     
     public void setAdditionalFeedback(String additionalFeedback) {
         this.additionalFeedback = additionalFeedback;
+    }
+    
+    public String getProjectName() {
+        return projectName;
+    }
+    
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+    
+    public String getProjectCategory() {
+        return projectCategory;
+    }
+    
+    public void setProjectCategory(String projectCategory) {
+        this.projectCategory = projectCategory;
     }
     
     public LocalDateTime getCreatedAt() {
