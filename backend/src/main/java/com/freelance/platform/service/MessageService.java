@@ -102,13 +102,30 @@ public class MessageService {
     );
 
         // Send notification to recipient
+        String notificationTitle = "New Message Received";
+        String notificationMessage;
+        String notificationData;
+        
+        // Customize notification based on conversation type
+        if (conversation.getType() == com.freelance.platform.entity.ConversationType.PROJECT_CHAT && conversation.getProject() != null) {
+            notificationMessage = String.format("New message from %s %s in project '%s'", 
+                sender.getFirstName(), sender.getLastName(), conversation.getProject().getTitle());
+            notificationData = String.format("{\"conversationId\":\"%s\",\"senderId\":\"%s\",\"projectId\":\"%s\",\"type\":\"PROJECT_CHAT\"}", 
+                conversationId, sender.getId(), conversation.getProject().getId());
+        } else {
+            notificationMessage = String.format("You received a new message from %s %s", 
+                sender.getFirstName(), sender.getLastName());
+            notificationData = String.format("{\"conversationId\":\"%s\",\"senderId\":\"%s\",\"type\":\"DIRECT_MESSAGE\"}", 
+                conversationId, sender.getId());
+        }
+        
         notificationService.createNotificationForUser(
                 recipient.getId(),
                 "NEW_MESSAGE",
-                "New Message Received",
-                String.format("You received a new message from %s %s", sender.getFirstName(), sender.getLastName()),
+                notificationTitle,
+                notificationMessage,
                 "medium",
-                String.format("{\"conversationId\":\"%s\",\"senderId\":\"%s\"}", conversationId, sender.getId())
+                notificationData
         );
 
         // Send email notification to recipient if enabled

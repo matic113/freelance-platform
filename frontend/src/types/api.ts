@@ -732,6 +732,8 @@ export interface ConversationResponse {
   otherParticipantAvatar?: string;
   unreadCount?: number;
   isBlocked?: boolean;
+  projectId?: string;
+  projectTitle?: string;
 }
 
 // Notification Types

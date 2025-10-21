@@ -210,6 +210,42 @@ public class ConversationController {
     }
 
     /**
+     * Get or create project conversation for a specific project
+     * GET /api/conversations/project/{projectId}
+     */
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<ConversationResponse> getProjectConversation(
+            @PathVariable UUID projectId,
+            Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        Conversation conversation = conversationService.getOrCreateProjectConversation(projectId, userId);
+        return ResponseEntity.ok(mapToConversationResponse(conversation, userId));
+    }
+
+    /**
+     * Filter conversations by type (DIRECT_MESSAGE or PROJECT_CHAT)
+     * GET /api/conversations/filter?type=DIRECT_MESSAGE&page=0&size=20
+     */
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ConversationResponse>> getConversationsByType(
+            @RequestParam String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        Pageable pageable = PageRequest.of(page, size);
+        
+        try {
+            com.freelance.platform.entity.ConversationType conversationType = 
+                com.freelance.platform.entity.ConversationType.valueOf(type);
+            Page<Conversation> conversations = conversationService.getConversationsByType(userId, conversationType, pageable);
+            return ResponseEntity.ok(conversations.map(conversation -> mapToConversationResponse(conversation, userId)));
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid conversation type");
+        }
+    }
+
+    /**
      * Upload file for messaging
      * POST /api/conversations/{conversationId}/upload
      */
@@ -264,6 +300,12 @@ public class ConversationController {
         response.setLastMessageAt(conversation.getLastMessageAt());
         response.setLastMessagePreview(conversation.getLastMessagePreview());
         response.setCreatedAt(conversation.getCreatedAt());
+
+        // Add project information for PROJECT_CHAT conversations
+        if (conversation.getType() == com.freelance.platform.entity.ConversationType.PROJECT_CHAT && conversation.getProject() != null) {
+            response.setProjectId(conversation.getProject().getId());
+            response.setProjectTitle(conversation.getProject().getTitle());
+        }
 
         // Determine the other participant relative to current user
         User participant1 = conversation.getParticipant1();

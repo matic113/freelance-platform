@@ -6,6 +6,7 @@ import com.freelance.platform.entity.User;
 import com.freelance.platform.exception.ResourceNotFoundException;
 import com.freelance.platform.exception.UnauthorizedException;
 import com.freelance.platform.repository.ConversationRepository;
+import com.freelance.platform.repository.ProjectRepository;
 import com.freelance.platform.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,10 +24,12 @@ public class ConversationService {
     
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
     
-    public ConversationService(ConversationRepository conversationRepository, UserRepository userRepository) {
+    public ConversationService(ConversationRepository conversationRepository, UserRepository userRepository, ProjectRepository projectRepository) {
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
+        this.projectRepository = projectRepository;
     }
     
     /**
@@ -203,5 +206,55 @@ public class ConversationService {
         }
         
         conversationRepository.save(conversation);
+    }
+
+    /**
+     * Get all conversations of a specific type for a user
+     * @param userId The user ID
+     * @param type The conversation type (DIRECT_MESSAGE or PROJECT_CHAT)
+     * @param pageable Pagination info
+     * @return Page of conversations of the specified type
+     */
+    @Transactional(readOnly = true)
+    public Page<Conversation> getConversationsByType(UUID userId, ConversationType type, Pageable pageable) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        return conversationRepository.findByTypeAndParticipant(type, user, pageable);
+    }
+
+    /**
+     * Get or create a project conversation for a specific project
+     * @param projectId The project ID
+     * @param userId The user ID (must be participant in the project)
+     * @return The project conversation
+     */
+    @Transactional
+    public Conversation getOrCreateProjectConversation(UUID projectId, UUID userId) {
+        com.freelance.platform.entity.Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        
+        User currentUser = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        // Verify user is involved with the project (is client or has active contract)
+        // For now, we'll check if user is the client - this can be extended to check contracts
+        if (!project.getClient().getId().equals(userId)) {
+            // In a real scenario, you might check if user has an active contract on this project
+            throw new UnauthorizedException("User is not involved in this project");
+        }
+        
+        // Find existing conversation for this project
+        return conversationRepository.findProjectConversation(project, project.getClient(), currentUser)
+            .orElseGet(() -> {
+                Conversation newConversation = new Conversation(
+                    project.getClient(),
+                    currentUser,
+                    project,
+                    ConversationType.PROJECT_CHAT
+                );
+                newConversation.setLastMessageAt(LocalDateTime.now());
+                return conversationRepository.save(newConversation);
+            });
     }
 }

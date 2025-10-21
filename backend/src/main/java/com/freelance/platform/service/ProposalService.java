@@ -6,6 +6,7 @@ import com.freelance.platform.dto.response.ProposalResponse;
 import com.freelance.platform.entity.*;
 import com.freelance.platform.exception.ResourceNotFoundException;
 import com.freelance.platform.exception.UnauthorizedException;
+import com.freelance.platform.repository.ConversationRepository;
 import com.freelance.platform.repository.ProposalRepository;
 import com.freelance.platform.repository.ProjectRepository;
 import com.freelance.platform.repository.UserRepository;
@@ -41,6 +42,9 @@ public class ProposalService {
 
     @Autowired
     private AutoContractService autoContractService;
+
+    @Autowired
+    private ConversationRepository conversationRepository;
 
     public ProposalResponse submitProposal(SubmitProposalRequest request, UUID freelancerId) {
         System.out.println("DEBUG: ProposalService.submitProposal called");
@@ -213,6 +217,19 @@ public class ProposalService {
 
         // Auto-create contract from accepted proposal
         autoContractService.createContractFromProposal(acceptedProposal);
+
+        // Create project conversation for the accepted proposal
+        conversationRepository.findProjectConversation(proposal.getProject(), proposal.getClient(), proposal.getFreelancer())
+            .orElseGet(() -> {
+                Conversation newConversation = new Conversation(
+                    proposal.getClient(),
+                    proposal.getFreelancer(),
+                    proposal.getProject(),
+                    ConversationType.PROJECT_CHAT
+                );
+                newConversation.setLastMessageAt(LocalDateTime.now());
+                return conversationRepository.save(newConversation);
+            });
 
         // Send notification to accepted freelancer
         notificationService.createNotificationForUser(

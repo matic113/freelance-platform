@@ -21,6 +21,10 @@ public class ConversationResponse {
     private String otherParticipantEmail;
     private String otherParticipantAvatar;
 
+    // Project info (for PROJECT_CHAT conversations)
+    private UUID projectId;
+    private String projectTitle;
+
     // Constructors
     public ConversationResponse() {}
 
@@ -104,5 +108,21 @@ public class ConversationResponse {
 
     public void setOtherParticipantAvatar(String otherParticipantAvatar) {
         this.otherParticipantAvatar = otherParticipantAvatar;
+    }
+
+    public UUID getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(UUID projectId) {
+        this.projectId = projectId;
+    }
+
+    public String getProjectTitle() {
+        return projectTitle;
+    }
+
+    public void setProjectTitle(String projectTitle) {
+        this.projectTitle = projectTitle;
     }
 }

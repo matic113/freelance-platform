@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MessageResponse, ConversationResponse } from '@/types/api';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface ChatWindowProps {
   messages: MessageResponse[];
@@ -71,12 +72,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             </Button>
           )}
 
+          {conversation.type !== 'PROJECT_CHAT' && (
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={conversation.otherParticipantAvatar} />
+              <AvatarFallback>
+                {(conversation.otherParticipantName || 'U').charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+          )}
+
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold">{conversation.otherParticipantName}</h2>
+              {conversation.type === 'PROJECT_CHAT' && conversation.projectTitle ? (
+                <h2 className="font-semibold">{conversation.projectTitle} Project Chat</h2>
+              ) : (
+                <h2 className="font-semibold">{conversation.otherParticipantName}</h2>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {conversation.otherParticipantEmail}
+              {conversation.type === 'PROJECT_CHAT' 
+                ? `with ${conversation.otherParticipantName}`
+                : conversation.otherParticipantEmail
+              }
             </p>
           </div>
         </div>

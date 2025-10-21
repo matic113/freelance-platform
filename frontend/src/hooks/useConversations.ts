@@ -159,3 +159,56 @@ export const useConversations = () => {
     isSending: sendMessage.isPending,
   };
 };
+
+/**
+ * Hook for fetching direct message conversations only
+ */
+export const useDirectMessages = (page: number = 0, size: number = 20) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['directMessages', user?.id, page],
+    queryFn: () => conversationService.getConversationsByType('DIRECT_MESSAGE', page, size),
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+/**
+ * Hook for fetching project chat conversations only
+ */
+export const useProjectChats = (page: number = 0, size: number = 20) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['projectChats', user?.id, page],
+    queryFn: () => conversationService.getConversationsByType('PROJECT_CHAT', page, size),
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+/**
+ * Hook for getting a specific project conversation
+ */
+export const useProjectConversation = (projectId: string | null) => {
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['projectConversation', projectId],
+    queryFn: () => conversationService.getProjectConversation(projectId!),
+    enabled: !!projectId,
+    staleTime: 1000 * 60, // 1 minute
+  });
+
+  const openProjectChat = (conversationId: string) => {
+    queryClient.setQueryData(['selectedConversation'], conversationId);
+  };
+
+  return {
+    conversation: data,
+    isLoading,
+    error,
+    openProjectChat,
+  };
+};

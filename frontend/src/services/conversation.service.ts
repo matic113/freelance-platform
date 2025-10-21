@@ -180,4 +180,32 @@ export const conversationService = {
       `/users/search-for-messaging?searchTerm=${encodeURIComponent(searchTerm)}&page=${page}&size=${size}`
     );
   },
+
+  /**
+   * Get or create a project conversation
+   * 
+   * @param projectId - ID of the project
+   * @returns ConversationResponse with the project conversation
+   */
+  getProjectConversation: async (projectId: string): Promise<ConversationResponse> => {
+    return apiService.get<ConversationResponse>(`/conversations/project/${projectId}`);
+  },
+
+  /**
+   * Get conversations filtered by type
+   * 
+   * @param type - Conversation type ('DIRECT_MESSAGE' or 'PROJECT_CHAT')
+   * @param page - Page number (0-indexed)
+   * @param size - Number of conversations per page
+   * @returns PageResponse containing filtered conversations
+   */
+  getConversationsByType: async (
+    type: 'DIRECT_MESSAGE' | 'PROJECT_CHAT',
+    page: number = 0,
+    size: number = 20
+  ): Promise<PageResponse<ConversationResponse>> => {
+    return apiService.get<PageResponse<ConversationResponse>>(
+      `/conversations/filter?type=${type}&page=${page}&size=${size}`
+    );
+  },
 };

@@ -98,6 +98,7 @@ export default function Messages() {
   const [replyTo, setReplyTo] = useState<any>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [activeTab, setActiveTab] = useState<'direct' | 'project'>('direct');
   const fileInputRef = useRef<HTMLInputElement>(null);
    const messagesContainerRef = useRef<HTMLDivElement>(null);
    const mainContainerRef = useRef<HTMLDivElement>(null);
@@ -430,11 +431,20 @@ export default function Messages() {
 
 
   // Filter conversations based on search term
-  const filteredConversations = conversations.filter(conv => 
-    (conv.otherParticipantName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (conv.otherParticipantEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (conv.lastMessagePreview || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredConversations = conversations.filter(conv => {
+    // Filter by type based on active tab
+    const typeMatches = activeTab === 'direct' 
+      ? conv.type === 'DIRECT_MESSAGE' 
+      : conv.type === 'PROJECT_CHAT';
+    
+    if (!typeMatches) return false;
+    
+    // Filter by search term
+    return (conv.otherParticipantName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (conv.otherParticipantEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (conv.projectTitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (conv.lastMessagePreview || '').toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   // Get current conversation data
   const currentConversation = conversations.find(conv => conv.id === selectedChat);
@@ -468,6 +478,18 @@ export default function Messages() {
                     <span className="text-xs sm:text-sm">{isRTL ? "محادثة جديدة" : "New Chat"}</span>
                   </Button>
                 </div>
+                
+                {/* Tabs for Direct Messages and Project Chats */}
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'direct' | 'project')} className="w-full mb-3">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="direct" className="text-xs sm:text-sm">
+                      {isRTL ? "رسائل مباشرة" : "Direct Messages"}
+                    </TabsTrigger>
+                    <TabsTrigger value="project" className="text-xs sm:text-sm">
+                      {isRTL ? "مشاريع" : "Projects"}
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 
                 {/* Search */}
                 <div className="relative w-full">
@@ -516,7 +538,7 @@ export default function Messages() {
                            )}
                            onClick={() => handleChatSelect(conversation.id)}
                          >
-                           <div className="flex items-start gap-3">
+                           <div className="flex items-center gap-3">
                              <div className="relative">
                                <Avatar className="h-12 w-12">
                                  <AvatarImage src={conversation.otherParticipantAvatar} />
@@ -529,12 +551,20 @@ export default function Messages() {
                              <div className="flex-1 min-w-0">
                                <div className="flex items-center justify-between mb-1">
                                  <h3 className="font-semibold text-sm truncate">
-                                   {conversation.otherParticipantName}
+                                   {conversation.type === 'PROJECT_CHAT' && conversation.projectTitle
+                                     ? conversation.projectTitle
+                                     : conversation.otherParticipantName}
                                  </h3>
                                  <span className="text-xs text-gray-500">
                                    {new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                  </span>
                                </div>
+                               
+                               {conversation.type === 'PROJECT_CHAT' && (
+                                 <p className="text-xs text-gray-500 truncate mb-1">
+                                   {isRTL ? "مع" : "with"} {conversation.otherParticipantName}
+                                 </p>
+                               )}
                                
                                <p className="text-sm text-gray-600 truncate mb-1">
                                  {getMessagePreview(conversation.lastMessagePreview, isCurrentUserSender, isRTL)}
@@ -568,19 +598,25 @@ export default function Messages() {
                   <CardHeader className="border-b pb-3 sm:pb-4 flex-shrink-0">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <Avatar className="h-8 sm:h-10 w-8 sm:w-10 flex-shrink-0">
-                          <AvatarImage src={currentConversation?.otherParticipantAvatar} />
-                          <AvatarFallback>
-                            {(currentConversation?.otherParticipantName || 'U').charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
+                        {currentConversation?.type !== 'PROJECT_CHAT' && (
+                          <Avatar className="h-8 sm:h-10 w-8 sm:w-10 flex-shrink-0">
+                            <AvatarImage src={currentConversation?.otherParticipantAvatar} />
+                            <AvatarFallback>
+                              {(currentConversation?.otherParticipantName || 'U').charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
                         <div className="min-w-0">
                           <h3 className="font-semibold text-sm sm:text-base truncate">
-                            {currentConversation?.otherParticipantName || 'Unknown User'}
+                            {currentConversation?.type === 'PROJECT_CHAT' && currentConversation?.projectTitle
+                              ? currentConversation.projectTitle + ' Project Chat'
+                              : currentConversation?.otherParticipantName || 'Unknown User'}
                           </h3>
                           <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 truncate">
                             <span className="text-gray-500 truncate">
-                              {currentConversation?.otherParticipantEmail}
+                              {currentConversation?.type === 'PROJECT_CHAT'
+                                ? `with ${currentConversation?.otherParticipantName}`
+                                : currentConversation?.otherParticipantEmail}
                             </span>
                           </div>
                         </div>
