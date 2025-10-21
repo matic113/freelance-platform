@@ -79,17 +79,8 @@ export const useUserReviewStatistics = (userId: string) => {
 export const useSearchReviews = (query: string, page: number = 0, size: number = 20) => {
   return useQuery({
     queryKey: reviewKeys.search(query),
-    queryFn: () => reviewService.searchReviews(query, page, size),
+  queryFn: () => reviewService.searchReviews(query, page, size),
     enabled: !!query,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-// Test API endpoint
-export const useTestReviewsApi = () => {
-  return useQuery({
-    queryKey: ['reviews', 'test'],
-    queryFn: () => reviewService.testApi(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

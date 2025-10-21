@@ -32,7 +32,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { ReviewForm } from '@/components/reviews/ReviewCard';
-import { useUserReviewStatistics, useSearchReviews, useTestReviewsApi, useMyReviews, useCreateReview, useUpdateReview, useDeleteReview } from '@/hooks/useReviews';
+import { useUserReviewStatistics, useSearchReviews, useMyReviews, useCreateReview, useUpdateReview, useDeleteReview } from '@/hooks/useReviews';
 import type { ReviewResponse } from '@/types/api';
 import { UserType } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -148,12 +148,10 @@ function ReviewsPageContent() {
     }
   };
 
-  // Backend API calls with error handling
-  const { data: myReviewsData, isLoading: myReviewsLoading, error: myReviewsError } = useMyReviews(0, 20);
-  const { data: statisticsData, isLoading: statsLoading, error: statsError } = useUserReviewStatistics(currentUserId);
-  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchReviews(searchTerm, 0, 20);
-  // Test API endpoint
-  const { data: testData, isLoading: testLoading, error: testError } = useTestReviewsApi();
+   // Backend API calls with error handling
+   const { data: myReviewsData, isLoading: myReviewsLoading, error: myReviewsError } = useMyReviews(0, 20);
+   const { data: statisticsData, isLoading: statsLoading, error: statsError } = useUserReviewStatistics(currentUserId);
+   const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchReviews(searchTerm, 0, 20);
 
 
 
@@ -332,603 +330,393 @@ function ReviewsPageContent() {
           </p>
         </div>
 
-        {/* Reviews Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? 'متوسط التقييم' : 'Average Rating'}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-3xl font-bold text-[#0A2540]">{averageRating}</span>
-                    {(() => {
-                      const stars = Math.round(Number(averageRating));
-                      return (
-                        <div className="flex items-center gap-1">
-                          {[1,2,3,4,5].map(star => (
-                            <Star key={star} className={cn('h-5 w-5', star <= stars ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <p className="text-xs text-green-600 mt-1">
-                    +0.2 {isRTL ? 'من الشهر الماضي' : 'from last month'}
-                  </p>
-                </div>
-                <Award className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? 'إجمالي التقييمات' : 'Total Reviews'}
-                  </p>
-                  <p className="text-3xl font-bold text-[#0A2540]">{receivedReviews.length}</p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    +3 {isRTL ? 'هذا الشهر' : 'this month'}
-                  </p>
-                </div>
-                <FileText className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? 'تقييمات إيجابية' : 'Positive Reviews'}
-                  </p>
-                  <p className="text-3xl font-bold text-green-600">
-                    {receivedReviews.filter(r => r.rating >= 4).length}
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    {receivedReviews.length > 0 
-                      ? Math.round((receivedReviews.filter(r => r.rating >= 4).length / receivedReviews.length) * 100)
-                      : 0}% {isRTL ? 'من الإجمالي' : 'of total'}
-                  </p>
-                </div>
-                <ThumbsUp className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? 'معدل الاستجابة' : 'Response Rate'}
-                  </p>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {receivedReviews.length > 0 ? 0 : 0}%
-                  </p>
-                  <p className="text-xs text-purple-600 mt-1">
-                    0 {isRTL ? 'رد' : 'responses'}
-                  </p>
-                </div>
-                <MessageCircle className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Rating Distribution */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[5, 4, 3, 2, 1].map((rating) => {
-                const count = distribution[rating as keyof typeof distribution];
-                const percentage = receivedReviews.length > 0 ? (count / receivedReviews.length) * 100 : 0;
-                const isEmpty = count === 0;
-                
-                return (
-                  <div key={rating} className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 w-20">
-                      <span className="text-sm font-medium">{rating}</span>
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            isEmpty 
-                              ? 'bg-gray-300' 
-                              : rating >= 4 
-                                ? 'bg-green-500' 
-                                : rating >= 3 
-                                  ? 'bg-yellow-500' 
-                                  : 'bg-red-500'
-                          }`}
-                          style={{ width: isEmpty ? '0%' : `${percentage}%` }}
-                        />
+         {/* Reviews Summary & Distribution - Left Column */}
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           {/* Left Column: Cards and Distribution */}
+           <div className="lg:col-span-1 space-y-6">
+             {/* Top Cards Grid (2x2) */}
+             <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">
+                        {isRTL ? 'متوسط التقييم' : 'Avg Rating'}
+                      </p>
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-2xl font-bold text-[#0A2540]">{averageRating}</span>
                       </div>
+                      {(() => {
+                        const stars = Math.round(Number(averageRating));
+                        return (
+                          <div className="flex items-center gap-0.5">
+                            {[1,2,3,4,5].map(star => (
+                              <Star key={star} className={cn('h-3 w-3', star <= stars ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                            ))}
+                          </div>
+                        );
+                      })()}
+                      <Award className="h-5 w-5 text-yellow-500 mt-2" />
                     </div>
-                    <span className="text-sm text-gray-600 w-12 text-right">
-                      {count}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  </CardContent>
+                </Card>
 
-        {/* Test API Status */}
-        {testData && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-              <span className="text-green-700">
-                {isRTL ? 'واجهة برمجة التطبيقات تعمل بنجاح' : 'API is working successfully'}
-              </span>
-            </div>
-            <p className="text-sm text-green-600 mt-1">
-              {isRTL ? 'تم الاتصال بالخادم بنجاح' : 'Successfully connected to server'}
-            </p>
-          </div>
-        )}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">
+                        {isRTL ? 'إجمالي' : 'Total'}
+                      </p>
+                      <p className="text-2xl font-bold text-[#0A2540] mb-2">{receivedReviews.length}</p>
+                      <FileText className="h-5 w-5 text-blue-500" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-        {/* Loading State */}
-        {(myReviewsLoading || statsLoading || testLoading) && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-12 w-12 text-gray-400 animate-spin" />
-            <span className="ml-3 text-gray-600">
-              {isRTL ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}
-            </span>
-          </div>
-        )}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">
+                        {isRTL ? 'إيجابية' : 'Positive'}
+                      </p>
+                      <p className="text-2xl font-bold text-green-600 mb-1">
+                        {receivedReviews.filter(r => r.rating >= 4).length}
+                      </p>
+                      <p className="text-xs text-green-600">
+                        {receivedReviews.length > 0 
+                          ? Math.round((receivedReviews.filter(r => r.rating >= 4).length / receivedReviews.length) * 100)
+                          : 0}%
+                      </p>
+                      <ThumbsUp className="h-5 w-5 text-green-500 mt-1" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-        {/* Error State */}
-        {(myReviewsError || statsError || searchError || testError) && (
-          <div className="flex items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-red-400" />
-            <div className="ml-3 text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {isRTL ? 'خطأ في التحميل' : 'Error Loading Reviews'}
-              </h3>
-              <p className="text-gray-500">
-                {isRTL 
-                  ? 'حدث خطأ أثناء جلب التقييمات. سيتم عرض البيانات الافتراضية.'
-                  : "An error occurred while fetching reviews. Showing default data."
-                }
-              </p>
-              <p className="text-xs text-gray-400 mt-2">
-                {isRTL 
-                  ? 'قد يكون الخادم غير متاح أو هناك مشكلة في الاتصال.'
-                  : "Server may be unavailable or there's a connection issue."
-                }
-              </p>
-            </div>
-          </div>
-        )}
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* Mobile-first responsive tabs */}
-          <div className="space-y-4 mb-6">
-            {/* Tabs */}
-            <TabsList className="grid w-full grid-cols-3 h-auto p-1">
-              <TabsTrigger value="received" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center">
-                <span className="hidden sm:inline">
-                  {isRTL ? 'التقييمات المستلمة' : 'Received Reviews'}
-                </span>
-                <span className="sm:hidden">
-                  {isRTL ? 'مستلمة' : 'Received'}
-                </span>
-                <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0.5">
-                  {receivedReviews.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="sent" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center">
-                <span className="hidden sm:inline">
-                  {isRTL ? 'التقييمات المرسلة' : 'Sent Reviews'}
-                </span>
-                <span className="sm:hidden">
-                  {isRTL ? 'مرسلة' : 'Sent'}
-                </span>
-                <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0.5">
-                  {sentReviews.length}
-                </Badge>
-              </TabsTrigger>
-               <TabsTrigger value="statistics" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center h-full">
-                 <div className="flex flex-col items-center justify-center h-full">
-                   <span className="hidden sm:inline">
-                     {isRTL ? 'الإحصائيات' : 'Statistics'}
-                   </span>
-                   <span className="sm:hidden">
-                     {isRTL ? 'إحصائيات' : 'Stats'}
-                   </span>
-                 </div>
-               </TabsTrigger>
-            </TabsList>
-
-            {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={isRTL ? 'البحث في التقييمات...' : 'Search reviews...'}
-                  className={cn('pl-9 h-10', isRTL && 'pr-9 text-right')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-xs font-medium text-gray-600 mb-2">
+                        {isRTL ? 'أعلى تقييم' : 'Highest'}
+                      </p>
+                      <p className="text-2xl font-bold text-yellow-600 mb-2">
+                        {receivedReviews.length > 0 ? Math.max(...receivedReviews.map(r => r.rating)) : 0}
+                      </p>
+                      <Award className="h-5 w-5 text-yellow-500" />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                <SelectTrigger className="w-full sm:w-[180px] h-10">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder={isRTL ? 'تصفية حسب التقييم' : 'Filter by Rating'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                  <SelectItem value="5">5 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
-                  <SelectItem value="4">4 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
-                  <SelectItem value="3">3 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
-                  <SelectItem value="2">2 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
-                  <SelectItem value="1">1 {isRTL ? 'نجمة' : 'Star'}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-           {/* Received Reviews Tab */}
-           <TabsContent value="received" className="space-y-6">
-             {receivedReviews.length > 0 ? (
-               receivedReviews.map((review) => {
-                 const otherPartyName = review.reviewerName || (isRTL ? 'مستخدم' : 'User');
+             {/* Rating Distribution */}
+             <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <TrendingUp className="h-4 w-4" />
+                  {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((rating) => {
+                    const count = distribution[rating as keyof typeof distribution];
+                    const percentage = receivedReviews.length > 0 ? (count / receivedReviews.length) * 100 : 0;
+                    const isEmpty = count === 0;
+                    
+                    return (
+                      <div key={rating} className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 w-16">
+                          <span className="text-xs font-medium">{rating}</span>
+                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                isEmpty 
+                                  ? 'bg-gray-300' 
+                                  : rating >= 4 
+                                    ? 'bg-green-500' 
+                                    : rating >= 3 
+                                      ? 'bg-yellow-500' 
+                                      : 'bg-red-500'
+                              }`}
+                              style={{ width: isEmpty ? '0%' : `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-600 w-8 text-right">
+                          {count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+           </div>
 
-                 return (
-                   <Card key={review.id} className="hover:shadow-md transition-shadow">
-                     <CardContent className="p-6">
-                       <div className="flex items-start justify-between mb-4">
-                         <div className="flex items-start gap-4">
-                           <Avatar className="h-12 w-12">
-                             <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
-                             <AvatarFallback>
-                               {otherPartyName.charAt(0)}
-                             </AvatarFallback>
-                           </Avatar>
-                           <div className="flex-1">
-                             <div className="flex items-center gap-2 mb-2">
-                               <h3 className="font-semibold text-lg">
-                                 {otherPartyName}
-                               </h3>
-                             </div>
-                             <div className="flex items-center gap-4 mb-3">
-                               {(() => (
-                                 <div className="flex items-center gap-1">
-                                   {[1,2,3,4,5].map((s) => (
-                                     <Star key={s} className={cn('h-4 w-4', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
-                                   ))}
-                                 </div>
-                               ))()}
-                               <span className="text-sm text-gray-500">
-                                 {new Date(review.createdAt).toLocaleDateString()}
-                               </span>
-                               <Badge variant="outline">
-                                 {review.projectName || (isRTL ? 'مشروع' : 'Project')}
-                               </Badge>
-                             </div>
-                             <p className="text-gray-700 mb-4">{review.comment}</p>
-                           </div>
-                         </div>
-                         
-                         <div className="flex items-center gap-2">
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => handleMarkHelpful(review.id)}
-                           >
-                             <ThumbsUp className="h-4 w-4 mr-1" />
-                             0
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => handleReportReview(review.id)}
-                           >
-                             <Flag className="h-4 w-4" />
-                           </Button>
-                         </div>
-                       </div>
-                     </CardContent>
-                   </Card>
-                 );
-               })
-             ) : (
-               <Card>
-                 <CardContent className="p-8 text-center">
-                   <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                     {isRTL ? 'لا توجد تقييمات مستلمة' : 'No Received Reviews'}
-                   </h3>
-                   <p className="text-gray-500">
-                     {isRTL 
-                       ? 'ستظهر التقييمات التي تلقيتها من العملاء أو المستقلين هنا'
-                       : 'Reviews you receive from clients or freelancers will appear here'
-                     }
-                   </p>
-                 </CardContent>
-               </Card>
-             )}
-           </TabsContent>
+           {/* Right Column: Reviews - starts at top */}
+           <div className="lg:col-span-2">
+             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+               {/* Mobile-first responsive tabs */}
+               <div className="space-y-4 mb-6">
+                 {/* Tabs */}
+                  <TabsList className="grid w-full grid-cols-2 h-auto p-1">
+                    <TabsTrigger value="received" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center">
+                      <span className="hidden sm:inline">
+                        {isRTL ? 'التقييمات المستلمة' : 'Received Reviews'}
+                      </span>
+                      <span className="sm:hidden">
+                        {isRTL ? 'مستلمة' : 'Received'}
+                      </span>
+                      <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0.5">
+                        {receivedReviews.length}
+                      </Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="sent" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center">
+                      <span className="hidden sm:inline">
+                        {isRTL ? 'التقييمات المرسلة' : 'Sent Reviews'}
+                      </span>
+                      <span className="sm:hidden">
+                        {isRTL ? 'مرسلة' : 'Sent'}
+                      </span>
+                      <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0.5">
+                        {sentReviews.length}
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
 
-           {/* Sent Reviews Tab */}
-           <TabsContent value="sent" className="space-y-6">
-             {sentReviews.length > 0 ? (
-               sentReviews.map((review) => {
-                 const otherPartyName = review.revieweeName || (isRTL ? 'مستخدم' : 'User');
+                 {/* Search and Filter */}
+                 <div className="flex flex-col sm:flex-row gap-3">
+                   <div className="relative flex-1">
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <Input
+                       placeholder={isRTL ? 'البحث في التقييمات...' : 'Search reviews...'}
+                       className={cn('pl-9 h-10', isRTL && 'pr-9 text-right')}
+                       value={searchTerm}
+                       onChange={(e) => setSearchTerm(e.target.value)}
+                     />
+                   </div>
+                   <Select value={ratingFilter} onValueChange={setRatingFilter}>
+                     <SelectTrigger className="w-full sm:w-[180px] h-10">
+                       <Filter className="h-4 w-4 mr-2" />
+                       <SelectValue placeholder={isRTL ? 'تصفية حسب التقييم' : 'Filter by Rating'} />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                       <SelectItem value="5">5 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                       <SelectItem value="4">4 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                       <SelectItem value="3">3 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                       <SelectItem value="2">2 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                       <SelectItem value="1">1 {isRTL ? 'نجمة' : 'Star'}</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
 
-                 return (
-                   <Card key={review.id} className="hover:shadow-md transition-shadow">
-                     <CardContent className="p-6">
-                       <div className="flex items-start justify-between mb-4">
-                         <div className="flex items-start gap-4">
-                           <Avatar className="h-12 w-12">
-                             <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
-                             <AvatarFallback>
-                               {otherPartyName.charAt(0)}
-                             </AvatarFallback>
-                           </Avatar>
-                           <div className="flex-1">
-                             <div className="flex items-center gap-2 mb-2">
-                               <h3 className="font-semibold text-lg">
-                                 {otherPartyName}
-                               </h3>
-                             </div>
-                             <div className="flex items-center gap-4 mb-3">
-                               {(() => (
-                                 <div className="flex items-center gap-1">
-                                   {[1,2,3,4,5].map((s) => (
-                                     <Star key={s} className={cn('h-4 w-4', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
-                                   ))}
-                                 </div>
-                               ))()}
-                               <span className="text-sm text-gray-500">
-                                 {new Date(review.createdAt).toLocaleDateString()}
-                               </span>
-                               <Badge variant="outline">
-                                 {review.projectName || (isRTL ? 'مشروع' : 'Project')}
-                               </Badge>
-                             </div>
-                             <p className="text-gray-700 mb-4">{review.comment}</p>
-                           </div>
-                         </div>
-                         
-                         <div className="flex items-center gap-2">
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => handleEditReview(review)}
-                           >
-                             <Edit className="h-4 w-4" />
-                           </Button>
-                           <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => {
-                               setReviewToDelete(review.id);
-                               setShowDeleteDialog(true);
-                             }}
-                           >
-                             <Trash2 className="h-4 w-4" />
-                           </Button>
-                         </div>
-                       </div>
-                     </CardContent>
-                   </Card>
-                 );
-               })
-             ) : (
-               <Card>
-                 <CardContent className="p-8 text-center">
-                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                     {isRTL ? 'لا توجد تقييمات مرسلة' : 'No Sent Reviews'}
-                   </h3>
-                   <p className="text-gray-500 mb-4">
-                     {isRTL 
-                       ? 'لم ترسل أي تقييمات بعد. ابدأ بتقييم المشاريع المكتملة'
-                       : "You haven't sent any reviews yet. Start by reviewing completed projects"
-                     }
-                   </p>
-                   <Button onClick={() => setShowReviewForm(true)}>
-                     <Plus className="h-4 w-4 mr-2" />
-                     {isRTL ? 'كتابة تقييم جديد' : 'Write New Review'}
-                   </Button>
-                 </CardContent>
-               </Card>
-             )}
-           </TabsContent>
+                 {/* Received Reviews Tab */}
+                 <TabsContent value="received" className="space-y-6">
+               {receivedReviews.length > 0 ? (
+                 receivedReviews.map((review) => {
+                   const otherPartyName = review.reviewerName || (isRTL ? 'مستخدم' : 'User');
 
-           {/* Statistics Tab */}
-           <TabsContent value="statistics" className="space-y-6">
-             {statsLoading ? (
+                   return (
+                     <Card key={review.id} className="hover:shadow-md transition-shadow">
+                       <CardContent className="p-6">
+                         <div className="flex items-start justify-between mb-4">
+                           <div className="flex items-start gap-4">
+                             <Avatar className="h-12 w-12">
+                               <AvatarImage src={review.reviewerProfilePicture || undefined} />
+                               <AvatarFallback>
+                                 {otherPartyName.charAt(0)}
+                               </AvatarFallback>
+                             </Avatar>
+                             <div className="flex-1">
+                               <div className="flex items-center gap-2 mb-2">
+                                 <span className="text-sm text-gray-500 font-medium">
+                                   {isRTL ? 'من' : 'From'}
+                                 </span>
+                                 <h3 className="font-semibold text-lg">
+                                   {otherPartyName}
+                                 </h3>
+                               </div>
+                              <div className="flex items-center gap-4 mb-3">
+                                {(() => (
+                                  <div className="flex items-center gap-1">
+                                    {[1,2,3,4,5].map((s) => (
+                                      <Star key={s} className={cn('h-4 w-4', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                                    ))}
+                                  </div>
+                                ))()}
+                                <span className="text-sm text-gray-500">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </span>
+                                <Badge variant="outline">
+                                  {review.projectName || (isRTL ? 'مشروع' : 'Project')}
+                                </Badge>
+                              </div>
+                              <p className="text-gray-700 mb-4">{review.comment}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleReportReview(review.id)}
+                            >
+                              <Flag className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                   );
+                 })
+               ) : (
+                 <Card>
+                   <CardContent className="p-8 text-center">
+                     <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {isRTL ? 'لا توجد تقييمات مستلمة' : 'No Received Reviews'}
+                    </h3>
+                    <p className="text-gray-500">
+                      {isRTL 
+                        ? 'ستظهر التقييمات التي تلقيتها من العملاء أو المستقلين هنا'
+                        : 'Reviews you receive from clients or freelancers will appear here'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+                {/* Sent Reviews Tab */}
+                 <TabsContent value="sent" className="space-y-6">
+               {sentReviews.length > 0 ? (
+                 sentReviews.map((review) => {
+                   const otherPartyName = review.revieweeName || (isRTL ? 'مستخدم' : 'User');
+
+                   return (
+                     <Card key={review.id} className="hover:shadow-md transition-shadow">
+                       <CardContent className="p-6">
+                         <div className="flex items-start justify-between mb-4">
+                           <div className="flex items-start gap-4">
+                             <Avatar className="h-12 w-12">
+                               <AvatarImage src={review.revieweeProfilePicture || undefined} />
+                               <AvatarFallback>
+                                 {otherPartyName.charAt(0)}
+                               </AvatarFallback>
+                             </Avatar>
+                             <div className="flex-1">
+                               <div className="flex items-center gap-2 mb-2">
+                                 <span className="text-sm text-gray-500 font-medium">
+                                   {isRTL ? 'إلى' : 'To'}
+                                 </span>
+                                 <h3 className="font-semibold text-lg">
+                                   {otherPartyName}
+                                 </h3>
+                               </div>
+                              <div className="flex items-center gap-4 mb-3">
+                                {(() => (
+                                  <div className="flex items-center gap-1">
+                                    {[1,2,3,4,5].map((s) => (
+                                      <Star key={s} className={cn('h-4 w-4', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                                    ))}
+                                  </div>
+                                ))()}
+                                <span className="text-sm text-gray-500">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </span>
+                                <Badge variant="outline">
+                                  {review.projectName || (isRTL ? 'مشروع' : 'Project')}
+                                </Badge>
+                              </div>
+                              <p className="text-gray-700 mb-4">{review.comment}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditReview(review)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setReviewToDelete(review.id);
+                                setShowDeleteDialog(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {isRTL ? 'لا توجد تقييمات مرسلة' : 'No Sent Reviews'}
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      {isRTL 
+                        ? 'لم ترسل أي تقييمات بعد. ابدأ بتقييم المشاريع المكتملة'
+                        : "You haven't sent any reviews yet. Start by reviewing completed projects"
+                      }
+                    </p>
+                    <Button onClick={() => setShowReviewForm(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {isRTL ? 'كتابة تقييم جديد' : 'Write New Review'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+                </TabsContent>
+             </Tabs>
+
+             {/* Loading State */}
+             {(myReviewsLoading || statsLoading) && (
                <div className="flex items-center justify-center py-12">
-                 <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                 <Loader2 className="h-12 w-12 text-gray-400 animate-spin" />
                  <span className="ml-3 text-gray-600">
-                   {isRTL ? 'جاري تحميل الإحصائيات...' : 'Loading statistics...'}
+                   {isRTL ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}
                  </span>
                </div>
-             ) : statsError ? (
-               <Card>
-                 <CardContent className="p-8 text-center">
-                   <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                     {isRTL ? 'خطأ في تحميل الإحصائيات' : 'Error Loading Statistics'}
-                   </h3>
-                   <p className="text-gray-500">
-                     {isRTL 
-                       ? 'حدث خطأ أثناء جلب إحصائيات التقييمات'
-                       : 'An error occurred while fetching review statistics'
-                     }
-                   </p>
-                 </CardContent>
-               </Card>
-             ) : (
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 {/* Review Statistics Summary */}
-                 <Card>
-                   <CardHeader>
-                     <CardTitle className="flex items-center gap-2">
-                       <BarChart3 className="h-5 w-5" />
-                       {isRTL ? 'ملخص الإحصائيات' : 'Statistics Summary'}
-                     </CardTitle>
-                   </CardHeader>
-                   <CardContent>
-                     <div className="space-y-4">
-                       <div className="grid grid-cols-2 gap-4">
-                         <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? 'متوسط التقييم' : 'Average Rating'}</p>
-                           <p className="text-2xl font-bold text-[#0A2540]">{averageRating}</p>
-                           <div className="flex items-center justify-center gap-1">
-                             {[1,2,3,4,5].map((s) => (
-                               <Star key={s} className={cn('h-4 w-4', s <= Math.round(Number(averageRating)) ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
-                             ))}
-                           </div>
-                         </div>
-                         <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? 'إجمالي التقييمات' : 'Total Reviews'}</p>
-                           <p className="text-2xl font-bold text-[#0A2540]">{receivedReviews.length}</p>
-                         </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4">
-                         <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? 'تقييمات إيجابية' : 'Positive Reviews'}</p>
-                           <p className="text-2xl font-bold text-green-600">
-                             {receivedReviews.filter(r => r.rating >= 4).length}
-                           </p>
-                           <p className="text-xs text-gray-500">
-                             {receivedReviews.length > 0 
-                               ? Math.round((receivedReviews.filter(r => r.rating >= 4).length / receivedReviews.length) * 100)
-                               : 0}%
-                           </p>
-                         </div>
-                         <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? 'أعلى تقييم' : 'Highest Rating'}</p>
-                           <p className="text-2xl font-bold text-yellow-600">
-                             {receivedReviews.length > 0 ? Math.max(...receivedReviews.map(r => r.rating)) : 0}
-                           </p>
-                         </div>
-                       </div>
-                     </div>
-                   </CardContent>
-                 </Card>
-
-                 {/* Rating Distribution */}
-                 <Card>
-                   <CardHeader>
-                     <CardTitle className="flex items-center gap-2">
-                       <TrendingUp className="h-5 w-5" />
-                       {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
-                     </CardTitle>
-                   </CardHeader>
-                   <CardContent>
-                     <div className="space-y-4">
-                       {[5, 4, 3, 2, 1].map((rating) => {
-                         const count = distribution[rating as keyof typeof distribution];
-                         const percentage = receivedReviews.length > 0 ? (count / receivedReviews.length) * 100 : 0;
-                         const isEmpty = count === 0;
-                         
-                         return (
-                           <div key={rating} className="flex items-center gap-4">
-                             <div className="flex items-center gap-2 w-20">
-                               <span className="text-sm font-medium">{rating}</span>
-                               <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                             </div>
-                             <div className="flex-1">
-                               <div className="w-full bg-gray-200 rounded-full h-2">
-                                 <div 
-                                   className={`h-2 rounded-full transition-all duration-300 ${
-                                     isEmpty 
-                                       ? 'bg-gray-300' 
-                                       : rating >= 4 
-                                         ? 'bg-green-500' 
-                                         : rating >= 3 
-                                           ? 'bg-yellow-500' 
-                                           : 'bg-red-500'
-                                   }`}
-                                   style={{ width: isEmpty ? '0%' : `${percentage}%` }}
-                                 />
-                               </div>
-                             </div>
-                             <span className="text-sm text-gray-600 w-12 text-right">
-                               {count}
-                             </span>
-                           </div>
-                         );
-                       })}
-                     </div>
-                   </CardContent>
-                 </Card>
-
-                 {/* Recent Reviews */}
-                 <Card className="lg:col-span-2">
-                   <CardHeader>
-                     <CardTitle className="flex items-center gap-2">
-                       <Clock className="h-5 w-5" />
-                       {isRTL ? 'أحدث التقييمات' : 'Recent Reviews'}
-                     </CardTitle>
-                   </CardHeader>
-                    <CardContent>
-                      {receivedReviews.length > 0 ? (
-                        <div className="space-y-4">
-                          {receivedReviews.slice(0, 5).map((review) => {
-                            const otherPartyName = review.reviewerName || (isRTL ? 'مستخدم' : 'User');
-                            
-                            return (
-                              <div key={review.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
-                                  <AvatarFallback>
-                                    {otherPartyName.charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-medium text-sm">{otherPartyName}</h4>
-                                    <div className="flex items-center gap-1">
-                                      {[1,2,3,4,5].map((s) => (
-                                        <Star key={s} className={cn('h-3 w-3', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <p className="text-sm text-gray-600 mb-1">{review.projectName || (isRTL ? 'مشروع' : 'Project')}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {new Date(review.createdAt).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500">
-                            {isRTL ? 'لا توجد تقييمات للعرض' : 'No reviews to display'}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                 </Card>
-               </div>
              )}
-           </TabsContent>
-        </Tabs>
+
+             {/* Error State */}
+             {(myReviewsError || statsError || searchError) && !myReviewsLoading && (
+              <div className="flex items-center justify-center py-12">
+                <AlertCircle className="h-12 w-12 text-red-400" />
+                <div className="ml-3 text-center">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {isRTL ? 'خطأ في التحميل' : 'Error Loading Reviews'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {isRTL 
+                      ? 'حدث خطأ أثناء جلب التقييمات. سيتم عرض البيانات الافتراضية.'
+                      : "An error occurred while fetching reviews. Showing default data."
+                    }
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {isRTL 
+                      ? 'قد يكون الخادم غير متاح أو هناك مشكلة في الاتصال.'
+                      : "Server may be unavailable or there's a connection issue."
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+           </div>
+         </div>
 
         {/* Review Form Dialog */}
         <Dialog open={showReviewForm} onOpenChange={setShowReviewForm}>

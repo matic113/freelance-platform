@@ -42,6 +42,12 @@ public class ReviewResponse {
     @Schema(description = "Project category", example = "Mobile Development")
     private String projectCategory;
 
+    @Schema(description = "Reviewer profile picture URL")
+    private String reviewerProfilePicture;
+
+    @Schema(description = "Reviewee profile picture URL")
+    private String revieweeProfilePicture;
+
     @Schema(description = "Review creation date")
     private LocalDateTime createdAt;
 
@@ -150,6 +156,22 @@ public class ReviewResponse {
 
     public void setProjectCategory(String projectCategory) {
         this.projectCategory = projectCategory;
+    }
+
+    public String getReviewerProfilePicture() {
+        return reviewerProfilePicture;
+    }
+
+    public void setReviewerProfilePicture(String reviewerProfilePicture) {
+        this.reviewerProfilePicture = reviewerProfilePicture;
+    }
+
+    public String getRevieweeProfilePicture() {
+        return revieweeProfilePicture;
+    }
+
+    public void setRevieweeProfilePicture(String revieweeProfilePicture) {
+        this.revieweeProfilePicture = revieweeProfilePicture;
     }
 
     public LocalDateTime getCreatedAt() {

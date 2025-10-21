@@ -50,7 +50,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={reviewerAvatar} alt={reviewerName} />
+            <AvatarImage src={review.reviewerProfilePicture || reviewerAvatar} alt={reviewerName} />
             <AvatarFallback className="bg-[#0A2540] text-white">
               {reviewerName.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>

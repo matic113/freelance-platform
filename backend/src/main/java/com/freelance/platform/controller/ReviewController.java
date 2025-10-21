@@ -71,16 +71,6 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
-    @GetMapping("/test")
-    @Operation(summary = "Test endpoint", description = "Simple test endpoint to verify API is working")
-    public ResponseEntity<Map<String, Object>> testEndpoint() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "Reviews API is working");
-        response.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping
     @Operation(summary = "Create review", description = "Create a new review")
     @ApiResponses(value = {

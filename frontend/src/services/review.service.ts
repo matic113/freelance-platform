@@ -6,11 +6,6 @@ import {
 } from '@/types/api';
 
 export const reviewService = {
-  // Test endpoint to verify API is working
-  testApi: async (): Promise<any> => {
-    return apiService.get('/reviews/test');
-  },
-
   // Get current user's reviews (both sent and received)
   getMyReviews: async (page: number = 0, size: number = 20): Promise<PageResponse<ReviewResponse>> => {
     return apiService.get<PageResponse<ReviewResponse>>('/reviews/my-reviews', {
