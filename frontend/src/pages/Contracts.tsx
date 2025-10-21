@@ -4,7 +4,7 @@ import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { cn, isFreelancerUser, isClientUser, getUserTypeString } from '@/lib/utils';
+import { cn, isFreelancer, isClient, getUserTypeString } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,8 +107,8 @@ export default function ContractsPage() {
   });
 
    // Determine user type from auth context
-   const isFreelancerUser = isFreelancerRole(user);
-   const isClientUser = isClientRole(user);
+   const isFreelancerUser = isFreelancer(user);
+   const isClientUser = isClient(user);
    const userType = getUserTypeString(user) || 'client';
 
   // Backend API hooks - only call endpoints based on user type
@@ -153,15 +153,19 @@ export default function ContractsPage() {
    const rejectContractMutation = useRejectContract();
 
   // Extract data from API responses
-  const contracts = [
-   ...(isClientUser ? (myContractsData?.content || []) : []),
-   ...(isFreelancerUser ? (freelancerContractsData?.content || []) : [])
+  const combinedContracts = [
+    ...(isClientUser ? (myContractsData?.content || []) : []),
+    ...(isFreelancerUser ? (freelancerContractsData?.content || []) : [])
   ];
+
+  const contracts = Array.from(new Map(combinedContracts.map(c => [c.id, c])).values());
   
-   const paymentRequests = [
+  const combinedPaymentRequests = [
     ...(isFreelancerUser ? (myPaymentRequestsData?.content || []) : []),
     ...(isClientUser ? (receivedPaymentRequestsData?.content || []) : [])
-   ];
+  ];
+
+  const paymentRequests = Array.from(new Map(combinedPaymentRequests.map(p => [p.id, p])).values());
 
    useEffect(() => {
      if (selectedContract) {
