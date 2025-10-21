@@ -99,6 +99,11 @@ public class ReviewService {
         review.setComment(request.getComment());
         review.setAdditionalFeedback(request.getAdditionalFeedback());
         review.setCreatedAt(LocalDateTime.now());
+        
+        if (contract != null && contract.getProject() != null) {
+            review.setProjectName(contract.getProject().getTitle());
+            review.setProjectCategory(contract.getProject().getCategory());
+        }
 
         Review savedReview = reviewRepository.save(review);
         
