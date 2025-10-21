@@ -17,6 +17,7 @@ export interface FreelancerDashboardData extends DashboardData {
   proposalSuccessRate: number;
   rating: number;
   activeContracts: ContractResponse[];
+  completedContracts: ContractResponse[];
   recentProposals: ProposalResponse[];
 }
 
@@ -38,15 +39,17 @@ export const useFreelancerDashboard = () => {
       const acceptedProposals = (proposalsRes as PageResponse<ProposalResponse>).content?.filter((p: ProposalResponse) => p.status === 'ACCEPTED').length || 0;
       const successRate = totalProposals > 0 ? Math.round((acceptedProposals / totalProposals) * 100) : 0;
 
-      const activeContracts = (contractsRes as PageResponse<ContractResponse>).content?.filter((c: ContractResponse) => c.status === 'ACTIVE') || [];
+       const activeContracts = (contractsRes as PageResponse<ContractResponse>).content?.filter((c: ContractResponse) => c.status === 'ACTIVE') || [];
+       const completedContracts = (contractsRes as PageResponse<ContractResponse>).content?.filter((c: ContractResponse) => c.status === 'COMPLETED') || [];
 
-      return {
-        ...baseData,
-        proposalSuccessRate: successRate,
-        rating: (profileRes as Record<string, unknown>)?.rating || 0,
-        activeContracts,
-        recentProposals: (proposalsRes as PageResponse<ProposalResponse>).content?.slice(0, 5) || []
-      };
+       return {
+         ...baseData,
+         proposalSuccessRate: successRate,
+         rating: (profileRes as Record<string, unknown>)?.rating || 0,
+         activeContracts,
+         completedContracts,
+         recentProposals: (proposalsRes as PageResponse<ProposalResponse>).content?.slice(0, 5) || []
+       };
     },
     enabled: !authLoading && !!user && user.userType === 'FREELANCER',
     staleTime: 2 * 60 * 1000,

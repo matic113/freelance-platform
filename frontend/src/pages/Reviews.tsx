@@ -1,174 +1,201 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Star, 
   Search, 
   Filter, 
   Plus, 
-  Calendar,
-  User,
-  MessageCircle,
-  ThumbsUp,
-  Eye,
   CheckCircle,
   AlertCircle,
+  MessageCircle,
+  ThumbsUp,
+  Flag,
+  Edit,
+  Trash2,
   Clock,
   Award,
   TrendingUp,
-  Users,
   FileText,
-  Edit,
-  Trash2,
-  Flag,
-  Shield,
-  Check,
-  X,
-  Send,
-  Reply,
-  Heart,
-  ThumbsDown,
   BarChart3,
-  Download,
-  FileSpreadsheet,
-  FileBarChart
+  Loader2
 } from 'lucide-react';
-import { ReviewCard, ReviewForm, ReviewsSummary } from '@/components/reviews/ReviewCard';
-import { Review } from '@/types/contract';
-import { useReviews, useUserReviewStatistics, useSearchReviews, useTestReviewsApi, useMyReviews } from '@/hooks/useReviews';
-import { ReviewResponse } from '@/types/api';
-import { Loader2 } from 'lucide-react';
+import { ReviewForm } from '@/components/reviews/ReviewCard';
+import { useUserReviewStatistics, useSearchReviews, useTestReviewsApi, useMyReviews, useCreateReview, useUpdateReview, useDeleteReview } from '@/hooks/useReviews';
+import type { ReviewResponse } from '@/types/api';
+import { UserType } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { reviewService } from '@/services/review.service';
+import { contractService } from '@/services/contract.service';
+import { projectService } from '@/services/project.service';
+import type { ContractResponse } from '@/types/contract';
+import { useToast } from '@/hooks/use-toast';
+
+// Local UI type derived from backend
+type UIReview = ReviewResponse & { type: 'client_to_freelancer' | 'freelancer_to_client' };
 
 function ReviewsPageContent() {
   const { isRTL, toggleLanguage } = useLocalization();
-  const { user, isAuthenticated } = useAuth();
+  const { user, activeRole } = useAuth();
+  const navigate = useNavigate();
+  const { contractId, projectId } = useParams<{ contractId?: string; projectId?: string }>();
+  const { toast } = useToast();
+
   const [activeTab, setActiveTab] = useState('received');
   const [searchTerm, setSearchTerm] = useState('');
   const [ratingFilter, setRatingFilter] = useState('all');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState('');
-  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [contractData, setContractData] = useState<Record<string, any> | null>(null);
+  const [revieweeData, setRevieweeData] = useState<{ id: string; name: string } | null>(null);
+  const [loadingContractData, setLoadingContractData] = useState(false);
+  const [editingReview, setEditingReview] = useState<UIReview | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+   const [reviewType, setReviewType] = useState<'client_to_freelancer' | 'freelancer_to_client'>('client_to_freelancer');
 
   // Get current user ID from auth context
-  const currentUserId = user?.id;
+  const currentUserId = user?.id || '';
+
+  useEffect(() => {
+    let cancelled = false;
+    const init = async () => {
+      if (contractId) {
+        const c = await fetchContractById(contractId);
+        if (!cancelled && c) {
+          setShowReviewForm(true);
+        }
+      } else if (projectId) {
+        const c = await resolveContractByProject(projectId);
+        if (!cancelled && c) {
+          setShowReviewForm(true);
+        }
+      }
+    };
+    init();
+    return () => { cancelled = true; };
+  }, [contractId, projectId, activeRole, currentUserId]);
+
+  const fetchContractById = async (id: string) => {
+    setLoadingContractData(true);
+    try {
+      const contract = await contractService.getContract(id);
+      setSelectedContractId(contract.id);
+      setContractData(contract as unknown as Record<string, any>);
+      if (currentUserId) {
+        if (contract.clientId === currentUserId) {
+          setRevieweeData({ id: contract.freelancerId, name: contract.freelancerName || 'Freelancer' });
+          setReviewType('client_to_freelancer');
+        } else if (contract.freelancerId === currentUserId) {
+          setRevieweeData({ id: contract.clientId, name: contract.clientName || 'Client' });
+          setReviewType('freelancer_to_client');
+        }
+      }
+      return contract;
+    } catch (error) {
+      console.error('Error fetching contract by id:', error);
+      return null;
+    } finally {
+      setLoadingContractData(false);
+    }
+  };
+
+  const resolveContractByProject = async (pid: string) => {
+    setLoadingContractData(true);
+    try {
+      const project = await projectService.getProject(pid);
+      // Try to fetch contracts list for current role and find matching project
+      const pageSize = 50;
+      const list = activeRole === UserType.CLIENT
+        ? await contractService.getMyContracts(0, pageSize)
+        : await contractService.getFreelancerContracts(0, pageSize);
+      const match = list.content.find(c => c.projectId === project.id);
+      if (match) {
+        setSelectedContractId(match.id);
+        setContractData(match as unknown as Record<string, any>);
+        if (currentUserId) {
+          if (match.clientId === currentUserId) {
+            setRevieweeData({ id: match.freelancerId, name: (match as any).freelancerName || 'Freelancer' });
+            setReviewType('client_to_freelancer');
+          } else if (match.freelancerId === currentUserId) {
+            setRevieweeData({ id: match.clientId, name: (match as any).clientName || 'Client' });
+            setReviewType('freelancer_to_client');
+          }
+        }
+        return match;
+      } else {
+        toast({ title: isRTL ? 'لم يتم العثور على عقد لهذا المشروع' : 'No contract found for this project' });
+        return null;
+      }
+    } catch (error) {
+      console.error('Error resolving contract by project:', error);
+      return null;
+    } finally {
+      setLoadingContractData(false);
+    }
+  };
 
   // Backend API calls with error handling
   const { data: myReviewsData, isLoading: myReviewsLoading, error: myReviewsError } = useMyReviews(0, 20);
-
-  const { data: statisticsData, isLoading: statsLoading, error: statsError } = useUserReviewStatistics(currentUserId?.toString() || '');
-
+  const { data: statisticsData, isLoading: statsLoading, error: statsError } = useUserReviewStatistics(currentUserId);
   const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchReviews(searchTerm, 0, 20);
-
   // Test API endpoint
   const { data: testData, isLoading: testLoading, error: testError } = useTestReviewsApi();
 
-  // Convert backend data to frontend format
-  const convertBackendReview = (backendReview: ReviewResponse): Review => ({
-    id: backendReview.id,
-    contractId: backendReview.contractId,
-    reviewerId: backendReview.reviewerId,
-    revieweeId: backendReview.revieweeId,
-    rating: backendReview.rating,
-    comment: backendReview.comment,
-    type: backendReview.reviewerId === currentUserId?.toString() ? 'freelancer_to_client' : 'client_to_freelancer', // Map to correct types
-    createdAt: backendReview.createdAt
-  });
 
-  // Always use backend data (even if empty)
-  const backendReviews = myReviewsData?.content?.map(convertBackendReview) || [];
-  const searchResults = searchData?.content?.map(convertBackendReview) || [];
 
-  // Debug logging
-  console.log('Reviews Debug:', {
-    myReviewsData,
-    backendReviews,
-    myReviewsLoading,
-    myReviewsError,
-    currentUserId,
-    isAuthenticated
-  });
+   const deriveType = (review: ReviewResponse): 'client_to_freelancer' | 'freelancer_to_client' => {
+     if (review.reviewerId === currentUserId) {
+       if (activeRole === UserType.CLIENT) return 'client_to_freelancer';
+       if (activeRole === UserType.FREELANCER) return 'freelancer_to_client';
+       return 'client_to_freelancer';
+     }
 
-  // Use backend data (no fallback to mock data)
-  const reviews = backendReviews;
-  const currentReviews = searchTerm ? searchResults : reviews;
+     if (review.revieweeId === currentUserId) {
+       if (activeRole === UserType.CLIENT) return 'freelancer_to_client';
+       if (activeRole === UserType.FREELANCER) return 'client_to_freelancer';
+       return 'client_to_freelancer';
+     }
 
-  // Filter reviews by type (sent/received)
-  const receivedReviews = currentReviews.filter(review => review.type === 'client_to_freelancer');
-  const sentReviews = currentReviews.filter(review => review.type === 'freelancer_to_client');
+     return 'client_to_freelancer';
+   };
 
-  const contracts = [
-    {
-      id: 'c1',
-      title: isRTL ? 'تطوير موقع إلكتروني' : 'E-commerce Website Development',
-      clientName: isRTL ? 'شركة التقنية المتقدمة' : 'Advanced Technology Company',
-      freelancerName: isRTL ? 'أحمد محمد' : 'Ahmed Mohamed',
-      status: 'completed',
-      completedAt: '2025-01-15',
-      amount: 5000,
-      currency: 'USD',
-      duration: '2 months'
-    },
-    {
-      id: 'c2',
-      title: isRTL ? 'تصميم هوية بصرية' : 'Brand Identity Design',
-      clientName: isRTL ? 'مؤسسة الإبداع' : 'Innovation Foundation',
-      freelancerName: isRTL ? 'فاطمة الزهراء' : 'Fatima Al-Zahra',
-      status: 'completed',
-      completedAt: '2025-01-10',
-      amount: 2500,
-      currency: 'USD',
-      duration: '3 weeks'
-    },
-    {
-      id: 'c3',
-      title: isRTL ? 'كتابة محتوى تسويقي' : 'Marketing Content Writing',
-      clientName: isRTL ? 'شركة التسويق الرقمي' : 'Digital Marketing Company',
-      freelancerName: isRTL ? 'علي الكاتب' : 'Ali Writer',
-      status: 'completed',
-      completedAt: '2025-01-08',
-      amount: 1500,
-      currency: 'USD',
-      duration: '1 month'
-    }
-  ];
+  const mapToUIReview = (review: ReviewResponse): UIReview => ({ ...review, type: deriveType(review) });
 
-  const getContractById = (id: string) => contracts.find(c => c.id === id);
+   // Current list (search or mine), mapped to UIReview with derived type
+   const allMine = myReviewsData?.content || [];
+   const allSearch = searchData?.content || [];
+   const currentBase: ReviewResponse[] = searchTerm ? allSearch : allMine;
+   const currentReviews: UIReview[] = useMemo(() => currentBase.map(mapToUIReview), [currentBase, currentUserId, activeRole]);
 
+  // Filter by search term and rating
   const filteredReviews = currentReviews.filter(review => {
     const matchesSearch = review.comment.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRating = ratingFilter === 'all' || review.rating.toString() === ratingFilter;
     return matchesSearch && matchesRating;
   });
 
-  const getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'text-green-600';
-    if (rating >= 3.5) return 'text-yellow-600';
-    if (rating >= 2.5) return 'text-orange-600';
-    return 'text-red-600';
-  };
+  // Grouping by direction relative to current user
+  const receivedReviews = filteredReviews.filter(r => r.revieweeId === currentUserId);
+  const sentReviews = filteredReviews.filter(r => r.reviewerId === currentUserId);
 
   const getRatingDistribution = () => {
-    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    const distribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     receivedReviews.forEach(review => {
-      distribution[review.rating as keyof typeof distribution]++;
+      distribution[review.rating] = (distribution[review.rating] || 0) + 1;
     });
     return distribution;
   };
@@ -176,82 +203,130 @@ function ReviewsPageContent() {
   const getAverageRating = () => {
     if (receivedReviews.length === 0) return 0;
     const sum = receivedReviews.reduce((acc, review) => acc + review.rating, 0);
-    return (sum / receivedReviews.length).toFixed(1);
+    return parseFloat((sum / receivedReviews.length).toFixed(1));
   };
 
-  const handleSubmitReview = (reviewData: Omit<Review, 'id' | 'createdAt'>) => {
-    const newReview: Review = {
-      id: Date.now().toString(),
-      ...reviewData,
-      createdAt: new Date().toISOString()
-    };
-    // Review will be added to backend via API call
-    alert(isRTL ? 'تم إرسال التقييم بنجاح' : 'Review submitted successfully');
-    setShowReviewForm(false);
-  };
+  // Mutations
+  const createReview = useCreateReview();
+  const updateReview = useUpdateReview();
+  const deleteReview = useDeleteReview();
 
-  const handleEditReview = (review: Review) => {
-    setEditingReview(review);
-    setShowReviewForm(true);
-  };
+  const handleSubmitReview = async (reviewData: { contractId: string; rating: number; comment: string }) => {
+    setSubmittingReview(true);
+    try {
+      const realContractId = selectedContractId || reviewData.contractId;
+      if (!realContractId) {
+        toast({ title: isRTL ? 'يرجى اختيار عقد صالح' : 'Please select a valid contract' });
+        return;
+      }
 
-  const handleUpdateReview = (updatedData: Omit<Review, 'id' | 'createdAt'>) => {
-    if (editingReview) {
-      // Review will be updated via API call
-      alert(isRTL ? 'تم تحديث التقييم بنجاح' : 'Review updated successfully');
-      setEditingReview(null);
+      const createRequest = {
+        contractId: realContractId,
+        rating: reviewData.rating,
+        comment: reviewData.comment,
+        additionalFeedback: ''
+      };
+
+      await createReview.mutateAsync(createRequest);
+
       setShowReviewForm(false);
+      toast({ title: isRTL ? 'تم إرسال التقييم بنجاح' : 'Review submitted successfully' });
+
+      if (contractId || projectId) {
+        setTimeout(() => navigate('/reviews'), 800);
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({ title: isRTL ? 'فشل في إرسال التقييم' : 'Failed to submit review' });
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
-  const handleDeleteReview = (reviewId: string) => {
-    // Review will be deleted via API call
-    setShowDeleteDialog(false);
-    setReviewToDelete(null);
-    alert(isRTL ? 'تم حذف التقييم' : 'Review deleted');
+   const handleEditReview = (review: UIReview) => {
+     setEditingReview(review);
+     setSelectedContractId(review.contractId);
+     if (currentUserId) {
+       if (review.reviewerId === currentUserId) {
+         setRevieweeData({ id: review.revieweeId, name: review.revieweeName || 'User' });
+         setReviewType(review.type === 'freelancer_to_client' ? 'freelancer_to_client' : 'client_to_freelancer');
+       } else {
+         setRevieweeData({ id: review.reviewerId, name: review.reviewerName || 'User' });
+         setReviewType(review.type);
+       }
+     }
+     setShowReviewForm(true);
+   };
+
+  const handleUpdateReview = async (updatedData: { contractId: string; rating: number; comment: string }) => {
+    if (editingReview) {
+      setSubmittingReview(true);
+      try {
+        const updateRequest = {
+          contractId: updatedData.contractId,
+          rating: updatedData.rating,
+          comment: updatedData.comment,
+          additionalFeedback: ''
+        };
+
+        await updateReview.mutateAsync({ id: editingReview.id, data: updateRequest });
+
+        setEditingReview(null);
+        setShowReviewForm(false);
+        toast({ title: isRTL ? 'تم تحديث التقييم بنجاح' : 'Review updated successfully' });
+      } catch (error) {
+        console.error('Error updating review:', error);
+        toast({ title: isRTL ? 'فشل في تحديث التقييم' : 'Failed to update review' });
+      } finally {
+        setSubmittingReview(false);
+      }
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    setSubmittingReview(true);
+    try {
+      await deleteReview.mutateAsync(reviewId);
+      setShowDeleteDialog(false);
+      setReviewToDelete(null);
+      toast({ title: isRTL ? 'تم حذف التقييم' : 'Review deleted' });
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast({ title: isRTL ? 'فشل في حذف التقييم' : 'Failed to delete review' });
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const handleMarkHelpful = (reviewId: string) => {
-    // Helpful action will be handled via API call
+    // Helpful action will be handled via API call later
   };
 
-  const handleReportReview = (reviewId: string) => {
-    alert(isRTL ? 'تم الإبلاغ عن التقييم' : 'Review reported');
-  };
-
-  const renderStars = (rating: number, size: 'sm' | 'md' | 'lg' = 'md') => {
-    const sizeClass = size === 'sm' ? 'h-3 w-3' : size === 'md' ? 'h-4 w-4' : 'h-5 w-5';
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={cn(
-              sizeClass,
-              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-            )}
-          />
-        ))}
-      </div>
-    );
+  const handleReportReview = async (reviewId: string) => {
+    try {
+      await reviewService.reportReview(reviewId, { reason: 'INAPPROPRIATE' });
+      toast({ title: isRTL ? 'تم الإبلاغ عن التقييم' : 'Review reported' });
+    } catch (e) {
+      toast({ title: isRTL ? 'فشل الإبلاغ' : 'Report failed' });
+    }
   };
 
   const distribution = getRatingDistribution();
   const averageRating = getAverageRating();
 
   return (
-    <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
+    <div className={cn('min-h-screen bg-muted/30', isRTL && 'rtl')} dir={isRTL ? 'rtl' : 'ltr'}>
       <Header isRTL={isRTL} onLanguageToggle={toggleLanguage} />
 
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-[#0A2540] mb-2">
-            {isRTL ? "التقييمات والمراجعات" : "Reviews & Ratings"}
+            {isRTL ? 'التقييمات والمراجعات' : 'Reviews & Ratings'}
           </h1>
           <p className="text-muted-foreground">
             {isRTL 
-              ? "إدارة التقييمات التي تلقيتها وأرسلتها للعملاء والمستقلين" 
+              ? 'إدارة التقييمات التي تلقيتها وأرسلتها للعملاء والمستقلين' 
               : "Manage reviews you've received and sent to clients and freelancers"
             }
           </p>
@@ -264,14 +339,23 @@ function ReviewsPageContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? "متوسط التقييم" : "Average Rating"}
+                    {isRTL ? 'متوسط التقييم' : 'Average Rating'}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-3xl font-bold text-[#0A2540]">{averageRating}</span>
-                    {renderStars(Math.round(parseFloat(averageRating.toString())), 'lg')}
+                    {(() => {
+                      const stars = Math.round(Number(averageRating));
+                      return (
+                        <div className="flex items-center gap-1">
+                          {[1,2,3,4,5].map(star => (
+                            <Star key={star} className={cn('h-5 w-5', star <= stars ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <p className="text-xs text-green-600 mt-1">
-                    +0.2 {isRTL ? "من الشهر الماضي" : "from last month"}
+                    +0.2 {isRTL ? 'من الشهر الماضي' : 'from last month'}
                   </p>
                 </div>
                 <Award className="h-8 w-8 text-yellow-500" />
@@ -284,11 +368,11 @@ function ReviewsPageContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? "إجمالي التقييمات" : "Total Reviews"}
+                    {isRTL ? 'إجمالي التقييمات' : 'Total Reviews'}
                   </p>
                   <p className="text-3xl font-bold text-[#0A2540]">{receivedReviews.length}</p>
                   <p className="text-xs text-blue-600 mt-1">
-                    +3 {isRTL ? "هذا الشهر" : "this month"}
+                    +3 {isRTL ? 'هذا الشهر' : 'this month'}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-blue-500" />
@@ -301,7 +385,7 @@ function ReviewsPageContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? "تقييمات إيجابية" : "Positive Reviews"}
+                    {isRTL ? 'تقييمات إيجابية' : 'Positive Reviews'}
                   </p>
                   <p className="text-3xl font-bold text-green-600">
                     {receivedReviews.filter(r => r.rating >= 4).length}
@@ -309,7 +393,7 @@ function ReviewsPageContent() {
                   <p className="text-xs text-green-600 mt-1">
                     {receivedReviews.length > 0 
                       ? Math.round((receivedReviews.filter(r => r.rating >= 4).length / receivedReviews.length) * 100)
-                      : 0}% {isRTL ? "من الإجمالي" : "of total"}
+                      : 0}% {isRTL ? 'من الإجمالي' : 'of total'}
                   </p>
                 </div>
                 <ThumbsUp className="h-8 w-8 text-green-500" />
@@ -322,15 +406,13 @@ function ReviewsPageContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    {isRTL ? "معدل الاستجابة" : "Response Rate"}
+                    {isRTL ? 'معدل الاستجابة' : 'Response Rate'}
                   </p>
                   <p className="text-3xl font-bold text-purple-600">
-                    {receivedReviews.length > 0 
-                      ? 0
-                      : 0}%
+                    {receivedReviews.length > 0 ? 0 : 0}%
                   </p>
                   <p className="text-xs text-purple-600 mt-1">
-                    0 {isRTL ? "رد" : "responses"}
+                    0 {isRTL ? 'رد' : 'responses'}
                   </p>
                 </div>
                 <MessageCircle className="h-8 w-8 text-purple-500" />
@@ -344,7 +426,7 @@ function ReviewsPageContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              {isRTL ? "توزيع التقييمات" : "Rating Distribution"}
+              {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -392,11 +474,11 @@ function ReviewsPageContent() {
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
               <span className="text-green-700">
-                {isRTL ? "واجهة برمجة التطبيقات تعمل بنجاح" : "API is working successfully"}
+                {isRTL ? 'واجهة برمجة التطبيقات تعمل بنجاح' : 'API is working successfully'}
               </span>
             </div>
             <p className="text-sm text-green-600 mt-1">
-              {isRTL ? "تم الاتصال بالخادم بنجاح" : "Successfully connected to server"}
+              {isRTL ? 'تم الاتصال بالخادم بنجاح' : 'Successfully connected to server'}
             </p>
           </div>
         )}
@@ -406,7 +488,7 @@ function ReviewsPageContent() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-12 w-12 text-gray-400 animate-spin" />
             <span className="ml-3 text-gray-600">
-              {isRTL ? "جاري تحميل التقييمات..." : "Loading reviews..."}
+              {isRTL ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}
             </span>
           </div>
         )}
@@ -417,17 +499,17 @@ function ReviewsPageContent() {
             <AlertCircle className="h-12 w-12 text-red-400" />
             <div className="ml-3 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {isRTL ? "خطأ في التحميل" : "Error Loading Reviews"}
+                {isRTL ? 'خطأ في التحميل' : 'Error Loading Reviews'}
               </h3>
               <p className="text-gray-500">
                 {isRTL 
-                  ? "حدث خطأ أثناء جلب التقييمات. سيتم عرض البيانات الافتراضية."
+                  ? 'حدث خطأ أثناء جلب التقييمات. سيتم عرض البيانات الافتراضية.'
                   : "An error occurred while fetching reviews. Showing default data."
                 }
               </p>
               <p className="text-xs text-gray-400 mt-2">
                 {isRTL 
-                  ? "قد يكون الخادم غير متاح أو هناك مشكلة في الاتصال."
+                  ? 'قد يكون الخادم غير متاح أو هناك مشكلة في الاتصال.'
                   : "Server may be unavailable or there's a connection issue."
                 }
               </p>
@@ -442,10 +524,10 @@ function ReviewsPageContent() {
             <TabsList className="grid w-full grid-cols-3 h-auto p-1">
               <TabsTrigger value="received" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center">
                 <span className="hidden sm:inline">
-                  {isRTL ? "التقييمات المستلمة" : "Received Reviews"}
+                  {isRTL ? 'التقييمات المستلمة' : 'Received Reviews'}
                 </span>
                 <span className="sm:hidden">
-                  {isRTL ? "مستلمة" : "Received"}
+                  {isRTL ? 'مستلمة' : 'Received'}
                 </span>
                 <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0.5">
                   {receivedReviews.length}
@@ -453,10 +535,10 @@ function ReviewsPageContent() {
               </TabsTrigger>
               <TabsTrigger value="sent" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center">
                 <span className="hidden sm:inline">
-                  {isRTL ? "التقييمات المرسلة" : "Sent Reviews"}
+                  {isRTL ? 'التقييمات المرسلة' : 'Sent Reviews'}
                 </span>
                 <span className="sm:hidden">
-                  {isRTL ? "مرسلة" : "Sent"}
+                  {isRTL ? 'مرسلة' : 'Sent'}
                 </span>
                 <Badge variant="secondary" className="mt-1 text-xs px-1.5 py-0.5">
                   {sentReviews.length}
@@ -465,10 +547,10 @@ function ReviewsPageContent() {
                <TabsTrigger value="statistics" className="flex flex-col items-center justify-center py-3 px-2 text-xs sm:text-sm text-center h-full">
                  <div className="flex flex-col items-center justify-center h-full">
                    <span className="hidden sm:inline">
-                     {isRTL ? "الإحصائيات" : "Statistics"}
+                     {isRTL ? 'الإحصائيات' : 'Statistics'}
                    </span>
                    <span className="sm:hidden">
-                     {isRTL ? "إحصائيات" : "Stats"}
+                     {isRTL ? 'إحصائيات' : 'Stats'}
                    </span>
                  </div>
                </TabsTrigger>
@@ -479,8 +561,8 @@ function ReviewsPageContent() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={isRTL ? "البحث في التقييمات..." : "Search reviews..."}
-                  className={cn("pl-9 h-10", isRTL && "pr-9 text-right")}
+                  placeholder={isRTL ? 'البحث في التقييمات...' : 'Search reviews...'}
+                  className={cn('pl-9 h-10', isRTL && 'pr-9 text-right')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -488,183 +570,189 @@ function ReviewsPageContent() {
               <Select value={ratingFilter} onValueChange={setRatingFilter}>
                 <SelectTrigger className="w-full sm:w-[180px] h-10">
                   <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder={isRTL ? "تصفية حسب التقييم" : "Filter by Rating"} />
+                  <SelectValue placeholder={isRTL ? 'تصفية حسب التقييم' : 'Filter by Rating'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{isRTL ? "الكل" : "All"}</SelectItem>
-                  <SelectItem value="5">5 {isRTL ? "نجوم" : "Stars"}</SelectItem>
-                  <SelectItem value="4">4 {isRTL ? "نجوم" : "Stars"}</SelectItem>
-                  <SelectItem value="3">3 {isRTL ? "نجوم" : "Stars"}</SelectItem>
-                  <SelectItem value="2">2 {isRTL ? "نجوم" : "Stars"}</SelectItem>
-                  <SelectItem value="1">1 {isRTL ? "نجمة" : "Star"}</SelectItem>
+                  <SelectItem value="all">{isRTL ? 'الكل' : 'All'}</SelectItem>
+                  <SelectItem value="5">5 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                  <SelectItem value="4">4 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                  <SelectItem value="3">3 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                  <SelectItem value="2">2 {isRTL ? 'نجوم' : 'Stars'}</SelectItem>
+                  <SelectItem value="1">1 {isRTL ? 'نجمة' : 'Star'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Received Reviews Tab */}
-          <TabsContent value="received" className="space-y-6">
-            {receivedReviews.length > 0 ? (
-              receivedReviews.map((review) => {
-                const contract = getContractById(review.contractId);
-                if (!contract) return null;
+           {/* Received Reviews Tab */}
+           <TabsContent value="received" className="space-y-6">
+             {receivedReviews.length > 0 ? (
+               receivedReviews.map((review) => {
+                 const otherPartyName = review.reviewerName || (isRTL ? 'مستخدم' : 'User');
 
-                return (
-                  <Card key={review.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
-                            <AvatarFallback>
-                              {review.type === 'client_to_freelancer' ? contract.clientName.charAt(0) : contract.freelancerName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-lg">
-                                {review.type === 'client_to_freelancer' ? contract.clientName : contract.freelancerName}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-4 mb-3">
-                              {renderStars(review.rating)}
-                              <span className="text-sm text-gray-500">
-                                {new Date(review.createdAt).toLocaleDateString()}
-                              </span>
-                              <Badge variant="outline">
-                                {contract.title}
-                              </Badge>
-                            </div>
-                            <p className="text-gray-700 mb-4">{review.comment}</p>
-                            
+                 return (
+                   <Card key={review.id} className="hover:shadow-md transition-shadow">
+                     <CardContent className="p-6">
+                       <div className="flex items-start justify-between mb-4">
+                         <div className="flex items-start gap-4">
+                           <Avatar className="h-12 w-12">
+                             <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
+                             <AvatarFallback>
+                               {otherPartyName.charAt(0)}
+                             </AvatarFallback>
+                           </Avatar>
+                           <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-2">
+                               <h3 className="font-semibold text-lg">
+                                 {otherPartyName}
+                               </h3>
+                             </div>
+                             <div className="flex items-center gap-4 mb-3">
+                               {(() => (
+                                 <div className="flex items-center gap-1">
+                                   {[1,2,3,4,5].map((s) => (
+                                     <Star key={s} className={cn('h-4 w-4', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                                   ))}
+                                 </div>
+                               ))()}
+                               <span className="text-sm text-gray-500">
+                                 {new Date(review.createdAt).toLocaleDateString()}
+                               </span>
+                               <Badge variant="outline">
+                                 {review.projectName || (isRTL ? 'مشروع' : 'Project')}
+                               </Badge>
+                             </div>
+                             <p className="text-gray-700 mb-4">{review.comment}</p>
+                           </div>
+                         </div>
+                         
+                         <div className="flex items-center gap-2">
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => handleMarkHelpful(review.id)}
+                           >
+                             <ThumbsUp className="h-4 w-4 mr-1" />
+                             0
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => handleReportReview(review.id)}
+                           >
+                             <Flag className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </div>
+                     </CardContent>
+                   </Card>
+                 );
+               })
+             ) : (
+               <Card>
+                 <CardContent className="p-8 text-center">
+                   <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                   <h3 className="text-lg font-medium text-gray-900 mb-2">
+                     {isRTL ? 'لا توجد تقييمات مستلمة' : 'No Received Reviews'}
+                   </h3>
+                   <p className="text-gray-500">
+                     {isRTL 
+                       ? 'ستظهر التقييمات التي تلقيتها من العملاء أو المستقلين هنا'
+                       : 'Reviews you receive from clients or freelancers will appear here'
+                     }
+                   </p>
+                 </CardContent>
+               </Card>
+             )}
+           </TabsContent>
 
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleMarkHelpful(review.id)}
-                          >
-                            <ThumbsUp className="h-4 w-4 mr-1" />
-                            0
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleReportReview(review.id)}
-                          >
-                            <Flag className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {isRTL ? "لا توجد تقييمات مستلمة" : "No Received Reviews"}
-                  </h3>
-                  <p className="text-gray-500">
-                    {isRTL 
-                      ? "ستظهر التقييمات التي تلقيتها من العملاء أو المستقلين هنا"
-                      : "Reviews you receive from clients or freelancers will appear here"
-                    }
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+           {/* Sent Reviews Tab */}
+           <TabsContent value="sent" className="space-y-6">
+             {sentReviews.length > 0 ? (
+               sentReviews.map((review) => {
+                 const otherPartyName = review.revieweeName || (isRTL ? 'مستخدم' : 'User');
 
-          {/* Sent Reviews Tab */}
-          <TabsContent value="sent" className="space-y-6">
-            {sentReviews.length > 0 ? (
-              sentReviews.map((review) => {
-                const contract = getContractById(review.contractId);
-                if (!contract) return null;
-
-                return (
-                  <Card key={review.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
-                            <AvatarFallback>
-                              {review.type === 'client_to_freelancer' ? contract.freelancerName.charAt(0) : contract.clientName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-lg">
-                                {review.type === 'client_to_freelancer' ? contract.freelancerName : contract.clientName}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-4 mb-3">
-                              {renderStars(review.rating)}
-                              <span className="text-sm text-gray-500">
-                                {new Date(review.createdAt).toLocaleDateString()}
-                              </span>
-                              <Badge variant="outline">
-                                {contract.title}
-                              </Badge>
-                            </div>
-                            <p className="text-gray-700 mb-4">{review.comment}</p>
-                            
-
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditReview(review)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setReviewToDelete(review.id);
-                              setShowDeleteDialog(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {isRTL ? "لا توجد تقييمات مرسلة" : "No Sent Reviews"}
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    {isRTL 
-                      ? "لم ترسل أي تقييمات بعد. ابدأ بتقييم المشاريع المكتملة"
-                      : "You haven't sent any reviews yet. Start by reviewing completed projects"
-                    }
-                  </p>
-                  <Button onClick={() => setShowReviewForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    {isRTL ? "كتابة تقييم جديد" : "Write New Review"}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+                 return (
+                   <Card key={review.id} className="hover:shadow-md transition-shadow">
+                     <CardContent className="p-6">
+                       <div className="flex items-start justify-between mb-4">
+                         <div className="flex items-start gap-4">
+                           <Avatar className="h-12 w-12">
+                             <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
+                             <AvatarFallback>
+                               {otherPartyName.charAt(0)}
+                             </AvatarFallback>
+                           </Avatar>
+                           <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-2">
+                               <h3 className="font-semibold text-lg">
+                                 {otherPartyName}
+                               </h3>
+                             </div>
+                             <div className="flex items-center gap-4 mb-3">
+                               {(() => (
+                                 <div className="flex items-center gap-1">
+                                   {[1,2,3,4,5].map((s) => (
+                                     <Star key={s} className={cn('h-4 w-4', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                                   ))}
+                                 </div>
+                               ))()}
+                               <span className="text-sm text-gray-500">
+                                 {new Date(review.createdAt).toLocaleDateString()}
+                               </span>
+                               <Badge variant="outline">
+                                 {review.projectName || (isRTL ? 'مشروع' : 'Project')}
+                               </Badge>
+                             </div>
+                             <p className="text-gray-700 mb-4">{review.comment}</p>
+                           </div>
+                         </div>
+                         
+                         <div className="flex items-center gap-2">
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => handleEditReview(review)}
+                           >
+                             <Edit className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => {
+                               setReviewToDelete(review.id);
+                               setShowDeleteDialog(true);
+                             }}
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </div>
+                     </CardContent>
+                   </Card>
+                 );
+               })
+             ) : (
+               <Card>
+                 <CardContent className="p-8 text-center">
+                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                   <h3 className="text-lg font-medium text-gray-900 mb-2">
+                     {isRTL ? 'لا توجد تقييمات مرسلة' : 'No Sent Reviews'}
+                   </h3>
+                   <p className="text-gray-500 mb-4">
+                     {isRTL 
+                       ? 'لم ترسل أي تقييمات بعد. ابدأ بتقييم المشاريع المكتملة'
+                       : "You haven't sent any reviews yet. Start by reviewing completed projects"
+                     }
+                   </p>
+                   <Button onClick={() => setShowReviewForm(true)}>
+                     <Plus className="h-4 w-4 mr-2" />
+                     {isRTL ? 'كتابة تقييم جديد' : 'Write New Review'}
+                   </Button>
+                 </CardContent>
+               </Card>
+             )}
+           </TabsContent>
 
            {/* Statistics Tab */}
            <TabsContent value="statistics" className="space-y-6">
@@ -672,7 +760,7 @@ function ReviewsPageContent() {
                <div className="flex items-center justify-center py-12">
                  <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
                  <span className="ml-3 text-gray-600">
-                   {isRTL ? "جاري تحميل الإحصائيات..." : "Loading statistics..."}
+                   {isRTL ? 'جاري تحميل الإحصائيات...' : 'Loading statistics...'}
                  </span>
                </div>
              ) : statsError ? (
@@ -680,12 +768,12 @@ function ReviewsPageContent() {
                  <CardContent className="p-8 text-center">
                    <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                     {isRTL ? "خطأ في تحميل الإحصائيات" : "Error Loading Statistics"}
+                     {isRTL ? 'خطأ في تحميل الإحصائيات' : 'Error Loading Statistics'}
                    </h3>
                    <p className="text-gray-500">
                      {isRTL 
-                       ? "حدث خطأ أثناء جلب إحصائيات التقييمات"
-                       : "An error occurred while fetching review statistics"
+                       ? 'حدث خطأ أثناء جلب إحصائيات التقييمات'
+                       : 'An error occurred while fetching review statistics'
                      }
                    </p>
                  </CardContent>
@@ -697,25 +785,29 @@ function ReviewsPageContent() {
                    <CardHeader>
                      <CardTitle className="flex items-center gap-2">
                        <BarChart3 className="h-5 w-5" />
-                       {isRTL ? "ملخص الإحصائيات" : "Statistics Summary"}
+                       {isRTL ? 'ملخص الإحصائيات' : 'Statistics Summary'}
                      </CardTitle>
                    </CardHeader>
                    <CardContent>
                      <div className="space-y-4">
                        <div className="grid grid-cols-2 gap-4">
                          <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? "متوسط التقييم" : "Average Rating"}</p>
+                           <p className="text-sm text-gray-600">{isRTL ? 'متوسط التقييم' : 'Average Rating'}</p>
                            <p className="text-2xl font-bold text-[#0A2540]">{averageRating}</p>
-                           {renderStars(Math.round(parseFloat(averageRating.toString())), 'sm')}
+                           <div className="flex items-center justify-center gap-1">
+                             {[1,2,3,4,5].map((s) => (
+                               <Star key={s} className={cn('h-4 w-4', s <= Math.round(Number(averageRating)) ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                             ))}
+                           </div>
                          </div>
                          <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? "إجمالي التقييمات" : "Total Reviews"}</p>
+                           <p className="text-sm text-gray-600">{isRTL ? 'إجمالي التقييمات' : 'Total Reviews'}</p>
                            <p className="text-2xl font-bold text-[#0A2540]">{receivedReviews.length}</p>
                          </div>
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                          <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? "تقييمات إيجابية" : "Positive Reviews"}</p>
+                           <p className="text-sm text-gray-600">{isRTL ? 'تقييمات إيجابية' : 'Positive Reviews'}</p>
                            <p className="text-2xl font-bold text-green-600">
                              {receivedReviews.filter(r => r.rating >= 4).length}
                            </p>
@@ -726,7 +818,7 @@ function ReviewsPageContent() {
                            </p>
                          </div>
                          <div className="text-center p-4 bg-gray-50 rounded-lg">
-                           <p className="text-sm text-gray-600">{isRTL ? "أعلى تقييم" : "Highest Rating"}</p>
+                           <p className="text-sm text-gray-600">{isRTL ? 'أعلى تقييم' : 'Highest Rating'}</p>
                            <p className="text-2xl font-bold text-yellow-600">
                              {receivedReviews.length > 0 ? Math.max(...receivedReviews.map(r => r.rating)) : 0}
                            </p>
@@ -741,7 +833,7 @@ function ReviewsPageContent() {
                    <CardHeader>
                      <CardTitle className="flex items-center gap-2">
                        <TrendingUp className="h-5 w-5" />
-                       {isRTL ? "توزيع التقييمات" : "Rating Distribution"}
+                       {isRTL ? 'توزيع التقييمات' : 'Rating Distribution'}
                      </CardTitle>
                    </CardHeader>
                    <CardContent>
@@ -788,47 +880,50 @@ function ReviewsPageContent() {
                    <CardHeader>
                      <CardTitle className="flex items-center gap-2">
                        <Clock className="h-5 w-5" />
-                       {isRTL ? "أحدث التقييمات" : "Recent Reviews"}
+                       {isRTL ? 'أحدث التقييمات' : 'Recent Reviews'}
                      </CardTitle>
                    </CardHeader>
-                   <CardContent>
-                     {receivedReviews.length > 0 ? (
-                       <div className="space-y-4">
-                         {receivedReviews.slice(0, 5).map((review) => {
-                           const contract = getContractById(review.contractId);
-                           if (!contract) return null;
-                           
-                           return (
-                             <div key={review.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                               <Avatar className="h-10 w-10">
-                                 <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
-                                 <AvatarFallback>
-                                   {contract.clientName.charAt(0)}
-                                 </AvatarFallback>
-                               </Avatar>
-                               <div className="flex-1">
-                                 <div className="flex items-center gap-2 mb-1">
-                                   <h4 className="font-medium text-sm">{contract.clientName}</h4>
-                                   {renderStars(review.rating, 'sm')}
-                                 </div>
-                                 <p className="text-sm text-gray-600 mb-1">{contract.title}</p>
-                                 <p className="text-xs text-gray-500">
-                                   {new Date(review.createdAt).toLocaleDateString()}
-                                 </p>
-                               </div>
-                             </div>
-                           );
-                         })}
-                       </div>
-                     ) : (
-                       <div className="text-center py-8">
-                         <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                         <p className="text-gray-500">
-                           {isRTL ? "لا توجد تقييمات للعرض" : "No reviews to display"}
-                         </p>
-                       </div>
-                     )}
-                   </CardContent>
+                    <CardContent>
+                      {receivedReviews.length > 0 ? (
+                        <div className="space-y-4">
+                          {receivedReviews.slice(0, 5).map((review) => {
+                            const otherPartyName = review.reviewerName || (isRTL ? 'مستخدم' : 'User');
+                            
+                            return (
+                              <div key={review.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={`https://images.unsplash.com/photo-${Math.random().toString(36).substr(2, 9)}?w=100&h=100&fit=crop&crop=face`} />
+                                  <AvatarFallback>
+                                    {otherPartyName.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-medium text-sm">{otherPartyName}</h4>
+                                    <div className="flex items-center gap-1">
+                                      {[1,2,3,4,5].map((s) => (
+                                        <Star key={s} className={cn('h-3 w-3', s <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300')} />
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-1">{review.projectName || (isRTL ? 'مشروع' : 'Project')}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">
+                            {isRTL ? 'لا توجد تقييمات للعرض' : 'No reviews to display'}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
                  </Card>
                </div>
              )}
@@ -841,24 +936,32 @@ function ReviewsPageContent() {
             <DialogHeader>
               <DialogTitle>
                 {editingReview 
-                  ? (isRTL ? "تعديل التقييم" : "Edit Review")
-                  : (isRTL ? "كتابة تقييم جديد" : "Write New Review")
+                  ? (isRTL ? 'تعديل التقييم' : 'Edit Review')
+                  : (isRTL ? 'كتابة تقييم جديد' : 'Write New Review')
                 }
               </DialogTitle>
             </DialogHeader>
-            <ReviewForm
-              contractId={selectedContractId}
-              reviewerId={user?.id?.toString() || 'c1'}
-              revieweeId={user?.id?.toString() || 'f1'}
-              reviewType="client_to_freelancer"
-              revieweeName="User"
-              isRTL={isRTL}
-              onSubmit={editingReview ? handleUpdateReview : handleSubmitReview}
-              onCancel={() => {
-                setShowReviewForm(false);
-                setEditingReview(null);
-              }}
-            />
+            {!selectedContractId ? (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-800">
+                {isRTL
+                  ? 'لا يمكن إنشاء تقييم بدون عقد مرتبط. يرجى فتح هذه الصفحة من عقد مكتمل أو من مشروع له عقد، أو اختر عقدًا صالحًا.'
+                  : 'Cannot create a review without a linked contract. Please open this page from a completed contract or from a project with an associated contract, or select a valid contract.'}
+              </div>
+            ) : (
+              <ReviewForm
+                contractId={selectedContractId}
+                reviewerId={currentUserId || 'c1'}
+                revieweeId={revieweeData?.id || currentUserId || 'f1'}
+                reviewType={reviewType}
+                revieweeName={revieweeData?.name || (contractData as any)?.freelancerName || (contractData as any)?.clientName || 'User'}
+                isRTL={isRTL}
+                onSubmit={editingReview ? handleUpdateReview : handleSubmitReview}
+                onCancel={() => {
+                  setShowReviewForm(false);
+                  setEditingReview(null);
+                }}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
@@ -867,14 +970,14 @@ function ReviewsPageContent() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {isRTL ? "تأكيد الحذف" : "Confirm Deletion"}
+                {isRTL ? 'تأكيد الحذف' : 'Confirm Deletion'}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-gray-600">
                 {isRTL
-                  ? "هل أنت متأكد من أنك تريد حذف هذا التقييم؟ لا يمكن التراجع عن هذا الإجراء."
-                  : "Are you sure you want to delete this review? This action cannot be undone."
+                  ? 'هل أنت متأكد من أنك تريد حذف هذا التقييم؟ لا يمكن التراجع عن هذا الإجراء.'
+                  : 'Are you sure you want to delete this review? This action cannot be undone.'
                 }
               </p>
               <div className="flex gap-2">
@@ -882,10 +985,10 @@ function ReviewsPageContent() {
                   variant="destructive"
                   onClick={() => reviewToDelete && handleDeleteReview(reviewToDelete)}
                 >
-                  {isRTL ? "حذف" : "Delete"}
+                  {isRTL ? 'حذف' : 'Delete'}
                 </Button>
                 <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                  {isRTL ? "إلغاء" : "Cancel"}
+                  {isRTL ? 'إلغاء' : 'Cancel'}
                 </Button>
               </div>
             </div>

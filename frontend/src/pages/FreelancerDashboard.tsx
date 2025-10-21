@@ -288,11 +288,11 @@ export default function FreelancerDashboard() {
                      <AlertCircle className="h-5 w-5 text-red-600" />
                      <span className="text-red-700">{isRTL ? "خطأ في التحميل" : "Error loading data"}</span>
                    </div>
-                 ) : activeProjects.length > 0 ? (
-                   <div className="space-y-4">
-                    {activeProjects.slice(0, 5).map((project) => (
-                        <Link key={project.id} to="/contracts">
-                         <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                   ) : activeProjects.length > 0 ? (
+                     <div className="space-y-4">
+                      {activeProjects.slice(0, 5).map((project) => (
+                        <div key={project.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors flex items-start justify-between gap-3">
+                          <Link to="/contracts" className="block flex-1">
                            <div className="flex items-center gap-3 mb-2">
                              <h3 className="font-semibold text-[#0A2540]">{project.projectTitle}</h3>
                              <Badge className={cn("text-xs", getContractStatusColor(project.status))}>
@@ -317,11 +317,18 @@ export default function FreelancerDashboard() {
                                </span>
                              )}
                            </div>
-                         </div>
-                       </Link>
-                     ))}
-                   </div>
-                 ) : (
+                          </Link>
+                          {project.status?.toUpperCase() === 'COMPLETED' && (
+                            <Link to={`/reviews/contract/${project.id}`}>
+                              <Button size="sm" variant="ghost" className="flex-shrink-0" title={isRTL ? "اترك تقييماً" : "Leave Review"}>
+                                <Star className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                       ))}
+                     </div>
+                  ) : (
                    <div className="text-center py-8">
                      <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                      <p className="text-muted-foreground">
@@ -338,9 +345,88 @@ export default function FreelancerDashboard() {
                </CardContent>
               </Card>
 
-              {/* Recent Proposals */}
-              <Card>
-             <CardHeader>
+               {/* Recent Completed Projects for Reviews */}
+               <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      {isRTL ? "المشاريع المكتملة الأخيرة" : "Recent Completed Projects"}
+                    </span>
+                    <Link to="/reviews">
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4 mr-2" />
+                        {isRTL ? "عرض الكل" : "View All"}
+                      </Button>
+                    </Link>
+                  </CardTitle>
+                  <CardDescription>
+                    {isRTL ? "قيم المشاريع المكتملة وأترك تقييمات" : "Rate your completed projects and leave reviews"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-[#0A2540]" />
+                      <span className="ml-2">{isRTL ? "جاري التحميل..." : "Loading..."}</span>
+                    </div>
+                  ) : error ? (
+                    <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                      <span className="text-red-700">{isRTL ? "خطأ في التحميل" : "Error loading data"}</span>
+                    </div>
+                  ) : dashboardData?.completedContracts && dashboardData.completedContracts.length > 0 ? (
+                    <div className="space-y-4">
+                      {dashboardData.completedContracts.slice(0, 5).map((project) => (
+                        <div key={project.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors flex items-start justify-between gap-3">
+                          <Link to={`/contracts`} className="block flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-[#0A2540]">{project.projectTitle}</h3>
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                {isRTL ? "مكتمل" : "Completed"}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                              <span className="flex items-center gap-1">
+                                <span className="text-xs">{isRTL ? "العميل: " : "Client: "}</span>
+                                {project.clientName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-4 w-4" />
+                                ${project.totalAmount}
+                              </span>
+                              {project.deadline && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {new Date(project.deadline).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                          <Link to={`/reviews/contract/${project.id}`}>
+                            <Button size="sm" variant="ghost" className="flex-shrink-0" title={isRTL ? "اترك تقييماً" : "Leave Review"}>
+                              <Star className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Briefcase className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground">
+                        {isRTL ? "لا توجد مشاريع مكتملة حالياً" : "No completed projects yet"}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+               </Card>
+
+               {/* Recent Proposals */}
+               <Card>
+              <CardHeader>
                <CardTitle className="flex items-center justify-between">
                  <span className="flex items-center gap-2">
                    <FileText className="h-5 w-5" />
