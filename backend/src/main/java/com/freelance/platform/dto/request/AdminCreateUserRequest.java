@@ -6,13 +6,14 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import com.freelance.platform.entity.Role;
 
+import java.util.Set;
+
 /**
- * DTO for user registration request.
- * All registered users are automatically assigned BOTH CLIENT and FREELANCER roles.
- * The activeRole field determines which role is active upon registration.
- * Email verification via OTP is required before account activation.
+ * DTO for admin user creation request.
+ * Allows super admins to create users with any roles (including admin roles).
+ * Unlike RegisterRequest, this DTO accepts a Set of roles for admin flexibility.
  */
-public class RegisterRequest {
+public class AdminCreateUserRequest {
     
     @NotBlank
     @Size(min = 2, max = 50)
@@ -32,12 +33,11 @@ public class RegisterRequest {
     private String password;
     
     /**
-     * The active role to use upon registration.
-     * Must be either CLIENT or FREELANCER.
-     * User will be assigned both roles, but this determines the initial active role.
+     * Roles to assign to the user. Super admins can assign any roles including admin roles.
+     * At least one role must be provided.
      */
     @NotNull
-    private Role activeRole;
+    private Set<Role> roles;
     
     private String phone;
     private String country;
@@ -45,14 +45,14 @@ public class RegisterRequest {
     private String timezone;
     private String language = "en";
     
-    public RegisterRequest() {}
+    public AdminCreateUserRequest() {}
     
-    public RegisterRequest(String firstName, String lastName, String email, String password, Role activeRole) {
+    public AdminCreateUserRequest(String firstName, String lastName, String email, String password, Set<Role> roles) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.activeRole = activeRole;
+        this.roles = roles;
     }
     
     public String getFirstName() {
@@ -87,12 +87,12 @@ public class RegisterRequest {
         this.password = password;
     }
     
-    public Role getActiveRole() {
-        return activeRole;
+    public Set<Role> getRoles() {
+        return roles;
     }
     
-    public void setActiveRole(Role activeRole) {
-        this.activeRole = activeRole;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
     
     public String getPhone() {

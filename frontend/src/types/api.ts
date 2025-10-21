@@ -392,7 +392,7 @@ export interface RegisterRequest {
   city?: string;
   timezone?: string;
   language?: string;
-  roles: UserType[]; // Changed from userType: UserType (single value)
+  activeRole: UserType;
   bio?: string;
   skills?: string[];
   hourlyRate?: number;

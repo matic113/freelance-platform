@@ -27,15 +27,15 @@ export const AuthDialogs: React.FC<AuthDialogsProps> = ({ isRTL = false }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    roles: [UserType.CLIENT],
-    agreeToTerms: false,
-  });
+   const [registerForm, setRegisterForm] = useState({
+     firstName: '',
+     lastName: '',
+     email: '',
+     password: '',
+     confirmPassword: '',
+     activeRole: UserType.CLIENT,
+     agreeToTerms: false,
+   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [otpEmail, setOtpEmail] = useState('');
@@ -228,65 +228,60 @@ export const AuthDialogs: React.FC<AuthDialogsProps> = ({ isRTL = false }) => {
     }
   };
 
-  const handleRegister = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    // Basic validation (kept minimal to mirror header behavior)
-    if (!registerForm.firstName?.trim() || !registerForm.lastName?.trim() || !registerForm.email?.trim()) {
-      toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill in all fields');
-      return;
-    }
-    if (registerForm.password !== registerForm.confirmPassword) {
-      toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
-      return;
-    }
-    if (!registerForm.roles.length) {
-      toast.error(isRTL ? 'يرجى اختيار دور على الأقل' : 'Select at least one role');
-      return;
-    }
+   const handleRegister = async (e?: React.FormEvent) => {
+     e?.preventDefault();
+     if (!registerForm.firstName?.trim() || !registerForm.lastName?.trim() || !registerForm.email?.trim()) {
+       toast.error(isRTL ? 'يرجى ملء جميع الحقول' : 'Please fill in all fields');
+       return;
+     }
+     if (registerForm.password !== registerForm.confirmPassword) {
+       toast.error(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+       return;
+     }
 
-    setIsLoading(true);
-    try {
-      const result = await register({
-        firstName: registerForm.firstName,
-        lastName: registerForm.lastName,
-        email: registerForm.email,
-        password: registerForm.password,
-        roles: registerForm.roles,
-      } as any);
+     setIsLoading(true);
+     try {
+       const result = await register({
+         firstName: registerForm.firstName,
+         lastName: registerForm.lastName,
+         email: registerForm.email,
+         password: registerForm.password,
+         activeRole: registerForm.activeRole,
+       } as any);
 
-      if (result && 'otpSent' in result) {
-        toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
-        setIsRegisterDialogOpen(false);
-        setOtpEmail(result.email);
-        setOtpValue('');
-        setOtpError('');
-        setOtpFlowType('register');
-        setIsOtpDialogOpen(true);
-        setCooldownSeconds(60);
-        setIsLoading(false);
-        return;
-      }
+       if (result && 'otpSent' in result) {
+         toast.success(isRTL ? 'تم إرسال رمز التحقق' : 'Verification code sent');
+         setIsRegisterDialogOpen(false);
+         setOtpEmail(result.email);
+         setOtpValue('');
+         setOtpError('');
+         setOtpFlowType('register');
+         setIsOtpDialogOpen(true);
+         setCooldownSeconds(60);
+         setIsLoading(false);
+         return;
+       }
 
-      toast.success(isRTL ? 'تم إنشاء الحساب بنجاح' : 'Registration successful');
-      setIsRegisterDialogOpen(false);
-      setRegisterForm(prev => ({
-        ...prev,
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        roles: [UserType.CLIENT],
-        agreeToTerms: false,
-      }));
-    } catch (error: any) {
-      console.error('Register error:', error);
-      const msg = error?.response?.data?.message || error?.message || (isRTL ? 'فشل في إنشاء الحساب' : 'Registration failed');
-      toast.error(msg.includes('Email') ? msg : msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+       toast.success(isRTL ? 'تم إنشاء الحساب بنجاح' : 'Registration successful');
+       setIsRegisterDialogOpen(false);
+       setRegisterForm(prev => ({
+         ...prev,
+         firstName: '',
+         lastName: '',
+         email: '',
+         password: '',
+         confirmPassword: '',
+         activeRole: UserType.CLIENT,
+         agreeToTerms: false,
+       }));
+     } catch (error: any) {
+       console.error('Register error:', error);
+       const msg = error?.response?.data?.message || error?.message || (isRTL ? 'فشل في إنشاء الحساب' : 'Registration failed');
+       toast.error(msg.includes('Email') ? msg : msg);
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
   const handleVerifyOtp = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -411,39 +406,31 @@ export const AuthDialogs: React.FC<AuthDialogsProps> = ({ isRTL = false }) => {
               <Label htmlFor="confirmPassword">{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</Label>
               <Input id="confirmPassword" type="password" value={registerForm.confirmPassword} onChange={(e) => setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }))} required />
             </div>
-            <div>
-              <span className="block text-sm font-medium mb-2">{isRTL ? 'اختر الدور' : 'Select your role'}</span>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {[UserType.CLIENT, UserType.FREELANCER].map((role) => {
-                  const isChecked = registerForm.roles.includes(role);
-                  const label = role === UserType.CLIENT ? (isRTL ? 'عميل' : 'Client') : (isRTL ? 'مستقل' : 'Freelancer');
-                  return (
-                    <label
-                      key={role}
-                      className={`flex items-center gap-2 rounded-md border p-3 text-sm transition-colors cursor-pointer ${isChecked ? 'border-[#0A2540] bg-[#0A2540]/5' : 'border-border hover:border-[#0A2540]'}`}
-                    >
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={(checked) =>
-                          setRegisterForm((prev) => {
-                            const roles = new Set(prev.roles);
-                            if (checked) {
-                              roles.add(role);
-                            } else {
-                              roles.delete(role);
-                            }
-                            return { ...prev, roles: Array.from(roles) as UserType[] };
-                          })
-                        }
-                        id={`role-${role}`}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{isRTL ? 'يمكنك اختيار دور واحد أو كلا الدورين.' : 'You can choose one or both roles.'}</p>
-            </div>
+             <div>
+               <span className="block text-sm font-medium mb-2">{isRTL ? 'اختر الدور' : 'Select your role'}</span>
+               <div className="grid gap-2 sm:grid-cols-2">
+                 {[UserType.CLIENT, UserType.FREELANCER].map((role) => {
+                   const isSelected = registerForm.activeRole === role;
+                   const label = role === UserType.CLIENT ? (isRTL ? 'عميل' : 'Client') : (isRTL ? 'مستقل' : 'Freelancer');
+                   return (
+                     <label
+                       key={role}
+                       className={`flex items-center gap-2 rounded-md border p-3 text-sm transition-colors cursor-pointer ${isSelected ? 'border-[#0A2540] bg-[#0A2540]/5' : 'border-border hover:border-[#0A2540]'}`}
+                     >
+                       <input
+                         type="radio"
+                         name="role"
+                         value={role}
+                         checked={isSelected}
+                         onChange={() => setRegisterForm(prev => ({ ...prev, activeRole: role }))}
+                       />
+                       <span>{label}</span>
+                     </label>
+                   );
+                 })}
+               </div>
+               <p className="mt-1 text-xs text-muted-foreground">{isRTL ? 'تم تعيين كلا الدورين. اختر الدور الذي تريد البدء به.' : 'Both roles have been assigned. Choose the role you want to start with.'}</p>
+             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="agreeToTerms" checked={registerForm.agreeToTerms} onCheckedChange={(checked) => setRegisterForm(prev => ({ ...prev, agreeToTerms: checked as boolean }))} />
               <Label htmlFor="agreeToTerms" className="text-sm cursor-pointer">{isRTL ? 'أوافق على الشروط والأحكام' : 'I agree to the terms and conditions'}</Label>

@@ -1,6 +1,6 @@
 package com.freelance.platform.controller.admin;
 
-import com.freelance.platform.dto.request.RegisterRequest;
+import com.freelance.platform.dto.request.AdminCreateUserRequest;
 import com.freelance.platform.dto.response.AuthResponse;
 import com.freelance.platform.entity.Role;
 import com.freelance.platform.entity.User;
@@ -51,7 +51,7 @@ public class AdminUserManagementController {
             @ApiResponse(responseCode = "403", description = "Only super admins can create admin users")
     })
     public ResponseEntity<?> createUserWithRoles(
-            @Valid @RequestBody RegisterRequest request,
+            @Valid @RequestBody AdminCreateUserRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         
         // Check if user already exists
@@ -81,7 +81,7 @@ public class AdminUserManagementController {
         user.setTimezone(request.getTimezone());
         user.setLanguage(request.getLanguage());
         user.setIsActive(true);
-        user.setIsVerified(true); // Admin-created users are auto-verified
+        user.setIsVerified(true);
         
         User savedUser = userService.save(user);
         

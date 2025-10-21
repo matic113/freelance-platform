@@ -185,17 +185,11 @@ public class AuthService {
             throw new RuntimeException("Email is already taken!");
         }
         
-        // SECURITY: Validate that only CLIENT and FREELANCER roles can be registered publicly
-        Set<Role> requestedRoles = registerRequest.getRoles();
-        if (requestedRoles == null || requestedRoles.isEmpty()) {
-            throw new RuntimeException("At least one role must be specified for registration");
-        }
-        
-        for (Role role : requestedRoles) {
-            if (role != Role.CLIENT && role != Role.FREELANCER) {
-                logger.warn("Registration attempt with prohibited role {}: {}", role, registerRequest.getEmail());
-                throw new SecurityException("Cannot register with admin roles. Admin accounts must be created by super admins only.");
-            }
+        // SECURITY: Validate that activeRole is CLIENT or FREELANCER
+        Role activeRole = registerRequest.getActiveRole();
+        if (activeRole != Role.CLIENT && activeRole != Role.FREELANCER) {
+            logger.warn("Registration attempt with prohibited active role {}: {}", activeRole, registerRequest.getEmail());
+            throw new RuntimeException("Active role must be CLIENT or FREELANCER");
         }
         
         // Create new user
@@ -205,11 +199,11 @@ public class AuthService {
         user.setEmail(registerRequest.getEmail());
         user.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
         
-        // Set roles and determine activeRole (first role in the set)
-        user.setRoles(new HashSet<>(requestedRoles));
-        Role assignedRole = requestedRoles.iterator().next();
-        user.setActiveRole(assignedRole);
-        logger.info("🔧 Setting activeRole to {} before save for user: {}", assignedRole, registerRequest.getEmail());
+        // ALWAYS assign both CLIENT and FREELANCER roles
+        Set<Role> roles = EnumSet.of(Role.CLIENT, Role.FREELANCER);
+        user.setRoles(roles);
+        user.setActiveRole(activeRole);
+        logger.info("🔧 Setting activeRole to {} and assigning both roles (CLIENT, FREELANCER) for user: {}", activeRole, registerRequest.getEmail());
         
         user.setPhone(registerRequest.getPhone());
         user.setCountry(registerRequest.getCountry());
@@ -220,14 +214,11 @@ public class AuthService {
         user.setIsVerified(false);
         
         User savedUser = userService.save(user);
-        logger.info("✅ User created with activeRole={}, isVerified={}, email: {}", savedUser.getActiveRole(), savedUser.getIsVerified(), savedUser.getEmail());
+        logger.info("✅ User created with activeRole={}, roles={CLIENT, FREELANCER}, isVerified={}, email: {}", savedUser.getActiveRole(), savedUser.getIsVerified(), savedUser.getEmail());
         
-    // Send OTP for email verification (tokens will be issued only after successful verification)
-    otpService.createAndSendOtpForUser(savedUser, true);
+        // Send OTP for email verification (tokens will be issued only after successful verification)
+        otpService.createAndSendOtpForUser(savedUser, true);
         logger.debug("Email verification OTP sent to: {}", savedUser.getEmail());
-        
-        // Return null to indicate registration is pending email verification
-        // Controller will handle this and return OtpSent response
     }
     
     public void login(LoginRequest loginRequest) {
