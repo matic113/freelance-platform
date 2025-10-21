@@ -1,57 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
-import { dashboardService, DashboardData } from '@/services/dashboard.service';
+import { dashboardService } from '@/services/dashboard.service';
+import { freelancerDashboardService } from '@/services/freelancerDashboard.service';
 import { useAuth } from '@/contexts/AuthContext';
-import { proposalService } from '@/services/proposal.service';
-import { contractService } from '@/services/contract.service';
-import { freelancerProfileService } from '@/services/freelancerProfile.service';
-import { PageResponse, ProposalResponse } from '@/types/api';
-import type { ContractResponse } from '@/types/api';
 
 export const dashboardKeys = {
   all: ['dashboard'] as const,
-  freelancer: () => [...dashboardKeys.all, 'freelancer'] as const,
+  freelancer: () => [...dashboardKeys.all, 'freelancer', 'v2'] as const,
   client: () => [...dashboardKeys.all, 'client'] as const,
 };
 
-export interface FreelancerDashboardData extends DashboardData {
-  proposalSuccessRate: number;
-  rating: number;
-  activeContracts: ContractResponse[];
-  completedContracts: ContractResponse[];
-  recentProposals: ProposalResponse[];
-}
-
 export const useFreelancerDashboard = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, activeRole, isLoading: authLoading } = useAuth();
+  
+  const isEnabled = !authLoading && !!user && activeRole === 'FREELANCER';
   
   return useQuery({
     queryKey: dashboardKeys.freelancer(),
-    queryFn: async (): Promise<FreelancerDashboardData> => {
-      const baseData = await dashboardService.getFreelancerDashboard();
-      
-      const [proposalsRes, profileRes, contractsRes] = await Promise.all([
-        proposalService.getMyProposals(0, 100),
-        freelancerProfileService.getMyProfile().catch(() => ({ rating: 0 })),
-        contractService.getFreelancerContracts(0, 100).catch(() => ({ content: [] }))
-      ]);
-
-      const totalProposals = (proposalsRes as PageResponse<ProposalResponse>).totalElements || 0;
-      const acceptedProposals = (proposalsRes as PageResponse<ProposalResponse>).content?.filter((p: ProposalResponse) => p.status === 'ACCEPTED').length || 0;
-      const successRate = totalProposals > 0 ? Math.round((acceptedProposals / totalProposals) * 100) : 0;
-
-       const activeContracts = (contractsRes as PageResponse<ContractResponse>).content?.filter((c: ContractResponse) => c.status === 'ACTIVE') || [];
-       const completedContracts = (contractsRes as PageResponse<ContractResponse>).content?.filter((c: ContractResponse) => c.status === 'COMPLETED') || [];
-
-       return {
-         ...baseData,
-         proposalSuccessRate: successRate,
-         rating: (profileRes as Record<string, unknown>)?.rating || 0,
-         activeContracts,
-         completedContracts,
-         recentProposals: (proposalsRes as PageResponse<ProposalResponse>).content?.slice(0, 5) || []
-       };
+    queryFn: async () => {
+      return await freelancerDashboardService.getFreelancerDashboard();
     },
-    enabled: !authLoading && !!user && user.userType === 'FREELANCER',
+    enabled: isEnabled,
     staleTime: 2 * 60 * 1000,
     retry: (failureCount, error: unknown) => {
       const apiError = error as Record<string, unknown>;

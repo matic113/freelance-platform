@@ -49,19 +49,19 @@ export default function FreelancerDashboard() {
     },
     {
       title: isRTL ? "المشاريع النشطة" : "Active Projects",
-      value: dashboardData.activeContracts.length.toString(),
+      value: dashboardData.stats.activeProjects.toString(),
       icon: Briefcase,
       color: "text-blue-600"
     },
     {
       title: isRTL ? "معدل النجاح" : "Success Rate",
-      value: `${dashboardData.proposalSuccessRate}%`,
+      value: `${dashboardData.stats.proposalSuccessRate}%`,
       icon: Target,
       color: "text-purple-600"
     },
     {
       title: isRTL ? "التقييم العام" : "Overall Rating",
-      value: dashboardData.rating.toFixed(1),
+      value: dashboardData.stats.rating.toFixed(1),
       icon: Star,
       color: "text-yellow-600"
     }
@@ -305,18 +305,18 @@ export default function FreelancerDashboard() {
                                {project.clientName}
                              </span>
                            </div>
-                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                             <span className="flex items-center gap-1">
-                               <DollarSign className="h-4 w-4" />
-                               ${project.totalAmount}
-                             </span>
-                             {project.deadline && (
+                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                <span className="flex items-center gap-1">
-                                 <Clock className="h-4 w-4" />
-                                 {new Date(project.deadline).toLocaleDateString()}
+                                 <DollarSign className="h-4 w-4" />
+                                 ${project.totalAmount}
                                </span>
-                             )}
-                           </div>
+                               {project.endDate && (
+                                 <span className="flex items-center gap-1">
+                                   <Clock className="h-4 w-4" />
+                                   {new Date(project.endDate).toLocaleDateString()}
+                                 </span>
+                               )}
+                             </div>
                           </Link>
                           {project.status?.toUpperCase() === 'COMPLETED' && (
                             <Link to={`/reviews/contract/${project.id}`}>
@@ -397,10 +397,10 @@ export default function FreelancerDashboard() {
                                 <DollarSign className="h-4 w-4" />
                                 ${project.totalAmount}
                               </span>
-                              {project.deadline && (
+                              {project.endDate && (
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
-                                  {new Date(project.deadline).toLocaleDateString()}
+                                  {new Date(project.endDate).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
@@ -459,23 +459,23 @@ export default function FreelancerDashboard() {
                    {recentProposals.slice(0, 5).map((proposal) => (
                      <Link key={proposal.id} to="/my-proposals">
                        <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                         <div className="flex items-center justify-between gap-3 mb-2">
-                           <h3 className="font-semibold text-sm text-[#0A2540] truncate flex-1">
-                             {proposal.project?.title}
-                           </h3>
-                           <Badge className={cn("text-xs flex-shrink-0", getProposalStatusColor(proposal.status))}>
-                             {getProposalStatusText(proposal.status)}
-                           </Badge>
-                         </div>
-                         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                           <span className="flex items-center gap-1">
-                             <DollarSign className="h-4 w-4" />
-                             {isRTL ? "عرضي: " : "Your Bid: "}${proposal.proposedBudget}
-                           </span>
-                         </div>
-                         <p className="text-xs text-gray-600 line-clamp-2">
-                           {proposal.coverLetter}
-                         </p>
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                            <h3 className="font-semibold text-sm text-[#0A2540] truncate flex-1">
+                              {proposal.projectTitle}
+                            </h3>
+                            <Badge className={cn("text-xs flex-shrink-0", getProposalStatusColor(proposal.status))}>
+                              {getProposalStatusText(proposal.status)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="h-4 w-4" />
+                              {isRTL ? "عرضي: " : "Your Bid: "}${proposal.proposedAmount}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2">
+                            {proposal.description}
+                          </p>
                        </div>
                      </Link>
                    ))}

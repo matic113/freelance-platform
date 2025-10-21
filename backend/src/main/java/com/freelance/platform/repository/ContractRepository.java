@@ -118,10 +118,10 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
     
     // Analytics methods
     @Query("SELECT COUNT(c) FROM Contract c WHERE c.freelancer.id = :freelancerId AND c.status = :status")
-    long countByFreelancerIdAndStatus(@Param("freelancerId") UUID freelancerId, @Param("status") String status);
+    long countByFreelancerIdAndStatus(@Param("freelancerId") UUID freelancerId, @Param("status") ContractStatus status);
     
     @Query("SELECT COUNT(c) FROM Contract c WHERE c.client.id = :clientId AND c.status = :status")
-    long countByClientIdAndStatus(@Param("clientId") UUID clientId, @Param("status") String status);
+    long countByClientIdAndStatus(@Param("clientId") UUID clientId, @Param("status") ContractStatus status);
     
     @Query("SELECT COUNT(c) FROM Contract c WHERE c.freelancer.id = :freelancerId")
     long countByFreelancerId(@Param("freelancerId") UUID freelancerId);

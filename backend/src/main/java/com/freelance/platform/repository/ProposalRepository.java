@@ -115,7 +115,7 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     long countByFreelancerId(@Param("freelancerId") UUID freelancerId);
     
     @Query("SELECT COUNT(p) FROM Proposal p WHERE p.freelancer.id = :freelancerId AND p.status = :status")
-    long countByFreelancerIdAndStatus(@Param("freelancerId") UUID freelancerId, @Param("status") String status);
+    long countByFreelancerIdAndStatus(@Param("freelancerId") UUID freelancerId, @Param("status") ProposalStatus status);
     
     // Analytics - monthly proposal counts (UTC)
     @Query(value = "SELECT DATE_FORMAT(CONVERT_TZ(p.submitted_at, @@session.time_zone, '+00:00'), '%Y-%m') AS ym, " +

@@ -1,8 +1,10 @@
 package com.freelance.platform.controller;
 
 import com.freelance.platform.dto.response.AnalyticsResponse;
+import com.freelance.platform.dto.response.FreelancerDashboardResponse;
 import com.freelance.platform.security.UserPrincipal;
 import com.freelance.platform.service.AnalyticsService;
+import com.freelance.platform.service.FreelancerDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,6 +27,23 @@ public class AnalyticsController {
 
     @Autowired
     private AnalyticsService analyticsService;
+
+    @Autowired
+    private FreelancerDashboardService freelancerDashboardService;
+
+    @GetMapping("/freelancer/dashboard")
+    @Operation(summary = "Get freelancer dashboard", description = "Get comprehensive dashboard data for freelancers")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Dashboard data retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    public ResponseEntity<FreelancerDashboardResponse> getFreelancerDashboard(
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        FreelancerDashboardResponse response = freelancerDashboardService.getFreelancerDashboard(currentUser.getId());
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/dashboard/{userId}")
     @Operation(summary = "Get user dashboard analytics", description = "Get comprehensive dashboard statistics for a user")

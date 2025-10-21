@@ -1,6 +1,8 @@
 package com.freelance.platform.service;
 
 import com.freelance.platform.dto.response.AnalyticsResponse;
+import com.freelance.platform.entity.ContractStatus;
+import com.freelance.platform.entity.ProposalStatus;
 import com.freelance.platform.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,7 +60,7 @@ public class AnalyticsService {
             response.setSatisfactionRate(calculateClientSatisfactionRate(userId));
         } else if (user.isFreelancer()) {
             // Freelancer analytics
-            response.setActiveProjects(Math.toIntExact(contractRepository.countByFreelancerIdAndStatus(userId, "ACTIVE")));
+            response.setActiveProjects(Math.toIntExact(contractRepository.countByFreelancerIdAndStatus(userId, ContractStatus.ACTIVE)));
             response.setHappyClients(Math.toIntExact(contractRepository.countDistinctClientsByFreelancerId(userId)));
             response.setTotalEarnings(BigDecimal.valueOf(transactionRepository.sumAmountByFreelancerId(userId)));
             response.setCompletionRate(calculateFreelancerCompletionRate(userId));
@@ -82,8 +84,8 @@ public class AnalyticsService {
             stats.put("averageProjectValue", projectRepository.getAverageProjectValueByClientId(userId));
         } else if (user.isFreelancer()) {
             stats.put("totalProposals", proposalRepository.countByFreelancerId(userId));
-            stats.put("acceptedProposals", proposalRepository.countByFreelancerIdAndStatus(userId, "ACCEPTED"));
-            stats.put("completedContracts", contractRepository.countByFreelancerIdAndStatus(userId, "COMPLETED"));
+            stats.put("acceptedProposals", proposalRepository.countByFreelancerIdAndStatus(userId, ProposalStatus.ACCEPTED));
+            stats.put("completedContracts", contractRepository.countByFreelancerIdAndStatus(userId, ContractStatus.COMPLETED));
             stats.put("averageContractValue", contractRepository.getAverageContractValueByFreelancerId(userId));
         }
         
@@ -99,8 +101,8 @@ public class AnalyticsService {
         }
         
         stats.put("totalContracts", contractRepository.countByFreelancerId(userId));
-        stats.put("activeContracts", contractRepository.countByFreelancerIdAndStatus(userId, "ACTIVE"));
-        stats.put("completedContracts", contractRepository.countByFreelancerIdAndStatus(userId, "COMPLETED"));
+        stats.put("activeContracts", contractRepository.countByFreelancerIdAndStatus(userId, ContractStatus.ACTIVE));
+        stats.put("completedContracts", contractRepository.countByFreelancerIdAndStatus(userId, ContractStatus.COMPLETED));
         stats.put("averageRating", reviewRepository.getAverageRatingByRevieweeId(userId));
         stats.put("totalReviews", reviewRepository.countByRevieweeId(userId));
         
