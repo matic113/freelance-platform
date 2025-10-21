@@ -4,7 +4,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useNotifications } from '@/hooks/useNotifications';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn, isClient } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ import { NotificationResponse } from '@/types/api';
 export default function NotificationsPage() {
   const { isRTL, toggleLanguage } = useLocalization();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { 
     notifications, 
     stats, 
@@ -234,27 +236,54 @@ export default function NotificationsPage() {
 
       try {
         const data = JSON.parse(notification.data);
+        const userIsClient = isClient(user);
         
         if (notification.type.includes('PROPOSAL')) {
           if (data.projectId) {
-            navigate(`/projects/${data.projectId}`);
+            if (userIsClient) {
+              navigate(`/client/project/${data.projectId}`);
+            } else {
+              navigate(`/projects`);
+            }
           }
-        } else if (notification.type.includes('CONTRACT') || notification.type.includes('MILESTONE')) {
-          if (data.projectId) {
-            navigate(`/projects/${data.projectId}`);
+        } else if (notification.type.includes('CONTRACT')) {
+          if (notification.type.includes('ACCEPTED')) {
+            navigate(`/contracts`);
+          } else if (notification.type.includes('REJECTED')) {
+            if (userIsClient) {
+              navigate(`/my-projects`);
+            } else {
+              navigate(`/projects`);
+            }
           } else if (data.contractId) {
+            navigate(`/contracts`);
+          }
+        } else if (notification.type.includes('MILESTONE')) {
+          if (data.contractId) {
             navigate(`/contracts`);
           }
         } else if (notification.type.includes('MESSAGE')) {
           if (data.conversationId) {
             navigate(`/messages?conversationId=${data.conversationId}`);
+          } else {
+            navigate(`/messages`);
           }
         } else if (notification.type.includes('PROJECT')) {
           if (data.projectId) {
-            navigate(`/projects/${data.projectId}`);
+            if (userIsClient) {
+              navigate(`/client/project/${data.projectId}`);
+            } else {
+              navigate(`/project/${data.projectId}`);
+            }
           }
         } else if (notification.type.includes('REVIEW')) {
-          navigate('/profile');
+          if (data.projectId) {
+            navigate(`/reviews/project/${data.projectId}`);
+          } else {
+            navigate(`/profile`);
+          }
+        } else if (notification.type.includes('PAYMENT')) {
+          navigate(`/payments`);
         }
       } catch (e) {
         console.error('Error parsing notification data:', e);
