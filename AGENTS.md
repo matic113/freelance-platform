@@ -13,6 +13,7 @@
 - **Types:** Define in `src/types/` (api.ts, contract.ts); use Zod schemas; `React.FC<Props>` for components; no strict null checks (`strictNullChecks: false`)
 - **Error Handling:** Use `try-catch` in services with Promise.reject(); toast errors with `sonner` library; handle axios errors via interceptors in api.ts
 - **State:** React hooks (useState, useContext), TanStack Query for server state, custom hooks in `src/hooks/`, path alias `@/*` for imports
+- **User Roles:** user functions in frontend/src/lib/utils.ts - role helper functions
 
 ## Backend (Java/Spring Boot 3.5.6)
 **Build/Test Commands:**

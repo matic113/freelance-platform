@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn, isFreelancer, isClient, getUserTypeString } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,23 +81,23 @@ export default function ProposalsPage() {
    };
    
     // Determine user type from auth context
-   const userType = user?.userType === 'FREELANCER' ? 'freelancer' : 'client';
+   const userType = getUserTypeString(user) || 'client';
 
    // Backend API hooks - only call endpoints based on user type
-   const isFreelancer = user?.userType === 'FREELANCER' || user?.activeRole === 'FREELANCER';
-   const isClient = user?.userType === 'CLIENT' || user?.activeRole === 'CLIENT';
+   const isFreelancerUser = isFreelancer(user);
+   const isClientUser = isClient(user);
   
   const { 
     data: myProposalsData, 
     isLoading: myProposalsLoading, 
     error: myProposalsError 
-  } = useMyProposals(0, 20, 'submittedAt,desc', isFreelancer);
+  } = useMyProposals(0, 20, 'submittedAt,desc', isFreelancerUser);
   
   const { 
     data: receivedProposalsData, 
     isLoading: receivedProposalsLoading, 
     error: receivedProposalsError 
-  } = useReceivedProposals(0, 20, 'submittedAt,desc', isClient);
+  } = useReceivedProposals(0, 20, 'submittedAt,desc', isClientUser);
 
   // Mutation hooks
   const acceptProposalMutation = useAcceptProposal();

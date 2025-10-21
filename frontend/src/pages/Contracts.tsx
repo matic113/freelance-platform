@@ -4,7 +4,7 @@ import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, isFreelancerUser, isClientUser, getUserTypeString } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,34 +107,34 @@ export default function ContractsPage() {
   });
 
    // Determine user type from auth context
-   const isFreelancer = user?.userType === 'FREELANCER' || user?.activeRole === 'FREELANCER';
-   const isClient = user?.userType === 'CLIENT' || user?.activeRole === 'CLIENT';
-   const userType = isFreelancer ? 'freelancer' : 'client';
+   const isFreelancerUser = isFreelancerRole(user);
+   const isClientUser = isClientRole(user);
+   const userType = getUserTypeString(user) || 'client';
 
   // Backend API hooks - only call endpoints based on user type
   const { 
     data: myContractsData, 
     isLoading: myContractsLoading, 
     error: myContractsError 
-  } = useMyContracts(0, 20, 'createdAt,desc', isClient);
+  } = useMyContracts(0, 20, 'createdAt,desc', isClientUser);
   
   const { 
     data: freelancerContractsData, 
     isLoading: freelancerContractsLoading, 
     error: freelancerContractsError 
-  } = useFreelancerContracts(0, 20, 'createdAt,desc', isFreelancer);
+  } = useFreelancerContracts(0, 20, 'createdAt,desc', isFreelancerUser);
 
   const { 
     data: myPaymentRequestsData, 
     isLoading: myPaymentRequestsLoading, 
     error: myPaymentRequestsError 
-  } = useMyPaymentRequests(0, 20, 'requestedAt,desc', isFreelancer);
+  } = useMyPaymentRequests(0, 20, 'requestedAt,desc', isFreelancerUser);
   
-   const { 
-     data: receivedPaymentRequestsData, 
-     isLoading: receivedPaymentRequestsLoading, 
-     error: receivedPaymentRequestsError 
-   } = useReceivedPaymentRequests(0, 20, 'requestedAt,desc', isClient);
+  const { 
+    data: receivedPaymentRequestsData, 
+    isLoading: receivedPaymentRequestsLoading,
+    error: receivedPaymentRequestsError 
+   } = useReceivedPaymentRequests(0, 20, 'requestedAt,desc', isClientUser);
 
    const {
      data: pendingReviewsData,
@@ -154,13 +154,13 @@ export default function ContractsPage() {
 
   // Extract data from API responses
   const contracts = [
-    ...(isClient ? (myContractsData?.content || []) : []),
-    ...(isFreelancer ? (freelancerContractsData?.content || []) : [])
+   ...(isClientUser ? (myContractsData?.content || []) : []),
+   ...(isFreelancerUser ? (freelancerContractsData?.content || []) : [])
   ];
   
    const paymentRequests = [
-     ...(isFreelancer ? (myPaymentRequestsData?.content || []) : []),
-     ...(isClient ? (receivedPaymentRequestsData?.content || []) : [])
+    ...(isFreelancerUser ? (myPaymentRequestsData?.content || []) : []),
+    ...(isClientUser ? (receivedPaymentRequestsData?.content || []) : [])
    ];
 
    useEffect(() => {
@@ -551,7 +551,7 @@ export default function ContractsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-[#0A2540]">
-                {(isClient && myContractsLoading) || (isFreelancer && freelancerContractsLoading) ? (
+                {(isClientUser && myContractsLoading) || (isFreelancerUser && freelancerContractsLoading) ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   totalContracts
@@ -569,7 +569,7 @@ export default function ContractsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {(isClient && myContractsLoading) || (isFreelancer && freelancerContractsLoading) ? (
+                {(isClientUser && myContractsLoading) || (isFreelancerUser && freelancerContractsLoading) ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   activeContracts
@@ -587,7 +587,7 @@ export default function ContractsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {(isClient && myContractsLoading) || (isFreelancer && freelancerContractsLoading) ? (
+                {(isClientUser && myContractsLoading) || (isFreelancerUser && freelancerContractsLoading) ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   completedMilestones
@@ -605,7 +605,7 @@ export default function ContractsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {(isClient && myPaymentRequestsLoading) || (isFreelancer && myPaymentRequestsLoading) ? (
+                {(isClientUser && myPaymentRequestsLoading) || (isFreelancerUser && myPaymentRequestsLoading) ? (
                   <Loader2 className="h-6 w-6 animate-spin" />
                 ) : (
                   `$${totalPayments.toLocaleString()}`
@@ -673,8 +673,8 @@ export default function ContractsPage() {
 
          {/* Main Content */}
          <Tabs value={activeTab} onValueChange={setActiveTab}>
-           <TabsList className={`grid w-full ${isFreelancer ? 'grid-cols-4' : 'grid-cols-3'} mb-6`}>
-             {isFreelancer && (
+           <TabsList className={`grid w-full ${isFreelancerUser ? 'grid-cols-4' : 'grid-cols-3'} mb-6`}>
+             {isFreelancerUser && (
                <TabsTrigger value="acceptance">
                  <Clock className="h-4 w-4 mr-2" />
                  {isRTL ? "الانتظار" : "Awaiting"}
@@ -695,7 +695,7 @@ export default function ContractsPage() {
            </TabsList>
 
            {/* Awaiting Acceptance Tab - Only for Freelancers */}
-           {isFreelancer && (
+           {isFreelancerUser && (
              <TabsContent value="acceptance" className="space-y-6">
                {freelancerContractsLoading ? (
                  <div className="flex items-center justify-center py-12">
@@ -741,14 +741,14 @@ export default function ContractsPage() {
 
            {/* Contracts Tab */}
           <TabsContent value="contracts" className="space-y-6">
-            {(isClient && myContractsLoading) || (isFreelancer && freelancerContractsLoading) ? (
+            {(isClientUser && myContractsLoading) || (isFreelancerUser && freelancerContractsLoading) ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
                 <span className="ml-3 text-gray-600">
                   {isRTL ? "جاري تحميل العقود..." : "Loading contracts..."}
                 </span>
               </div>
-            ) : (isClient && myContractsError) || (isFreelancer && freelancerContractsError) ? (
+            ) : (isClientUser && myContractsError) || (isFreelancerUser && freelancerContractsError) ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
@@ -915,7 +915,7 @@ export default function ContractsPage() {
 
           {/* Milestones Tab */}
           <TabsContent value="milestones" className="space-y-6">
-            {(isClient && myContractsLoading) || (isFreelancer && freelancerContractsLoading) ? (
+            {(isClientUser && myContractsLoading) || (isFreelancerUser && freelancerContractsLoading) ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
                 <span className="ml-3 text-gray-600">
@@ -1079,7 +1079,7 @@ export default function ContractsPage() {
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-6">
-            {(isClient && receivedPaymentRequestsLoading) || (isFreelancer && myPaymentRequestsLoading) ? (
+            {(isClientUser && receivedPaymentRequestsLoading) || (isFreelancerUser && myPaymentRequestsLoading) ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
                 <span className="ml-3 text-gray-600">

@@ -20,7 +20,7 @@ import {
   UserPlus,
   UserMinus
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, isFreelancer, isClient } from "@/lib/utils";
 import { useState } from "react";
 import { ProjectDetailsModal } from "@/components/modals/ProjectDetailsModal";
 import { proposalService } from "@/services/proposal.service";
@@ -175,7 +175,7 @@ export const ProjectCard = ({ project, isRTL = false, viewMode = 'grid' }: Proje
 
   // Project management functions
   const handleApplyForProject = async () => {
-    if (!user || user.userType !== 'FREELANCER') {
+    if (!isFreelancer(user)) {
       toast({
         title: isRTL ? "خطأ" : "Error",
         description: isRTL ? "يجب أن تكون مستقل لتقديم عرض" : "You must be a freelancer to apply",
@@ -258,8 +258,8 @@ export const ProjectCard = ({ project, isRTL = false, viewMode = 'grid' }: Proje
   };
 
   // Check if user can perform actions
-  const isFreelancer = user?.userType === 'FREELANCER';
-  const isClient = user?.userType === 'CLIENT';
+  const isFreelancerUser = isFreelancer(user);
+  const isClientUser = isClient(user);
   const isProjectOwner = project.clientId === user?.id;
 
   if (viewMode === 'list') {
@@ -370,7 +370,7 @@ export const ProjectCard = ({ project, isRTL = false, viewMode = 'grid' }: Proje
                 </Button>
                 
                 {/* Freelancer Actions */}
-                {isFreelancer && !isProjectOwner && (
+                {isFreelancerUser && !isProjectOwner && (
                   <>
                     {!hasApplied ? (
                       <Button 
@@ -413,7 +413,7 @@ export const ProjectCard = ({ project, isRTL = false, viewMode = 'grid' }: Proje
                 )}
                 
                 {/* Client Actions */}
-                {isClient && isProjectOwner && (
+                {isClientUser && isProjectOwner && (
                   <div className="flex gap-1">
                     <Button 
                       onClick={() => {
@@ -574,7 +574,7 @@ export const ProjectCard = ({ project, isRTL = false, viewMode = 'grid' }: Proje
             </Button>
             
             {/* Freelancer Actions */}
-            {isFreelancer && !isProjectOwner && (
+            {isFreelancerUser && !isProjectOwner && (
               <>
                 {!hasApplied ? (
                   <Button 
@@ -618,7 +618,7 @@ export const ProjectCard = ({ project, isRTL = false, viewMode = 'grid' }: Proje
             )}
             
             {/* Client Actions */}
-            {isClient && isProjectOwner && (
+            {isClientUser && isProjectOwner && (
               <div className="flex gap-2">
                 <Button 
                   onClick={() => {

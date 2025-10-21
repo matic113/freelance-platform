@@ -3,7 +3,7 @@ import { useLocalization } from "../hooks/useLocalization";
 import { useAuth, useIsFreelancer } from "../contexts/AuthContext";
 import { useProfile } from "../hooks/useProfile";
 import { useToast } from "../hooks/use-toast";
-import { cn } from "../lib/utils";
+import { cn, getUserTypeString } from "../lib/utils";
 import { config } from "../config/env";
 import { Header } from "../components/layout/Header";
 import { Footer } from "../components/sections/Footer";
@@ -166,7 +166,7 @@ export default function Profile() {
                 </div>
                 <CardTitle className="text-xl">{user?.firstName} {user?.lastName}</CardTitle>
                 <CardDescription className="text-base">
-                  {user.userType === 'FREELANCER' 
+                  {getUserTypeString(user) === 'freelancer' 
                     ? ""
                     : (isRTL ? "عميل" : "Client")
                   }
@@ -199,7 +199,7 @@ export default function Profile() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm">{user.userType === 'FREELANCER' ? (isRTL ? "مطور" : "Freelancer") : (isRTL ? "عميل" : "Client")}</span>
+                  <span className="text-sm">{getUserTypeString(user) === 'freelancer' ? (isRTL ? "مطور" : "Freelancer") : (isRTL ? "عميل" : "Client")}</span>
                 </div>
               </CardContent>
             </Card>
@@ -286,7 +286,7 @@ export default function Profile() {
         </div>
 
         {/* Skills and Portfolio Section - Only for Freelancers */}
-        {user?.userType === 'FREELANCER' && (
+        {getUserTypeString(user) === 'freelancer' && (
           <div className="container mx-auto px-4 py-8">
             <div className="space-y-8">
               {/* Skills Section */}

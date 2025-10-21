@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useLocalization } from "../hooks/useLocalization";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/use-toast";
-import { cn } from "../lib/utils";
+import { cn, getUserTypeString } from "../lib/utils";
 import { config } from "../config/env";
 import { Header } from "../components/layout/Header";
 import { Footer } from "../components/sections/Footer";
@@ -96,7 +96,8 @@ export default function UserProfile() {
         setUser(userData);
         
         // If user is a freelancer, load detailed freelancer profile
-        if (userData.userType === UserType.FREELANCER) {
+        const userTypeString = getUserTypeString(userData);
+        if (userTypeString === 'freelancer') {
           try {
             const freelancerData = await freelancerProfileService.getFreelancerProfile(userId);
             setFreelancerProfile(freelancerData);
@@ -228,7 +229,7 @@ export default function UserProfile() {
                 </div>
                 <CardTitle className="text-xl">{user.firstName} {user.lastName}</CardTitle>
                 <CardDescription className="text-base">
-                  {user.userType === 'FREELANCER' 
+                  {getUserTypeString(user) === 'freelancer' 
                     ? (isRTL ? "مستقل" : "Freelancer")
                     : (isRTL ? "عميل" : "Client")
                   }
@@ -284,11 +285,11 @@ export default function UserProfile() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm">{user.userType === 'FREELANCER' ? (isRTL ? "مطور" : "Freelancer") : (isRTL ? "عميل" : "Client")}</span>
+                  <span className="text-sm">{getUserTypeString(user) === 'freelancer' ? (isRTL ? "مطور" : "Freelancer") : (isRTL ? "عميل" : "Client")}</span>
                 </div>
                 
                 {/* Contact Button */}
-                {isAuthenticated && user.userType === UserType.FREELANCER && (
+                {isAuthenticated && getUserTypeString(user) === 'freelancer' && (
                   <Button 
                     onClick={handleContact}
                     className="w-full bg-[#0A2540] hover:bg-[#142b52]"
@@ -344,7 +345,7 @@ export default function UserProfile() {
                   )}
                 </div>
                 {/* Bio field - Only for freelancers */}
-                {user.userType === 'FREELANCER' && (
+                {getUserTypeString(user) === 'freelancer' && (
                   <div className="space-y-2">
                     <Label htmlFor="bio">{isRTL ? "نبذة شخصية" : "Bio"}</Label>
                     <div className="p-3 bg-gray-50 rounded-md text-sm min-h-[100px]">
@@ -391,7 +392,7 @@ export default function UserProfile() {
                       <p className="text-sm text-gray-500">{user.timezone || 'Not specified'}</p>
                     </div>
                   </div>
-                  {user.userType === 'FREELANCER' && freelancerProfile?.hourlyRate && (
+                  {getUserTypeString(user) === 'freelancer' && freelancerProfile?.hourlyRate && (
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-gray-500" />
                       <div>
@@ -400,7 +401,7 @@ export default function UserProfile() {
                       </div>
                     </div>
                   )}
-                  {user.userType === 'FREELANCER' && freelancerProfile?.experienceLevel && (
+                  {getUserTypeString(user) === 'freelancer' && freelancerProfile?.experienceLevel && (
                     <div className="flex items-center gap-2">
                       <Award className="h-4 w-4 text-gray-500" />
                       <div>
@@ -414,7 +415,7 @@ export default function UserProfile() {
                       </div>
                     </div>
                   )}
-                  {user.userType === 'FREELANCER' && freelancerProfile?.availability && (
+                  {getUserTypeString(user) === 'freelancer' && freelancerProfile?.availability && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-gray-500" />
                       <div>
@@ -435,7 +436,7 @@ export default function UserProfile() {
         </div>
 
         {/* Skills and Portfolio Section - Only for Freelancers */}
-        {user.userType === 'FREELANCER' && (
+        {getUserTypeString(user) === 'freelancer' && (
           <div className="space-y-8">
             {/* Skills Section */}
             <Card>

@@ -1,5 +1,5 @@
 import { useLocalization } from "@/hooks/useLocalization";
-import { cn } from "@/lib/utils";
+import { cn, isClient } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,8 +93,8 @@ export default function ClientDashboard() {
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState<string | null>(null);
 
-   const isClient = user?.userType === 'CLIENT' || user?.activeRole === 'CLIENT';
-   const { data: receivedProposalsData, isLoading: proposalsLoading } = useReceivedProposals(0, 5, 'submittedAt,desc', isClient);
+   const isClientUser = isClient(user);
+   const { data: receivedProposalsData, isLoading: proposalsLoading } = useReceivedProposals(0, 5, 'submittedAt,desc', isClientUser);
 
    const {
      data: pendingReviewsData,
