@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface WhyAhmedDropdownProps {
+interface WhyFreintDropdownProps {
   isOpen: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
@@ -10,7 +10,7 @@ interface WhyAhmedDropdownProps {
   textColor?: string;
 }
 
-const whyAhmedMegaMenu = [
+const whyFreintMegaMenu = [
   {
     category: (isRTL: boolean) => (isRTL ? "قصص وتجارب" : "Stories & Experiences"),
     links: [
@@ -28,13 +28,13 @@ const whyAhmedMegaMenu = [
   },
 ];
 
-export const WhyAhmedDropdown = ({
+export const WhyFreintDropdown = ({
   isOpen,
   onMouseEnter,
   onMouseLeave,
   isRTL = false,
   textColor = "#0A2540",
-}: WhyAhmedDropdownProps) => {
+}: WhyFreintDropdownProps) => {
   return (
     <div
       className="relative font-medium transition-colors cursor-pointer"
@@ -45,7 +45,7 @@ export const WhyAhmedDropdown = ({
         className="flex items-center gap-1 font-medium hover:opacity-80"
         style={{ color: textColor }}
       >
-        {isRTL ? "لماذا أحمد" : "Why Ahmed"}
+        {isRTL ? "لماذا فريينت" : "Why Freint"}
         <ChevronDown className="w-4 h-4" stroke={textColor} />
       </div>
 
@@ -56,7 +56,7 @@ export const WhyAhmedDropdown = ({
             isRTL ? "right-0 text-right" : "left-0 text-left"
           )}
         >
-          {whyAhmedMegaMenu.map((section, idx) => (
+          {whyFreintMegaMenu.map((section, idx) => (
             <div key={idx}>
               <h4 className="font-semibold mb-2 text-[#0A2540]">
                 {typeof section.category === 'function' ? section.category(isRTL) : section.category}

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import AuthDialogs from "@/components/auth/AuthDialogs";
 import { NotificationsPopover } from "./NotificationsPopover";
 import { UserDropdown } from "./UserDropdown";
-import { WhyAhmedDropdown } from "./WhyAhmedDropdown";
+import { WhyFreintDropdown } from "./WhyFreintDropdown";
 import { HeaderRoleSwitcher } from "@/components/HeaderRoleSwitcher";
 import { UserType } from "@/types/api";
 
@@ -74,13 +74,13 @@ export const HeaderDesktop = ({
           isRTL ? "mr-8" : "ml-8"
         )}
       >
-        <WhyAhmedDropdown
-          isOpen={isDropdownOpen}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          isRTL={isRTL}
-          textColor={textColor}
-        />
+        <WhyFreintDropdown
+           isOpen={isDropdownOpen}
+           onMouseEnter={onMouseEnter}
+           onMouseLeave={onMouseLeave}
+           isRTL={isRTL}
+           textColor={textColor}
+         />
 
         <Link
           to="/projects"

@@ -248,7 +248,7 @@ export const HeaderMobile = ({
                   <div className="p-1 bg-[#0A2540]/10 rounded">
                     <Settings className="w-4 h-4 text-[#0A2540]" />
                   </div>
-                  {isRTL ? "لماذا أحمد" : "Why Ahmed"}
+                  {isRTL ? "لماذا فريينت" : "Why Freint"}
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 text-[#0A2540] transition-transform ${
