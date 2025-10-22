@@ -259,420 +259,446 @@ export default function ProjectsManagementPage() {
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
       <Header isRTL={isRTL} onLanguageToggle={toggleLanguage} />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/client-dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {isRTL ? "العودة" : "Back"}
-            </Button>
-            <h1 className="text-3xl md:text-4xl font-bold text-[#0A2540]">
-              {isRTL ? "إدارة المشاريع" : "Project Management"}
-            </h1>
-          </div>
-          <p className="text-muted-foreground">
-            {isRTL 
-              ? "إنشاء وإدارة مشاريعك مع تتبع حالة كل مشروع والعروض المقدمة" 
-              : "Create and manage your projects with full analytics and proposal tracking"
-            }
-          </p>
-        </div>
+       <main className="container mx-auto px-4 py-8">
+         <div className="mb-8">
+           <div className="flex items-center gap-4 mb-4">
+             <Button
+               variant="outline"
+               size="sm"
+               onClick={() => navigate('/client-dashboard')}
+               className="flex items-center gap-2"
+             >
+               <ArrowLeft className="h-4 w-4" />
+               {isRTL ? "العودة" : "Back"}
+             </Button>
+             <h1 className="text-3xl md:text-4xl font-bold text-[#0A2540]">
+               {isRTL ? "إدارة المشاريع" : "Project Management"}
+             </h1>
+           </div>
+           <p className="text-muted-foreground">
+             {isRTL 
+               ? "إنشاء وإدارة مشاريعك مع تتبع حالة كل مشروع والعروض المقدمة" 
+               : "Create and manage your projects with full analytics and proposal tracking"
+             }
+           </p>
+         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="dashboard">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              {isRTL ? "لوحة التحكم" : "Dashboard"}
-            </TabsTrigger>
-            <TabsTrigger value="projects">
-              <FileText className="h-4 w-4 mr-2" />
-              {isRTL ? "المشاريع" : "Projects"}
-            </TabsTrigger>
-            <TabsTrigger value="create">
-              <Plus className="h-4 w-4 mr-2" />
-              {isRTL ? (editingProject ? "تحديث" : "إنشاء جديد") : (editingProject ? "Update" : "Create New")}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Project Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{isRTL ? "إجمالي" : "Total"}</p>
-                      <p className="text-2xl font-bold text-[#0A2540]">{metrics.totalProjects}</p>
-                    </div>
-                    <Briefcase className="h-8 w-8 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{isRTL ? "مسودات" : "Drafts"}</p>
-                      <p className="text-2xl font-bold text-gray-600">{metrics.draftCount}</p>
-                    </div>
-                    <FileText className="h-8 w-8 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{isRTL ? "منشور" : "Published"}</p>
-                      <p className="text-2xl font-bold text-blue-600">{metrics.publishedCount}</p>
-                    </div>
-                    <Eye className="h-8 w-8 text-blue-400" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{isRTL ? "قيد التنفيذ" : "In Progress"}</p>
-                      <p className="text-2xl font-bold text-yellow-600">{metrics.inProgressCount}</p>
-                    </div>
-                    <Play className="h-8 w-8 text-yellow-400" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{isRTL ? "مكتملة" : "Completed"}</p>
-                      <p className="text-2xl font-bold text-green-600">{metrics.completedCount}</p>
-                    </div>
-                    <CheckCircle className="h-8 w-8 text-green-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Proposal Analytics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    {isRTL ? "إجمالي العروض" : "Total Proposals"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingStats ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <div>
-                      <p className="text-2xl font-bold text-[#0A2540]">{proposalStats.totalProposals}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {isRTL ? `${proposalStats.acceptedCount} مقبول` : `${proposalStats.acceptedCount} accepted`}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    {isRTL ? "معدل القبول" : "Acceptance Rate"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingStats ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <div>
-                      <p className="text-2xl font-bold text-green-600">{proposalStats.acceptanceRate}%</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {isRTL ? "من إجمالي العروض" : "of total proposals"}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-purple-600" />
-                    {isRTL ? "متوسط العرض" : "Avg. Proposal"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingStats ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <div>
-                      <p className="text-2xl font-bold text-purple-600">${proposalStats.averageProposedAmount}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {isRTL ? "متوسط المبلغ المقترح" : "average amount"}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Target className="h-4 w-4 text-orange-600" />
-                    {isRTL ? "قيد الانتظار" : "Pending"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingStats ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <div>
-                      <p className="text-2xl font-bold text-orange-600">{proposalStats.pendingCount}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {isRTL ? "عروض قيد المراجعة" : "under review"}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{isRTL ? "إجراءات سريعة" : "Quick Actions"}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex gap-2 flex-wrap">
-                <Button onClick={() => setActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52]">
+         {activeTab === 'create' ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="projects">
+                  <FileText className="h-4 w-4 mr-2" />
+                  {isRTL ? "المشاريع" : "Projects"}
+                </TabsTrigger>
+                <TabsTrigger value="create">
                   <Plus className="h-4 w-4 mr-2" />
-                  {isRTL ? "مشروع جديد" : "New Project"}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  {isRTL ? (editingProject ? "تحديث" : "إنشاء جديد") : (editingProject ? "Update" : "Create New")}
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Projects Tab */}
-          <TabsContent value="projects" className="space-y-6">
-            {isLoadingProjects ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Loader2 className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-spin" />
-                  <p className="text-gray-600">{isRTL ? "جاري تحميل المشاريع..." : "Loading projects..."}</p>
-                </CardContent>
-              </Card>
-            ) : projects.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {isRTL ? "لا توجد مشاريع بعد" : "No projects yet"}
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    {isRTL ? "ابدأ بإنشاء أول مشروع لك" : "Start by creating your first project"}
-                  </p>
-                  <Button onClick={() => setActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52]">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {isRTL ? "إنشاء مشروع" : "Create Project"}
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {projects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-[#0A2540]">
-                              {project.title}
-                            </h3>
-                            <Badge className={getStatusColor(project.status)}>
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(project.status)}
-                                {getStatusText(project.status)}
-                              </div>
-                            </Badge>
-                          </div>
-                          <p className="text-gray-600 mb-3 line-clamp-2">
-                            {project.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
-                              {project.budgetMin} - {project.budgetMax} {project.currency}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Tag className="h-4 w-4" />
-                              {project.category}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {new Date(project.deadline).toLocaleDateString()}
-                            </div>
-                          </div>
+              {/* Create/Edit Tab */}
+              <TabsContent value="create" className="space-y-6">
+                <ProjectForm
+                  isRTL={isRTL}
+                  onSubmit={handleCreateProject}
+                  onCancel={handleCancelForm}
+                  initialProject={editingProject}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+           <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
+              {/* Left Column - Statistics and Quick Actions */}
+              <div className="lg:col-span-1 space-y-6">
+                {/* Project Metrics */}
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold text-[#0A2540]">
+                    {isRTL ? "إحصائيات المشاريع" : "Project Statistics"}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <Briefcase className="h-6 w-6 text-gray-400 mb-2" />
+                          <p className="text-xs font-medium text-gray-600">{isRTL ? "إجمالي" : "Total"}</p>
+                          <p className="text-lg font-bold text-[#0A2540]">{metrics.totalProjects}</p>
                         </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.skillsRequired.map((skill, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {project.status === 'DRAFT' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditProject(project)}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              {isRTL ? "تحرير" : "Edit"}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => handlePublishProject(project.id)}
-                              disabled={publishProjectMutation.isPending}
-                            >
-                              {publishProjectMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <Eye className="h-4 w-4 mr-1" />
-                              )}
-                              {isRTL ? "نشر" : "Publish"}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {
-                                setProjectToDelete(project.id);
-                                setShowDeleteDialog(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              {isRTL ? "حذف" : "Delete"}
-                            </Button>
-                          </>
-                        )}
-                        {project.status === 'PUBLISHED' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUnpublishProject(project.id)}
-                              disabled={unpublishProjectMutation.isPending}
-                            >
-                              {unpublishProjectMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <EyeOff className="h-4 w-4 mr-1" />
-                              )}
-                              {isRTL ? "إرجاع" : "Unpublish"}
-                            </Button>
-                            <Badge variant="secondary">
-                              {isRTL ? "يمكن للعاملين تقديم عروضهم" : "Awaiting proposals"}
-                            </Badge>
-                          </>
-                        )}
-                        {project.status === 'IN_PROGRESS' && (
-                          <Badge variant="secondary">
-                            {isRTL ? "قيد التنفيذ من قبل متخصص" : "Assigned to freelancer"}
-                          </Badge>
-                        )}
-                        
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleToggleExpand(project.id)}
-                          className="ml-auto"
-                        >
-                          <ChevronDown className={cn("h-4 w-4 transition-transform", expandedProjects.has(project.id) && "rotate-180")} />
-                          {isRTL ? "المراحل" : "Milestones"}
-                        </Button>
-                      </div>
-
-                      {expandedProjects.has(project.id) && (
-                        <div className="mt-6 pt-6 border-t">
-                          {loadingContracts.has(project.id) ? (
-                            <div className="flex items-center justify-center py-4">
-                              <Loader2 className="h-5 w-5 animate-spin text-gray-400 mr-2" />
-                              <span className="text-sm text-gray-500">{isRTL ? "جاري تحميل المراحل..." : "Loading milestones..."}</span>
-                            </div>
-                          ) : projectContracts[project.id] && projectContracts[project.id].length > 0 ? (
-                            <div className="space-y-3">
-                              <h4 className="font-semibold text-sm text-gray-900 mb-3">
-                                {isRTL ? "المراحل المرتبطة" : "Associated Milestones"}
-                              </h4>
-                              {projectContracts[project.id].map((contract) => (
-                                <div key={contract.id} className="bg-gray-50 rounded-lg p-3 space-y-2">
-                                  <div className="flex items-start justify-between">
-                                    <div>
-                                      <p className="font-medium text-sm text-gray-900">{contract.title}</p>
-                                      <p className="text-xs text-gray-600">{isRTL ? "العقد:" : "Contract:"} {contract.projectTitle}</p>
-                                    </div>
-                                    <Badge variant="outline" className="text-xs capitalize">
-                                      {contract.status}
-                                    </Badge>
-                                  </div>
-                                  {contract.milestones && contract.milestones.length > 0 ? (
-                                    <div className="space-y-2 mt-2">
-                                      {contract.milestones.map((milestone) => (
-                                        <div key={milestone.id} className="flex items-center gap-2 bg-white rounded p-2 text-xs">
-                                          <div className="flex-1">
-                                            <p className="font-medium text-gray-900">{milestone.title}</p>
-                                            <p className="text-gray-600">{isRTL ? "المبلغ:" : "Amount:"} {contract.currency} {milestone.amount}</p>
-                                            <p className="text-gray-500">{isRTL ? "الموعد:" : "Due:"} {new Date(milestone.dueDate).toLocaleDateString()}</p>
-                                          </div>
-                                          <Badge variant={milestone.status === 'COMPLETED' ? 'default' : 'secondary'} className="text-xs">
-                                            {milestone.status}
-                                          </Badge>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-xs text-gray-500 mt-2">{isRTL ? "لا توجد مراحل" : "No milestones"}</p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-500">{isRTL ? "لا توجد عقود أو مراحل لهذا المشروع" : "No contracts or milestones for this project"}</p>
-                          )}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <FileText className="h-6 w-6 text-gray-400 mb-2" />
+                          <p className="text-xs font-medium text-gray-600">{isRTL ? "مسودات" : "Drafts"}</p>
+                          <p className="text-lg font-bold text-gray-600">{metrics.draftCount}</p>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <Eye className="h-6 w-6 text-blue-400 mb-2" />
+                          <p className="text-xs font-medium text-gray-600">{isRTL ? "منشور" : "Published"}</p>
+                          <p className="text-lg font-bold text-blue-600">{metrics.publishedCount}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <Play className="h-6 w-6 text-yellow-400 mb-2" />
+                          <p className="text-xs font-medium text-gray-600">{isRTL ? "قيد التنفيذ" : "In Progress"}</p>
+                          <p className="text-lg font-bold text-yellow-600">{metrics.inProgressCount}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                          <p className="text-xs font-medium text-gray-600">{isRTL ? "مكتملة" : "Completed"}</p>
+                          <p className="text-lg font-bold text-green-600">{metrics.completedCount}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                {/* Proposal Analytics */}
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold text-[#0A2540]">
+                    {isRTL ? "إحصائيات العروض" : "Proposal Analytics"}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Card>
+                      <CardHeader className="pb-1">
+                        <CardTitle className="text-xs font-medium flex items-center gap-1">
+                          <Users className="h-3 w-3 text-blue-600" />
+                          {isRTL ? "العروض" : "Proposals"}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-2">
+                        {isLoadingStats ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <div>
+                            <p className="text-lg font-bold text-[#0A2540]">{proposalStats.totalProposals}</p>
+                            <p className="text-xs text-gray-500">
+                              {isRTL ? "مقبول" : "accepted"}: {proposalStats.acceptedCount}
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-1">
+                        <CardTitle className="text-xs font-medium flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3 text-green-600" />
+                          {isRTL ? "معدل" : "Rate"}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-2">
+                        {isLoadingStats ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <div>
+                            <p className="text-lg font-bold text-green-600">{proposalStats.acceptanceRate}%</p>
+                            <p className="text-xs text-gray-500">
+                              {isRTL ? "قبول" : "acceptance"}
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-1">
+                        <CardTitle className="text-xs font-medium flex items-center gap-1">
+                          <DollarSign className="h-3 w-3 text-purple-600" />
+                          {isRTL ? "متوسط" : "Avg"}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-2">
+                        {isLoadingStats ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <div>
+                            <p className="text-lg font-bold text-purple-600">${proposalStats.averageProposedAmount}</p>
+                            <p className="text-xs text-gray-500">
+                              {isRTL ? "المبلغ" : "amount"}
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-1">
+                        <CardTitle className="text-xs font-medium flex items-center gap-1">
+                          <Target className="h-3 w-3 text-orange-600" />
+                          {isRTL ? "انتظار" : "Pending"}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-2">
+                        {isLoadingStats ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <div>
+                            <p className="text-lg font-bold text-orange-600">{proposalStats.pendingCount}</p>
+                            <p className="text-xs text-gray-500">
+                              {isRTL ? "مراجعة" : "review"}
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+               {/* Quick Actions */}
+               <Card>
+                 <CardHeader>
+                   <CardTitle>{isRTL ? "إجراءات سريعة" : "Quick Actions"}</CardTitle>
+                 </CardHeader>
+                 <CardContent className="flex flex-col gap-2">
+                   <Button onClick={() => setActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52] w-full">
+                     <Plus className="h-4 w-4 mr-2" />
+                     {isRTL ? "مشروع جديد" : "New Project"}
+                   </Button>
+                 </CardContent>
+               </Card>
+             </div>
+
+              {/* Right Column - Projects and Create New */}
+              <div className="lg:col-span-5 space-y-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="projects">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="projects">
+                      <FileText className="h-4 w-4 mr-2" />
+                      {isRTL ? "المشاريع" : "Projects"}
+                    </TabsTrigger>
+                    <TabsTrigger value="create">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {isRTL ? (editingProject ? "تحديث" : "إنشاء جديد") : (editingProject ? "Update" : "Create New")}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Projects Tab */}
+                  <TabsContent value="projects" className="space-y-6">
+                   {isLoadingProjects ? (
+                      <Card>
+                        <CardContent className="p-8 text-center">
+                          <Loader2 className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-spin" />
+                          <p className="text-gray-600">{isRTL ? "جاري تحميل المشاريع..." : "Loading projects..."}</p>
+                        </CardContent>
+                      </Card>
+                    ) : projects.length === 0 ? (
+                      <Card>
+                        <CardContent className="p-8 text-center">
+                          <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                         <h3 className="text-lg font-medium text-gray-900 mb-2">
+                           {isRTL ? "لا توجد مشاريع بعد" : "No projects yet"}
+                         </h3>
+                         <p className="text-gray-500 mb-4">
+                           {isRTL ? "ابدأ بإنشاء أول مشروع لك" : "Start by creating your first project"}
+                         </p>
+                         <Button onClick={() => setActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52]">
+                           <Plus className="h-4 w-4 mr-2" />
+                           {isRTL ? "إنشاء مشروع" : "Create Project"}
+                         </Button>
+                       </CardContent>
+                     </Card>
+                   ) : (
+                     <div className="space-y-4">
+                       {projects.map((project) => (
+                         <Card key={project.id} className="hover:shadow-md transition-shadow">
+                           <CardContent className="p-6">
+                             <div className="flex items-start justify-between mb-4">
+                               <div className="flex-1">
+                                 <div className="flex items-center gap-3 mb-2">
+                                   <h3 className="text-lg font-semibold text-[#0A2540]">
+                                     {project.title}
+                                   </h3>
+                                   <Badge className={getStatusColor(project.status)}>
+                                     <div className="flex items-center gap-1">
+                                       {getStatusIcon(project.status)}
+                                       {getStatusText(project.status)}
+                                     </div>
+                                   </Badge>
+                                 </div>
+                                 <p className="text-gray-600 mb-3 line-clamp-2">
+                                   {project.description}
+                                 </p>
+                                 <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
+                                   <div className="flex items-center gap-1">
+                                     <DollarSign className="h-4 w-4" />
+                                     {project.budgetMin} - {project.budgetMax} {project.currency}
+                                   </div>
+                                   <div className="flex items-center gap-1">
+                                     <Tag className="h-4 w-4" />
+                                     {project.category}
+                                   </div>
+                                   <div className="flex items-center gap-1">
+                                     <Calendar className="h-4 w-4" />
+                                     {new Date(project.deadline).toLocaleDateString()}
+                                   </div>
+                                 </div>
+                               </div>
+                             </div>
+
+                             <div className="flex flex-wrap gap-2 mb-4">
+                               {project.skillsRequired.map((skill, index) => (
+                                 <Badge key={index} variant="outline" className="text-xs">
+                                   {skill}
+                                 </Badge>
+                               ))}
+                             </div>
+
+                             <div className="flex items-center gap-2 flex-wrap">
+                               {project.status === 'DRAFT' && (
+                                 <>
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => handleEditProject(project)}
+                                   >
+                                     <Edit className="h-4 w-4 mr-1" />
+                                     {isRTL ? "تحرير" : "Edit"}
+                                   </Button>
+                                   <Button
+                                     size="sm"
+                                     variant="default"
+                                     className="bg-green-600 hover:bg-green-700"
+                                     onClick={() => handlePublishProject(project.id)}
+                                     disabled={publishProjectMutation.isPending}
+                                   >
+                                     {publishProjectMutation.isPending ? (
+                                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                     ) : (
+                                       <Eye className="h-4 w-4 mr-1" />
+                                     )}
+                                     {isRTL ? "نشر" : "Publish"}
+                                   </Button>
+                                   <Button
+                                     size="sm"
+                                     variant="destructive"
+                                     onClick={() => {
+                                       setProjectToDelete(project.id);
+                                       setShowDeleteDialog(true);
+                                     }}
+                                   >
+                                     <Trash2 className="h-4 w-4 mr-1" />
+                                     {isRTL ? "حذف" : "Delete"}
+                                   </Button>
+                                 </>
+                               )}
+                               {project.status === 'PUBLISHED' && (
+                                 <>
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => handleUnpublishProject(project.id)}
+                                     disabled={unpublishProjectMutation.isPending}
+                                   >
+                                     {unpublishProjectMutation.isPending ? (
+                                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                     ) : (
+                                       <EyeOff className="h-4 w-4 mr-1" />
+                                     )}
+                                     {isRTL ? "إرجاع" : "Unpublish"}
+                                   </Button>
+                                   <Badge variant="secondary">
+                                     {isRTL ? "يمكن للعاملين تقديم عروضهم" : "Awaiting proposals"}
+                                   </Badge>
+                                 </>
+                               )}
+                               {project.status === 'IN_PROGRESS' && (
+                                 <Badge variant="secondary">
+                                   {isRTL ? "قيد التنفيذ من قبل متخصص" : "Assigned to freelancer"}
+                                 </Badge>
+                               )}
+                               
+                               <Button
+                                 size="sm"
+                                 variant="ghost"
+                                 onClick={() => handleToggleExpand(project.id)}
+                                 className="ml-auto"
+                               >
+                                 <ChevronDown className={cn("h-4 w-4 transition-transform", expandedProjects.has(project.id) && "rotate-180")} />
+                                 {isRTL ? "المراحل" : "Milestones"}
+                               </Button>
+                             </div>
+
+                             {expandedProjects.has(project.id) && (
+                               <div className="mt-6 pt-6 border-t">
+                                 {loadingContracts.has(project.id) ? (
+                                   <div className="flex items-center justify-center py-4">
+                                     <Loader2 className="h-5 w-5 animate-spin text-gray-400 mr-2" />
+                                     <span className="text-sm text-gray-500">{isRTL ? "جاري تحميل المراحل..." : "Loading milestones..."}</span>
+                                   </div>
+                                 ) : projectContracts[project.id] && projectContracts[project.id].length > 0 ? (
+                                   <div className="space-y-3">
+                                     <h4 className="font-semibold text-sm text-gray-900 mb-3">
+                                       {isRTL ? "المراحل المرتبطة" : "Associated Milestones"}
+                                     </h4>
+                                     {projectContracts[project.id].map((contract) => (
+                                       <div key={contract.id} className="bg-gray-50 rounded-lg p-3 space-y-2">
+                                         <div className="flex items-start justify-between">
+                                           <div>
+                                             <p className="font-medium text-sm text-gray-900">{contract.title}</p>
+                                             <p className="text-xs text-gray-600">{isRTL ? "العقد:" : "Contract:"} {contract.projectTitle}</p>
+                                           </div>
+                                           <Badge variant="outline" className="text-xs capitalize">
+                                             {contract.status}
+                                           </Badge>
+                                         </div>
+                                         {contract.milestones && contract.milestones.length > 0 ? (
+                                           <div className="space-y-2 mt-2">
+                                             {contract.milestones.map((milestone) => (
+                                               <div key={milestone.id} className="flex items-center gap-2 bg-white rounded p-2 text-xs">
+                                                 <div className="flex-1">
+                                                   <p className="font-medium text-gray-900">{milestone.title}</p>
+                                                   <p className="text-gray-600">{isRTL ? "المبلغ:" : "Amount:"} {contract.currency} {milestone.amount}</p>
+                                                   <p className="text-gray-500">{isRTL ? "الموعد:" : "Due:"} {new Date(milestone.dueDate).toLocaleDateString()}</p>
+                                                 </div>
+                                                 <Badge variant={milestone.status === 'COMPLETED' ? 'default' : 'secondary'} className="text-xs">
+                                                   {milestone.status}
+                                                 </Badge>
+                                               </div>
+                                             ))}
+                                           </div>
+                                         ) : (
+                                           <p className="text-xs text-gray-500 mt-2">{isRTL ? "لا توجد مراحل" : "No milestones"}</p>
+                                         )}
+                                       </div>
+                                     ))}
+                                   </div>
+                                 ) : (
+                                   <p className="text-sm text-gray-500">{isRTL ? "لا توجد عقود أو مراحل لهذا المشروع" : "No contracts or milestones for this project"}</p>
+                                 )}
+                               </div>
+                             )}
+                           </CardContent>
+                         </Card>
+                       ))}
+                     </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Create/Edit Tab */}
+                  <TabsContent value="create" className="space-y-6">
+                    <ProjectForm
+                      isRTL={isRTL}
+                      onSubmit={handleCreateProject}
+                      onCancel={handleCancelForm}
+                      initialProject={editingProject}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
-            )}
-          </TabsContent>
-
-          {/* Create/Edit Tab */}
-          <TabsContent value="create" className="space-y-6">
-            <ProjectForm
-              isRTL={isRTL}
-              onSubmit={handleCreateProject}
-              onCancel={handleCancelForm}
-              initialProject={editingProject}
-            />
-          </TabsContent>
-        </Tabs>
+            </div>
+          )}
 
         {/* Delete Dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
