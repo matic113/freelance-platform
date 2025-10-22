@@ -435,8 +435,10 @@ public class ContractService {
         private void checkAndAutoCompleteContract(Contract contract) {
            List<Milestone> allMilestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
            
+           // Check if all milestones are PAID (not just COMPLETED)
+           // Contract should only auto-complete after payment is received
            boolean allCompleted = allMilestones.stream()
-                   .allMatch(m -> m.getStatus() == MilestoneStatus.COMPLETED);
+                   .allMatch(m -> m.getStatus() == MilestoneStatus.PAID);
            
            if (allCompleted && contract.getStatus() == ContractStatus.ACTIVE) {
                contract.setStatus(ContractStatus.COMPLETED);
@@ -613,6 +615,23 @@ public class ContractService {
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
         // Load milestones for the contract
         List<Milestone> milestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contractId);
+        contract.setMilestones(milestones);
+        return mapToContractResponse(contract);
+    }
+
+    public ContractResponse getContractByProposal(UUID proposalId, UUID userId) {
+        Contract contract = contractRepository.findByProposalId(proposalId);
+        if (contract == null) {
+            throw new ResourceNotFoundException("Contract not found for this proposal");
+        }
+        
+        // Verify user is either client or freelancer on this contract
+        if (!contract.getClient().getId().equals(userId) && !contract.getFreelancer().getId().equals(userId)) {
+            throw new UnauthorizedException("You can only view your own contracts");
+        }
+        
+        // Load milestones for the contract
+        List<Milestone> milestones = milestoneRepository.findByContractIdOrderByOrderIndexAsc(contract.getId());
         contract.setMilestones(milestones);
         return mapToContractResponse(contract);
     }
