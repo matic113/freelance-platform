@@ -279,7 +279,7 @@ export const HeaderMobile = ({
             </div>
 
             {[
-              { path: "/projects-management", label: isRTL ? "المشاريع" : "Projects", icon: FileText },
+              { path: "/projects", label: isRTL ? "المشاريع" : "Projects", icon: FileText },
               { path: "/freelancers", label: isRTL ? "المستقلون" : "Freelancers", icon: User },
               { path: "/about", label: isRTL ? "حولنا" : "About", icon: Settings },
               { path: "/contact-us", label: isRTL ? "تواصل معنا" : "Contact Us", icon: MessageCircle },
@@ -304,20 +304,29 @@ export const HeaderMobile = ({
               {isRTL ? "الحساب" : "Account"}
             </h3>
             <div className="space-y-1">
-              {[
-                { path: "/profile", label: isRTL ? "الملف الشخصي" : "Profile", icon: User },
-                { path: "/projects", label: isRTL ? "المشاريع" : "Projects", icon: FileText },
-                { path: "/settings", label: isRTL ? "الإعدادات" : "Settings", icon: Settings },
-              ].map((item) => (
+              <Link
+                to="/profile"
+                className="flex items-center gap-3 px-3 py-3 text-gray-700 hover:text-[#0A2540] hover:bg-[#0A2540]/5 rounded-lg transition-colors"
+              >
+                <User className="w-4 h-4" />
+                {isRTL ? "الملف الشخصي" : "Profile"}
+              </Link>
+              {effectiveRole === UserType.CLIENT && (
                 <Link
-                  key={item.path}
-                  to={item.path}
+                  to="/projects-management"
                   className="flex items-center gap-3 px-3 py-3 text-gray-700 hover:text-[#0A2540] hover:bg-[#0A2540]/5 rounded-lg transition-colors"
                 >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
+                  <FileText className="w-4 h-4" />
+                  {isRTL ? "إدارة المشاريع" : "Project Management"}
                 </Link>
-              ))}
+              )}
+              <Link
+                to="/settings"
+                className="flex items-center gap-3 px-3 py-3 text-gray-700 hover:text-[#0A2540] hover:bg-[#0A2540]/5 rounded-lg transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                {isRTL ? "الإعدادات" : "Settings"}
+              </Link>
             </div>
           </div>
         )}

@@ -83,7 +83,7 @@ export const HeaderDesktop = ({
          />
 
         <Link
-          to="/projects-management"
+          to="/projects"
           className="font-medium hover:opacity-80"
           style={{ color: textColor }}
         >
