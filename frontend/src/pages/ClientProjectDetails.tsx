@@ -209,7 +209,7 @@ export default function ClientProjectDetailsPage() {
     if (!project) return;
     console.log('Navigating to edit project', project.id);
     toast({ title: isRTL ? 'جاري التحويل' : 'Opening editor', description: isRTL ? 'جارٍ تحميل المشروع للتحرير' : 'Loading project for editing' });
-    navigate('/create-project', { state: { editProjectId: project.id } });
+    navigate('/projects-management', { state: { editProjectId: project.id } });
   };
 
   const handleDeleteProject = async () => {

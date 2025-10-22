@@ -37,6 +37,7 @@ import Contracts from "./pages/Contracts";
 import Proposals from "./pages/Proposals";
 import Notifications from "./pages/Notifications";
 import CreateProject from "./pages/CreateProject";
+import ProjectsManagement from "./pages/ProjectsManagement";
 import MyProposals from "./pages/MyProposals";
 import ProjectDetails from "./pages/ProjectDetails";
 import ClientProjectDetails from "./pages/ClientProjectDetails";
@@ -137,6 +138,11 @@ const App = () => (
             <Route path="/create-project" element={
               <ClientRoute>
                 <CreateProject />
+              </ClientRoute>
+            } />
+            <Route path="/projects-management" element={
+              <ClientRoute>
+                <ProjectsManagement />
               </ClientRoute>
             } />
             <Route path="/profile" element={

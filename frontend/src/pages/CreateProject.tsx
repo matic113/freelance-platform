@@ -73,6 +73,7 @@ export default function CreateProjectPage() {
    const [newSkill, setNewSkill] = useState('');
    const [isSubmitting, setIsSubmitting] = useState(false);
    const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
    const [isUploadingFile, setIsUploadingFile] = useState(false);
 
    const { data: projectsData, isLoading: isLoadingProjects } = useMyProjects(0, 50, 'createdAt,desc');
@@ -170,7 +171,8 @@ export default function CreateProjectPage() {
 
    const handleFileSelect = async (file: File) => {
      if (!editingProjectId) {
-       toast.error(isRTL ? 'يجب إنشاء المشروع أولاً' : 'Please create the project first');
+       setPendingFiles(prev => [...prev, file]);
+       toast.success(isRTL ? `تمت إضافة ${file.name} - سيتم رفعه بعد إنشاء المشروع` : `${file.name} added - will upload after project creation`);
        return;
      }
 
@@ -179,10 +181,14 @@ export default function CreateProjectPage() {
        return;
      }
 
+     await uploadSingleFile(file, editingProjectId);
+   };
+
+   const uploadSingleFile = async (file: File, projectId: string) => {
      setIsUploadingFile(true);
      try {
        const presignedResponse = await presignedUploadService.getPresignedUploadUrl(
-         editingProjectId,
+         projectId,
          file.name,
          'files'
        );
@@ -201,7 +207,7 @@ export default function CreateProjectPage() {
        };
 
        const projectResponse = await presignedUploadService.completeUpload(
-         editingProjectId,
+         projectId,
          completeRequest
        );
 
@@ -220,12 +226,20 @@ export default function CreateProjectPage() {
        console.error('Error uploading file:', error);
        const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
        toast.error(isRTL ? `خطأ: ${errorMessage}` : `Error: ${errorMessage}`);
+       throw error;
      } finally {
        setIsUploadingFile(false);
      }
    };
 
-  const handleRemoveAttachment = (filename: string) => {
+  const handleRemoveAttachment = async (filename: string) => {
+    const pendingFile = pendingFiles.find(f => f.name === filename);
+    if (pendingFile) {
+      setPendingFiles(prev => prev.filter(f => f.name !== filename));
+      toast.success(isRTL ? 'تم إزالة الملف' : 'File removed');
+      return;
+    }
+    
     setAttachments(prev => prev.filter(att => att.filename !== filename));
   };
 
@@ -280,23 +294,22 @@ export default function CreateProjectPage() {
       } else {
         const created = await createProjectMutation.mutateAsync(requestData);
        createdProjectId = created.id;
+         setEditingProjectId(createdProjectId);
          toast.success(isRTL ? 'تم إنشاء المشروع بنجاح' : 'Project created successfully');
+         
+         if (pendingFiles.length > 0) {
+           toast.info(isRTL ? `جاري رفع ${pendingFiles.length} ملف...` : `Uploading ${pendingFiles.length} file(s)...`);
+           for (const file of pendingFiles) {
+             try {
+               await uploadSingleFile(file, createdProjectId);
+             } catch (error) {
+               console.error('Failed to upload file:', file.name, error);
+             }
+           }
+           setPendingFiles([]);
+           toast.success(isRTL ? 'تم رفع جميع الملفات' : 'All files uploaded successfully');
+         }
        }
-
-       setFormData({
-        title: '',
-        description: '',
-        category: '',
-        budgetMin: '',
-        budgetMax: '',
-        currency: 'USD',
-        projectType: ProjectType.FIXED,
-        duration: '',
-        deadline: '',
-        skillsRequired: [],
-      });
-      setEditingProjectId(null);
-      setActiveTab('manage');
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || (isRTL ? 'حدث خطأ أثناء إنشاء المشروع' : 'Error creating project');
       toast.error(errorMessage);
@@ -386,6 +399,7 @@ export default function CreateProjectPage() {
       skillsRequired: [],
     });
     setAttachments([]);
+    setPendingFiles([]);
     setEditingProjectId(null);
     navigate('/client-dashboard');
   };
@@ -655,28 +669,37 @@ export default function CreateProjectPage() {
                          <FileUploadInput
                            onFileSelect={handleFileSelect}
                            isUploading={isUploadingFile}
-                           disabled={!editingProjectId}
+                           disabled={false}
                            maxFileSizeMB={20}
                            acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.zip,.rar"
                            fullArea={true}
                            allowMultiple={true}
                          />
                        </div>
-                       {!editingProjectId && (
+                       {!editingProjectId && pendingFiles.length > 0 && (
                          <p className="text-xs text-muted-foreground">
-                           {isRTL ? "يجب إنشاء المشروع أولاً قبل إضافة المرفقات" : "Create the project first to add attachments"}
+                           {isRTL ? `${pendingFiles.length} ملف جاهز للرفع بعد إنشاء المشروع` : `${pendingFiles.length} file(s) ready to upload after project creation`}
                          </p>
                        )}
                      </div>
                   </div>
 
-                  {attachments.length > 0 && (
+                  {(attachments.length > 0 || pendingFiles.length > 0) && (
                     <div className={cn("mt-6", isRTL && "rtl")}>
                       <p className="text-sm font-medium mb-4 text-muted-foreground">
-                        {isRTL ? "المرفقات المرفوعة" : "Uploaded Attachments"} ({attachments.length})
+                        {isRTL ? "المرفقات" : "Attachments"} ({attachments.length + pendingFiles.length})
                       </p>
                       <AttachmentList
-                        attachments={attachments}
+                        attachments={[
+                          ...attachments,
+                          ...pendingFiles.map((file, idx) => ({
+                            id: `pending-${idx}`,
+                            filename: file.name,
+                            url: '',
+                            size: file.size,
+                            type: file.type,
+                          }))
+                        ]}
                         onRemove={handleRemoveAttachment}
                         isRTL={isRTL}
                         canRemove={true}

@@ -171,6 +171,22 @@ export const presignedUploadService = {
     );
   },
 
+  getPresignedUploadUrlsBatch: async (
+    projectId: string,
+    filenames: string[],
+    folder: string = 'files'
+  ): Promise<PresignedUploadResponse[]> => {
+    return apiService.post<PresignedUploadResponse[]>(
+      `/projects/${projectId}/presigned-uploads/batch`,
+      filenames,
+      {
+        params: {
+          folder,
+        },
+      }
+    );
+  },
+
   uploadToPresignedUrl: async (
     uploadUrl: string,
     file: File

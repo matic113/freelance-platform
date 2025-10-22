@@ -112,7 +112,7 @@ export const UserDropdown = ({
         {!isAdminView && (
           <>
             <DropdownMenuItem asChild>
-              <Link to="/projects" className="flex items-center">
+              <Link to="/projects-management" className="flex items-center">
                 <FileText className="mr-2 h-4 w-4" />
                 <span>{isRTL ? "المشاريع" : "Projects"}</span>
               </Link>

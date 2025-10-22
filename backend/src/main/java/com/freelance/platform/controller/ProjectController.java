@@ -309,6 +309,40 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/presigned-uploads/batch")
+    @Operation(summary = "Get multiple presigned upload URLs", description = "Get presigned URLs for multiple files at once")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Presigned URLs generated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to upload files to this project"),
+            @ApiResponse(responseCode = "404", description = "Project not found")
+    })
+    public ResponseEntity<java.util.List<com.freelance.platform.dto.response.PresignedUploadResponse>> getPresignedUploadUrlsBatch(
+            @Parameter(description = "Project ID") @PathVariable UUID id,
+            @RequestBody java.util.List<String> filenames,
+            @RequestParam(value = "folder", defaultValue = "files") String folder,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ProjectResponse projectResponse = projectService.getProjectById(id);
+        
+        // Verify user is the project owner
+        if (!projectResponse.getClientId().equals(currentUser.getId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to upload files to this project");
+        }
+
+        if (filenames == null || filenames.isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Filenames list cannot be empty");
+        }
+
+        java.util.List<com.freelance.platform.dto.response.PresignedUploadResponse> responses = 
+                projectService.getPresignedUploadUrlsBatch(id, filenames, folder, currentUser.getId());
+
+        return ResponseEntity.ok(responses);
+    }
+
     @PostMapping("/{id}/complete-upload")
     @Operation(summary = "Complete file upload", description = "Register uploaded file as project attachment")
     @ApiResponses(value = {

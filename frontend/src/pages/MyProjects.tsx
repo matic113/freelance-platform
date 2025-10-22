@@ -183,7 +183,7 @@ export default function MyProjects() {
               }
             </p>
           </div>
-          <Link to="/create-project">
+          <Link to="/projects-management">
             <Button className="bg-[#0A2540] hover:bg-[#142b52]">
               <Plus className="h-4 w-4 mr-2" />
               {isRTL ? "مشروع جديد" : "New Project"}

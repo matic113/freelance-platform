@@ -279,7 +279,7 @@ export const HeaderMobile = ({
             </div>
 
             {[
-              { path: "/projects", label: isRTL ? "المشاريع" : "Projects", icon: FileText },
+              { path: "/projects-management", label: isRTL ? "المشاريع" : "Projects", icon: FileText },
               { path: "/freelancers", label: isRTL ? "المستقلون" : "Freelancers", icon: User },
               { path: "/about", label: isRTL ? "حولنا" : "About", icon: Settings },
               { path: "/contact-us", label: isRTL ? "تواصل معنا" : "Contact Us", icon: MessageCircle },

@@ -21,11 +21,12 @@ interface AttachmentListProps {
   canRemove?: boolean;
 }
 
-const getFileIcon = (contentType: string) => {
-  if (contentType.startsWith('image/')) return <Image className="h-4 w-4 text-blue-500" />;
-  if (contentType.includes('zip') || contentType.includes('rar') || contentType.includes('7z')) 
+const getFileIcon = (contentType?: string) => {
+  const type = contentType || '';
+  if (type.startsWith('image/')) return <Image className="h-4 w-4 text-blue-500" />;
+  if (type.includes('zip') || type.includes('rar') || type.includes('7z')) 
     return <Archive className="h-4 w-4 text-orange-500" />;
-  if (contentType.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />;
+  if (type.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />;
   return <File className="h-4 w-4 text-gray-500" />;
 };
 

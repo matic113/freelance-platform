@@ -97,4 +97,15 @@ export const projectService = {
     
     return apiService.upload<FileUploadResponse>('/files/upload', formData);
   },
+
+  // Complete file upload by registering it as an attachment
+  completeFileUpload: async (projectId: string, objectName: string, filename: string, fileSize: number, contentType: string): Promise<ProjectResponse> => {
+    return apiService.post<ProjectResponse>(`/projects/${projectId}/complete-upload`, {
+      objectName,
+      filename,
+      fileSize,
+      contentType,
+      folder: 'files',
+    });
+  },
 };

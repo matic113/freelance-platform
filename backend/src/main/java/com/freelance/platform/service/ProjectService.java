@@ -80,6 +80,22 @@ public class ProjectService {
         project.setUpdatedAt(LocalDateTime.now());
 
         Project savedProject = projectRepository.save(project);
+        
+        // Handle attachments if provided
+        if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
+            for (com.freelance.platform.dto.request.ProjectAttachmentRequest attachmentRequest : request.getAttachments()) {
+                ProjectAttachment attachment = new ProjectAttachment();
+                attachment.setProject(savedProject);
+                attachment.setFileName(attachmentRequest.getFileName());
+                attachment.setFileUrl(attachmentRequest.getFileUrl());
+                attachment.setFileSize(attachmentRequest.getFileSize());
+                attachment.setFileType(attachmentRequest.getFileType());
+                attachment.setUploadedAt(LocalDateTime.now());
+                
+                projectAttachmentRepository.save(attachment);
+            }
+        }
+        
         return mapToProjectResponse(savedProject);
     }
 
@@ -407,6 +423,35 @@ public class ProjectService {
         );
     }
 
+    public java.util.List<com.freelance.platform.dto.response.PresignedUploadResponse> getPresignedUploadUrlsBatch(UUID projectId, java.util.List<String> filenames, String folder, UUID clientId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+
+        if (!project.getClient().getId().equals(clientId)) {
+            throw new UnauthorizedException("You can only upload files to your own projects");
+        }
+
+        java.util.List<com.freelance.platform.dto.response.PresignedUploadResponse> responses = new java.util.ArrayList<>();
+        
+        for (String filename : filenames) {
+            // Generate object name with project ID and folder
+            String sanitizedFilename = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+            String objectName = "projects/" + projectId + "/" + folder + "/" + System.currentTimeMillis() + "_" + sanitizedFilename;
+
+            // Generate presigned upload URL (24 hours expiration)
+            String uploadUrl = storageService.getPresignedUploadUrl(objectName, 24);
+
+            responses.add(new com.freelance.platform.dto.response.PresignedUploadResponse(
+                    uploadUrl,
+                    objectName,
+                    filename,
+                    24 * 60 * 60 * 1000  // 24 hours in milliseconds
+            ));
+        }
+        
+        return responses;
+    }
+
     public ProjectResponse completeFileUpload(UUID projectId, com.freelance.platform.dto.request.CompleteUploadRequest request, UUID clientId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
@@ -415,16 +460,14 @@ public class ProjectService {
             throw new UnauthorizedException("You can only upload files to your own projects");
         }
 
-        // Generate presigned download URL
-        String downloadUrl = storageService.getPresignedDownloadUrl(request.getObjectName(), 24);
-
-        // Create and save the attachment
+        // Create and save the attachment with the object name (not a presigned URL)
+        // mapToProjectResponse will generate fresh presigned download URLs when returning the project
         ProjectAttachment attachment = new ProjectAttachment();
         attachment.setProject(project);
         attachment.setFileName(request.getFilename());
         attachment.setFileSize(request.getFileSize());
         attachment.setFileType(request.getContentType());
-        attachment.setFileUrl(downloadUrl);
+        attachment.setFileUrl(request.getObjectName());  // Store object name, not presigned URL
         attachment.setUploadedAt(LocalDateTime.now());
         
         projectAttachmentRepository.save(attachment);

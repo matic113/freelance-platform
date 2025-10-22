@@ -481,6 +481,7 @@ export interface CreateProjectRequest {
   projectType: ProjectType;
   duration: string;
   deadline: string;
+  attachments?: ProjectAttachment[];
 }
 
 export interface UpdateProjectRequest {
@@ -494,6 +495,7 @@ export interface UpdateProjectRequest {
   projectType?: ProjectType;
   duration?: string;
   deadline?: string;
+  attachments?: ProjectAttachment[];
 }
 
 export interface ProjectSearchRequest {

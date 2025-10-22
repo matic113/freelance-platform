@@ -308,7 +308,7 @@ export default function ClientDashboard() {
                 </CardHeader>
                 <CardContent className="p-2">
                   <div className="space-y-1">
-                   <Link to="/create-project" className="block">
+                   <Link to="/projects-management" className="block">
                      <div className="flex items-center gap-2 p-2 rounded-lg border hover:bg-muted transition-colors cursor-pointer text-sm">
                        <Plus className="h-4 w-4 text-[#0A2540] flex-shrink-0" />
                        <span className="truncate text-xs">{isRTL ? "مشروع جديد" : "New Project"}</span>
@@ -359,7 +359,7 @@ export default function ClientDashboard() {
                   <Calendar className="h-5 w-5" />
                   {isRTL ? "المشاريع الأخيرة" : "Recent Projects"}
                 </span>
-                <Link to="/my-projects">
+                <Link to="/projects-management">
                   <Button variant="outline" size="sm">
                     <Eye className="h-4 w-4 mr-2" />
                     {isRTL ? "عرض الكل" : "View All"}

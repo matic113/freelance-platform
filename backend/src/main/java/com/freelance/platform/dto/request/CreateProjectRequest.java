@@ -45,6 +45,8 @@ public class CreateProjectRequest {
 
     private LocalDate deadline;
 
+    private List<ProjectAttachmentRequest> attachments;
+
     // Constructors
     public CreateProjectRequest() {}
 
@@ -143,5 +145,13 @@ public class CreateProjectRequest {
 
     public void setDeadline(LocalDate deadline) {
         this.deadline = deadline;
+    }
+
+    public List<ProjectAttachmentRequest> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<ProjectAttachmentRequest> attachments) {
+        this.attachments = attachments;
     }
 }

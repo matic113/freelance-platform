@@ -47,10 +47,22 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    for (let i = 0; i < files.length; i++) {
-      handleFileSelect(files[i]);
+    const fileList = e.target.files;
+    console.log('[FileUploadInput] handleInputChange called. Files count:', fileList?.length);
+    if (!fileList || fileList.length === 0) return;
+    
+    // Convert FileList to array to avoid issues with live collection
+    const filesArray = Array.from(fileList);
+    console.log('[FileUploadInput] Processing', filesArray.length, 'files');
+    
+    for (let i = 0; i < filesArray.length; i++) {
+      console.log('[FileUploadInput] Calling handleFileSelect for file', i, ':', filesArray[i].name);
+      handleFileSelect(filesArray[i]);
+    }
+    console.log('[FileUploadInput] All files processed, clearing input');
+    // Clear input for next upload
+    if (e.target) {
+      e.target.value = '';
     }
   };
 
@@ -69,8 +81,10 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files?.[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        handleFileSelect(e.dataTransfer.files[i]);
+      }
     }
   };
 
