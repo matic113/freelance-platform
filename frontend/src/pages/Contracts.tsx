@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/sections/Footer';
 import { useLocalization } from '@/hooks/useLocalization';
@@ -90,6 +91,8 @@ export default function ContractsPage() {
   const { isRTL, toggleLanguage } = useLocalization();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('contracts');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -105,11 +108,13 @@ export default function ContractsPage() {
     dueDate: '',
     orderIndex: 1
   });
+  const [highlightedContractId, setHighlightedContractId] = useState<string | null>(null);
 
    // Determine user type from auth context
    const isFreelancerUser = isFreelancer(user);
    const isClientUser = isClient(user);
-   const userType = getUserTypeString(user) || 'client';
+   const userTypeRaw = getUserTypeString(user) || 'client';
+   const userType: 'client' | 'freelancer' = userTypeRaw === 'admin' ? 'client' : userTypeRaw as 'client' | 'freelancer';
 
   // Backend API hooks - only call endpoints based on user type
   const { 
@@ -166,6 +171,37 @@ export default function ContractsPage() {
   ];
 
   const paymentRequests = Array.from(new Map(combinedPaymentRequests.map(p => [p.id, p])).values());
+
+   // Handle contract highlighting from URL parameter
+   useEffect(() => {
+     const params = new URLSearchParams(location.search);
+     const contractId = params.get('contractId');
+     
+     if (contractId && contracts.length > 0) {
+       const contract = contracts.find(c => c.id === contractId);
+       if (contract) {
+         setHighlightedContractId(contractId);
+         setSelectedContract(contract);
+         setShowContractDetails(true);
+         
+         // Clear the URL parameter to prevent re-opening
+         navigate(location.pathname, { replace: true });
+         
+         // Scroll to the contract (with a slight delay to ensure DOM is ready)
+         setTimeout(() => {
+           const element = document.getElementById(`contract-${contractId}`);
+           if (element) {
+             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+           }
+         }, 300);
+         
+         // Clear the highlight after a few seconds
+         setTimeout(() => {
+           setHighlightedContractId(null);
+         }, 3000);
+       }
+     }
+   }, [location.search, contracts.length, navigate, location.pathname]);
 
    useEffect(() => {
      if (selectedContract) {
@@ -526,6 +562,11 @@ export default function ContractsPage() {
      }
    };
 
+   const handleAddMilestoneFromModal = (contractId: string) => {
+     // Contract is already selected, just open the dialog
+     setShowMilestoneDialog(true);
+   };
+
   return (
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
       <Header isRTL={isRTL} onLanguageToggle={toggleLanguage} />
@@ -770,7 +811,14 @@ export default function ContractsPage() {
             ) : (
               <div className="space-y-6">
                 {filteredContracts.map((contract) => (
-                <Card key={contract.id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={contract.id} 
+                  id={`contract-${contract.id}`}
+                  className={cn(
+                    "hover:shadow-md transition-all duration-300",
+                    highlightedContractId === contract.id && "ring-4 ring-blue-500 shadow-xl"
+                  )}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -1356,6 +1404,7 @@ export default function ContractsPage() {
         onApprovePayment={handleApprovePayment}
         onRejectPayment={handleRejectPayment}
         onSendMessage={handleSendMessage}
+        onAddMilestone={handleAddMilestoneFromModal}
       />
       </main>
 

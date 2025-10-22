@@ -20,7 +20,8 @@ import {
   CheckCircle,
   Star,
   MessageCircle,
-  Share2
+  Share2,
+  FileText
 } from 'lucide-react';
 import { projectService } from '@/services/project.service';
 import { proposalService } from '@/services/proposal.service';
@@ -189,8 +190,14 @@ export default function ProjectDetailsPage() {
     if (!project) return;
 
     try {
+      // Prepend project context to the message
+      const projectContext = isRTL 
+        ? `هذه الرسالة تتعلق بالمشروع: ${project.title}\n\n`
+        : `This message is concerning project: ${project.title}\n\n`;
+      const fullMessage = projectContext + message;
+
       const conversation = await conversationService.startConversationById(project.clientId);
-      await conversationService.sendMessage(conversation.id, message);
+      await conversationService.sendMessage(conversation.id, fullMessage);
 
       toast({
         title: isRTL ? 'نجح' : 'Success',
@@ -278,6 +285,26 @@ export default function ProjectDetailsPage() {
                     )}
                   </div>
                 </CardHeader>
+                {project.attachments && project.attachments.length > 0 && (
+                  <CardContent>
+                    <div className="flex flex-wrap gap-4">
+                      {project.attachments.map((attachment) => (
+                        <div key={attachment.id} className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-500" />
+                          <a
+                            href={attachment.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline truncate max-w-[150px]"
+                            title={attachment.fileName}
+                          >
+                            {attachment.fileName}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
               </Card>
 
               {/* Project Details Card */}
@@ -335,30 +362,6 @@ export default function ProjectDetailsPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Attachments Card */}
-              {project.attachments && project.attachments.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{isRTL ? 'المرفقات' : 'Attachments'}</CardTitle>
-                    <CardDescription>
-                      {isRTL ? 'ملفات المشروع' : 'Project files'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <AttachmentList
-                      attachments={project.attachments.map((att) => ({
-                        filename: att.fileName,
-                        url: att.fileUrl,
-                        size: att.fileSize,
-                        type: att.fileType,
-                      }))}
-                      isRTL={isRTL}
-                      canRemove={false}
-                    />
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Recent Proposals Card */}
               <Card>

@@ -27,7 +27,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Edit,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { projectService } from '@/services/project.service';
 import { proposalService } from '@/services/proposal.service';
@@ -147,10 +148,9 @@ export default function ClientProjectDetailsPage() {
   const confirmAcceptProposal = async () => {
     if (selectedProposal) {
       try {
-        await acceptProposalMutation.mutateAsync(selectedProposal.id);
+        const response = await acceptProposalMutation.mutateAsync(selectedProposal.id);
         
         setShowAcceptDialog(false);
-        setSelectedProposal(null);
         
         setProposals(prev =>
           prev.map(p =>
@@ -160,9 +160,19 @@ export default function ClientProjectDetailsPage() {
 
         toast({
           title: isRTL ? 'نجح' : 'Success',
-          description: isRTL ? 'تم قبول العرض بنجاح' : 'Proposal accepted successfully',
+          description: isRTL ? 'تم قبول العرض بنجاح. جارٍ التحويل إلى العقد...' : 'Proposal accepted successfully. Redirecting to contract...',
           variant: 'default'
         });
+
+        // Redirect to contracts page with the contract ID
+        if (response?.contractId) {
+          navigate(`/contracts?contractId=${response.contractId}`);
+        } else {
+          // Fallback: redirect to contracts page
+          navigate('/contracts');
+        }
+        
+        setSelectedProposal(null);
       } catch (error: unknown) {
         console.error('Error accepting proposal:', error);
         toast({
@@ -296,6 +306,23 @@ export default function ClientProjectDetailsPage() {
                     )}
                   </div>
                 </CardHeader>
+                {project.attachments && project.attachments.length > 0 && (
+                  <CardContent className="space-y-4">
+                    {project.attachments.map((attachment, index) => (
+                      <div key={index} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                        <FileText className="h-5 w-5 text-gray-400" />
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline truncate max-w-[200px]"
+                        >
+                          {attachment.name}
+                        </a>
+                      </div>
+                    ))}
+                  </CardContent>
+                )}
               </Card>
 
               {/* Project Details Card */}
@@ -353,30 +380,6 @@ export default function ClientProjectDetailsPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Attachments Card */}
-              {project.attachments && project.attachments.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{isRTL ? 'المرفقات' : 'Attachments'}</CardTitle>
-                    <CardDescription>
-                      {isRTL ? 'ملفات المشروع' : 'Project files'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <AttachmentList
-                      attachments={project.attachments.map((att) => ({
-                        filename: att.fileName,
-                        url: att.fileUrl,
-                        size: att.fileSize,
-                        type: att.fileType,
-                      }))}
-                      isRTL={isRTL}
-                      canRemove={false}
-                    />
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Received Proposals Card */}
               <Card>
