@@ -15,9 +15,11 @@ export const Footer = ({ isRTL = false }: FooterProps) => {
 
           {/* Company Info */}
           <div className={cn("space-y-4", isRTL && "text-right")}>
-            <div className="italic text-2xl font-bold text-white">
-              {isRTL ? "فريينت" : "Freint"}
-            </div>
+            <img 
+              src="/Freint-Logo.png" 
+              alt="Freint Logo" 
+              className="h-12 w-auto object-contain"
+            />
 
             <p className="text-[#E0E6ED] leading-relaxed">
               {isRTL 

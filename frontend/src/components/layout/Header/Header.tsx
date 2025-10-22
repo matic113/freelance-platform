@@ -108,10 +108,10 @@ export const Header = ({ isRTL = false, onLanguageToggle }: HeaderProps) => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/");
+      // Stay on current page after logout, don't navigate
+      // User can manually navigate where they want
     } catch (error) {
       console.error("Logout error:", error);
-      navigate("/");
     }
   };
 
@@ -126,12 +126,15 @@ export const Header = ({ isRTL = false, onLanguageToggle }: HeaderProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
-             <Link
+           <Link
                to="/"
-               className="text-2xl font-bold tracking-wide"
-               style={{ color: textColor }}
+               className="flex items-center h-16 hover:opacity-80 transition-opacity"
              >
-               {isRTL ? "فريينت" : "Freint"}
+               <img 
+                 src="/Freint-Logo.png" 
+                 alt="Freint Logo" 
+                 className="h-10 w-auto object-contain"
+               />
              </Link>
           </div>
 
