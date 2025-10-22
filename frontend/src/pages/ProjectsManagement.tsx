@@ -600,9 +600,9 @@ export default function ProjectsManagementPage() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleToggleExpand(project.id)}
-                          className={cn("ml-auto", expandedProjects.has(project.id) && "rotate-180")}
+                          className="ml-auto"
                         >
-                          <ChevronDown className="h-4 w-4 transition-transform" />
+                          <ChevronDown className={cn("h-4 w-4 transition-transform", expandedProjects.has(project.id) && "rotate-180")} />
                           {isRTL ? "المراحل" : "Milestones"}
                         </Button>
                       </div>
