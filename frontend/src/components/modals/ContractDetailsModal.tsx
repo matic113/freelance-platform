@@ -37,6 +37,7 @@ interface ContractDetailsModalProps {
   onRejectPayment?: (paymentRequestId: string, reason: string) => void;
   onSendMessage?: (contractId: string) => void;
   onAddMilestone?: (contractId: string) => void;
+  onEditMilestone?: (milestone: MilestoneResponse) => void;
 }
 
 export const ContractDetailsModal: React.FC<ContractDetailsModalProps> = ({
@@ -52,7 +53,8 @@ export const ContractDetailsModal: React.FC<ContractDetailsModalProps> = ({
   onApprovePayment,
   onRejectPayment,
   onSendMessage,
-  onAddMilestone
+  onAddMilestone,
+  onEditMilestone
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -265,20 +267,21 @@ export const ContractDetailsModal: React.FC<ContractDetailsModalProps> = ({
                       {isRTL ? "أضف مرحلة جديدة لبدء المشروع" : "Add a milestone to get started"}
                     </p>
                   </div>
-                ) : (
-                  contractMilestones.map((milestone) => (
-                    <MilestoneCard
-                      key={milestone.id}
-                      milestone={milestone}
-                      contract={contract}
-                      userType={userType}
-                      isRTL={isRTL}
-                      onUpdateMilestone={onUpdateMilestone}
-                      onRequestPayment={onRequestPayment}
-                      onRejectPayment={onRejectPayment}
-                    />
-                  ))
-                )}
+                 ) : (
+                   contractMilestones.map((milestone) => (
+                     <MilestoneCard
+                       key={milestone.id}
+                       milestone={milestone}
+                       contract={contract}
+                       userType={userType}
+                       isRTL={isRTL}
+                       onUpdateMilestone={onUpdateMilestone}
+                       onRequestPayment={onRequestPayment}
+                       onRejectPayment={onRejectPayment}
+                       onEdit={onEditMilestone}
+                     />
+                   ))
+                 )}
               </div>
             </TabsContent>
 

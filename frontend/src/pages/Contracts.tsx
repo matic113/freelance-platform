@@ -172,36 +172,37 @@ export default function ContractsPage() {
 
   const paymentRequests = Array.from(new Map(combinedPaymentRequests.map(p => [p.id, p])).values());
 
-   // Handle contract highlighting from URL parameter
-   useEffect(() => {
-     const params = new URLSearchParams(location.search);
-     const contractId = params.get('contractId');
-     
-     if (contractId && contracts.length > 0) {
-       const contract = contracts.find(c => c.id === contractId);
-       if (contract) {
-         setHighlightedContractId(contractId);
-         setSelectedContract(contract);
-         setShowContractDetails(true);
-         
-         // Clear the URL parameter to prevent re-opening
-         navigate(location.pathname, { replace: true });
-         
-         // Scroll to the contract (with a slight delay to ensure DOM is ready)
-         setTimeout(() => {
-           const element = document.getElementById(`contract-${contractId}`);
-           if (element) {
-             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-           }
-         }, 300);
-         
-         // Clear the highlight after a few seconds
-         setTimeout(() => {
-           setHighlightedContractId(null);
-         }, 3000);
-       }
-     }
-   }, [location.search, contracts.length, navigate, location.pathname]);
+    // Handle contract highlighting from URL parameter
+    useEffect(() => {
+      const params = new URLSearchParams(location.search);
+      const contractId = params.get('contractId');
+      
+      if (contractId && contracts.length > 0) {
+        const contract = contracts.find(c => c.id === contractId);
+        if (contract) {
+          setHighlightedContractId(contractId);
+          setSelectedContract(contract);
+          setShowContractDetails(true);
+          setActiveTab('contracts');
+          
+          // Clear the URL parameter to prevent re-opening
+          navigate(location.pathname, { replace: true });
+          
+          // Scroll to the contract (with a slight delay to ensure DOM is ready)
+          setTimeout(() => {
+            const element = document.getElementById(`contract-${contractId}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 300);
+          
+          // Clear the highlight after a few seconds
+          setTimeout(() => {
+            setHighlightedContractId(null);
+          }, 3000);
+        }
+      }
+    }, [location.search, contracts, navigate, location.pathname]);
 
    useEffect(() => {
      if (selectedContract) {
@@ -1387,25 +1388,26 @@ export default function ContractsPage() {
           </DialogContent>
         </Dialog>
 
-      {/* Contract Details Modal */}
-      <ContractDetailsModal
-        contract={selectedContract}
-        milestones={sortMilestonesByDate(contracts.flatMap(c => c.milestones || []))}
-        paymentRequests={paymentRequests}
-        isOpen={showContractDetails}
-        onClose={() => {
-          setShowContractDetails(false);
-          setSelectedContract(null);
-        }}
-        userType={userType}
-        isRTL={isRTL}
-        onUpdateMilestone={handleUpdateMilestoneForModal}
-        onRequestPayment={handleRequestPaymentForModal}
-        onApprovePayment={handleApprovePayment}
-        onRejectPayment={handleRejectPayment}
-        onSendMessage={handleSendMessage}
-        onAddMilestone={handleAddMilestoneFromModal}
-      />
+       {/* Contract Details Modal */}
+       <ContractDetailsModal
+         contract={selectedContract}
+         milestones={sortMilestonesByDate(contracts.flatMap(c => c.milestones || []))}
+         paymentRequests={paymentRequests}
+         isOpen={showContractDetails}
+         onClose={() => {
+           setShowContractDetails(false);
+           setSelectedContract(null);
+         }}
+         userType={userType}
+         isRTL={isRTL}
+         onUpdateMilestone={handleUpdateMilestoneForModal}
+         onRequestPayment={handleRequestPaymentForModal}
+         onApprovePayment={handleApprovePayment}
+         onRejectPayment={handleRejectPayment}
+         onSendMessage={handleSendMessage}
+         onAddMilestone={handleAddMilestoneFromModal}
+         onEditMilestone={handleEditMilestone}
+       />
       </main>
 
       <Footer isRTL={isRTL} />

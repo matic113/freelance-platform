@@ -28,6 +28,7 @@ interface MilestoneCardProps {
   onRequestPayment?: (contractId: string, milestoneId: string, amount: number) => void;
   onApprovePayment?: (milestoneId: string) => void;
   onRejectPayment?: (milestoneId: string, reason: string) => void;
+  onEdit?: (milestone: MilestoneResponse) => void;
 }
 
 export const MilestoneCard: React.FC<MilestoneCardProps> = ({
@@ -38,7 +39,8 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
   onUpdateMilestone,
   onRequestPayment,
   onApprovePayment,
-  onRejectPayment
+  onRejectPayment,
+  onEdit
 }) => {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -80,10 +82,11 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
     }
   };
 
-  const canMarkComplete = userType === 'freelancer' && milestone.status === 'IN_PROGRESS';
-  const canRequestPayment = userType === 'freelancer' && milestone.status === 'COMPLETED';
-  const canApprovePayment = userType === 'client' && milestone.status === 'COMPLETED';
-  const canRejectPayment = userType === 'client' && milestone.status === 'COMPLETED';
+   const canEdit = userType === 'client' && (contract.status === 'active' || contract.status === 'pending') && milestone.status === 'PENDING';
+   const canMarkComplete = userType === 'freelancer' && milestone.status === 'IN_PROGRESS';
+   const canRequestPayment = userType === 'freelancer' && milestone.status === 'COMPLETED';
+   const canApprovePayment = userType === 'client' && milestone.status === 'COMPLETED';
+   const canRejectPayment = userType === 'client' && milestone.status === 'COMPLETED';
 
   const handleRejectPayment = () => {
     if (rejectionReason.trim()) {
@@ -164,18 +167,29 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          {canMarkComplete && (
-            <Button
-              size="sm"
-              onClick={() => onUpdateMilestone?.(contract.id, milestone.id, { status: 'COMPLETED' as any })}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              {isRTL ? 'تم الإكمال' : 'Mark Complete'}
-            </Button>
-          )}
+         {/* Actions */}
+         <div className="flex gap-2 pt-2">
+           {canEdit && (
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={() => onEdit?.(milestone)}
+             >
+               <Edit className="h-4 w-4 mr-2" />
+               {isRTL ? 'تعديل' : 'Edit'}
+             </Button>
+           )}
+
+           {canMarkComplete && (
+             <Button
+               size="sm"
+               onClick={() => onUpdateMilestone?.(contract.id, milestone.id, { status: 'COMPLETED' as any })}
+               className="bg-green-600 hover:bg-green-700"
+             >
+               <CheckCircle className="h-4 w-4 mr-2" />
+               {isRTL ? 'تم الإكمال' : 'Mark Complete'}
+             </Button>
+           )}
           
           {canRequestPayment && (
             <Button
