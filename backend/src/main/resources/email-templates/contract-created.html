@@ -140,7 +140,7 @@
                     <p><strong>Client:</strong> <span th:text="${clientName}">Client Name</span></p>
                 </div>
                 <p>Review the contract terms, milestones, and deliverables. Once you're ready to start work, accept the contract to proceed.</p>
-                <a th:href="${frontendUrl} + '/contracts'" class="cta-button">Review Contract</a>
+                <a th:href="${frontendUrl} + '/contracts?contractId=' + ${contractId}" class="cta-button">Review Contract</a>
             </div>
             <div class="meta">
                 <p>

@@ -249,11 +249,12 @@ public class EmailService {
         sendTemplateEmail(freelancer.getEmail(), "PROPOSAL_ACCEPTED", variables);
     }
 
-    public void sendContractCreatedEmail(User freelancer, String clientName, String projectTitle) {
+    public void sendContractCreatedEmail(User freelancer, String clientName, String projectTitle, String contractId) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("firstName", freelancer.getFirstName());
         variables.put("clientName", clientName);
         variables.put("projectTitle", projectTitle);
+        variables.put("contractId", contractId);
         variables.put("frontendUrl", frontendUrl);
 
         sendTemplateEmail(freelancer.getEmail(), "CONTRACT_CREATED", variables);

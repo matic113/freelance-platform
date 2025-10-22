@@ -38,6 +38,8 @@ import { ProjectResponse, ProposalResponse } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcceptProposal, useRejectProposal } from '@/hooks/useProposals';
 import { AttachmentList } from '@/components/AttachmentList';
+import { ContractCreationModal } from '@/components/modals/ContractCreationModal';
+import { ContractResponse } from '@/types/contract';
 
 export default function ClientProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +57,8 @@ export default function ClientProjectDetailsPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showContractCreationModal, setShowContractCreationModal] = useState(false);
+  const [contractFromAcceptance, setContractFromAcceptance] = useState<ContractResponse | null>(null);
 
   const acceptProposalMutation = useAcceptProposal();
   const rejectProposalMutation = useRejectProposal();
@@ -147,95 +151,105 @@ export default function ClientProjectDetailsPage() {
     setShowRejectDialog(true);
   };
 
-   const confirmAcceptProposal = async () => {
+    const confirmAcceptProposal = async () => {
+      if (selectedProposal) {
+        try {
+          const response = await acceptProposalMutation.mutateAsync(selectedProposal.id);
+          
+          setShowAcceptDialog(false);
+          
+          setProposals(prev =>
+            prev.map(p =>
+              p.id === selectedProposal.id ? { ...p, status: 'ACCEPTED' } : p
+            )
+          );
+
+          toast({
+            title: isRTL ? 'نجح' : 'Success',
+            description: isRTL ? 'تم قبول العرض بنجاح. جارٍ فتح محرر العقد...' : 'Proposal accepted successfully. Opening contract editor...',
+            variant: 'default'
+          });
+
+          if (response?.contractId) {
+            try {
+              const contract = await contractService.getContract(response.contractId);
+              setContractFromAcceptance(contract);
+              setShowContractCreationModal(true);
+            } catch (contractError) {
+              console.error('Error fetching contract:', contractError);
+              toast({
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'فشل تحميل العقد' : 'Failed to load contract',
+                variant: 'destructive'
+              });
+              navigate('/contracts');
+            }
+          } else {
+            navigate('/contracts');
+          }
+          
+          setSelectedProposal(null);
+        } catch (error: unknown) {
+          console.error('Error accepting proposal:', error);
+          toast({
+            title: isRTL ? 'خطأ' : 'Error',
+            description: isRTL ? 'فشل قبول العرض' : 'Failed to accept proposal',
+            variant: 'destructive'
+          });
+        }
+      }
+    };
+
+   const confirmRejectProposal = async () => {
      if (selectedProposal) {
        try {
-         const response = await acceptProposalMutation.mutateAsync(selectedProposal.id);
+         await rejectProposalMutation.mutateAsync(selectedProposal.id);
          
-         setShowAcceptDialog(false);
+         setShowRejectDialog(false);
+         setSelectedProposal(null);
+         setRejectionReason('');
          
          setProposals(prev =>
            prev.map(p =>
-             p.id === selectedProposal.id ? { ...p, status: 'ACCEPTED' } : p
+             p.id === selectedProposal.id ? { ...p, status: 'REJECTED' } : p
            )
          );
 
          toast({
            title: isRTL ? 'نجح' : 'Success',
-           description: isRTL ? 'تم قبول العرض بنجاح. جارٍ التحويل إلى العقد...' : 'Proposal accepted successfully. Redirecting to contract...',
+           description: isRTL ? 'تم رفض العرض بنجاح' : 'Proposal rejected successfully',
            variant: 'default'
          });
-
-         if (response?.contractId) {
-           try {
-             const contractLookup = await contractService.checkContractForOpening(response.contractId);
-             
-             if (contractLookup.canOpen) {
-               const reviewLookup = await reviewService.checkReviewForProject(project!.id);
-               
-               if (reviewLookup.shouldOpenReviewModal) {
-                 navigate(`/contracts?contractId=${response.contractId}&showReview=true`);
-               } else {
-                 navigate(`/contracts?contractId=${response.contractId}`);
-               }
-             } else {
-               toast({
-                 title: isRTL ? 'تنبيه' : 'Notice',
-                 description: contractLookup.reason || (isRTL ? 'لا يمكن فتح هذا العقد' : 'Cannot open this contract'),
-                 variant: 'default'
-               });
-               navigate('/contracts');
-             }
-           } catch (lookupError) {
-             console.error('Error checking contract/review:', lookupError);
-             navigate(`/contracts?contractId=${response.contractId}`);
-           }
-         } else {
-           navigate('/contracts');
-         }
-         
-         setSelectedProposal(null);
        } catch (error: unknown) {
-         console.error('Error accepting proposal:', error);
+         console.error('Error rejecting proposal:', error);
          toast({
            title: isRTL ? 'خطأ' : 'Error',
-           description: isRTL ? 'فشل قبول العرض' : 'Failed to accept proposal',
+           description: isRTL ? 'فشل رفض العرض' : 'Failed to reject proposal',
            variant: 'destructive'
          });
        }
      }
    };
 
-  const confirmRejectProposal = async () => {
-    if (selectedProposal) {
+    const handleSendToFreelancer = async (contractId: string) => {
       try {
-        await rejectProposalMutation.mutateAsync(selectedProposal.id);
+        setShowContractCreationModal(false);
+        setContractFromAcceptance(null);
         
-        setShowRejectDialog(false);
-        setSelectedProposal(null);
-        setRejectionReason('');
-        
-        setProposals(prev =>
-          prev.map(p =>
-            p.id === selectedProposal.id ? { ...p, status: 'REJECTED' } : p
-          )
-        );
-
         toast({
           title: isRTL ? 'نجح' : 'Success',
-          description: isRTL ? 'تم رفض العرض بنجاح' : 'Proposal rejected successfully',
+          description: isRTL ? 'تم إرسال العقد للمستقل بنجاح' : 'Contract sent to freelancer successfully',
           variant: 'default'
         });
-      } catch (error: unknown) {
-        console.error('Error rejecting proposal:', error);
-        toast({
-          title: isRTL ? 'خطأ' : 'Error',
-          description: isRTL ? 'فشل رفض العرض' : 'Failed to reject proposal',
-          variant: 'destructive'
-        });
-      }
-    }
-  };
+     } catch (error: unknown) {
+       console.error('Error sending contract to freelancer:', error);
+       toast({
+         title: isRTL ? 'خطأ' : 'Error',
+         description: isRTL ? 'فشل إرسال العقد' : 'Failed to send contract',
+         variant: 'destructive'
+       });
+     }
+   };
 
   const handleEditProject = () => {
     if (!project) return;
@@ -702,9 +716,20 @@ export default function ClientProjectDetailsPage() {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+       </Dialog>
 
-      <Footer />
+       <ContractCreationModal
+         isOpen={showContractCreationModal}
+         onClose={() => {
+           setShowContractCreationModal(false);
+           setContractFromAcceptance(null);
+         }}
+         contract={contractFromAcceptance}
+         onSendToFreelancer={handleSendToFreelancer}
+         isRTL={isRTL}
+       />
+
+       <Footer />
     </div>
   );
 }

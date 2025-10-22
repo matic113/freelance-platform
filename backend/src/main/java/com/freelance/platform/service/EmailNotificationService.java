@@ -166,10 +166,10 @@ public class EmailNotificationService {
         }
     }
 
-    public void sendContractCreatedEmail(User freelancer, String clientName, String projectTitle) {
+    public void sendContractCreatedEmail(User freelancer, String clientName, String projectTitle, String contractId) {
         if (shouldSendEmail(freelancer.getId(), "emailNewProposals")) {
             try {
-                emailService.sendContractCreatedEmail(freelancer, clientName, projectTitle);
+                emailService.sendContractCreatedEmail(freelancer, clientName, projectTitle, contractId);
             } catch (Exception e) {
                 System.err.println("Failed to send contract created email to " + freelancer.getEmail() + ": " + e.getMessage());
             }

@@ -185,23 +185,31 @@ export default function ContractsPage() {
         if (contract) {
           contractService.checkContractForOpening(contractId).then(lookup => {
             if (lookup.canOpen) {
-              setHighlightedContractId(contractId);
-              setSelectedContract(contract);
-              setShowContractDetails(true);
-              setActiveTab('contracts');
-              
-              navigate(location.pathname, { replace: true });
-              
-              setTimeout(() => {
-                const element = document.getElementById(`contract-${contractId}`);
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }, 300);
-              
-              setTimeout(() => {
-                setHighlightedContractId(null);
-              }, 3000);
+              // For freelancers with pending contracts, don't auto-open details
+              // Let them use the Awaiting Acceptance tab instead
+              if (isFreelancerUser && contract.status === ContractStatus.PENDING && contract.freelancerId === user?.id) {
+                setActiveTab('acceptance');
+                navigate(location.pathname, { replace: true });
+              } else {
+                // For clients or other cases, open the contract details
+                setHighlightedContractId(contractId);
+                setSelectedContract(contract);
+                setShowContractDetails(true);
+                setActiveTab('contracts');
+                
+                navigate(location.pathname, { replace: true });
+                
+                setTimeout(() => {
+                  const element = document.getElementById(`contract-${contractId}`);
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 300);
+                
+                setTimeout(() => {
+                  setHighlightedContractId(null);
+                }, 3000);
+              }
             } else {
               toast({
                 title: isRTL ? 'تنبيه' : 'Notice',
@@ -216,7 +224,7 @@ export default function ContractsPage() {
           });
         }
       }
-    }, [location.search, contracts, navigate, location.pathname, isRTL, toast]);
+    }, [location.search, contracts, navigate, location.pathname, isRTL, toast, isFreelancerUser, user?.id]);
 
    useEffect(() => {
      if (selectedContract) {
@@ -781,19 +789,19 @@ export default function ContractsPage() {
                          </p>
                        </CardContent>
                      </Card>
-                   ) : (
-                     contracts
-                       .filter(c => c.status === ContractStatus.PENDING)
-                       .map((contract) => (
-                         <ContractAcceptanceFlow
-                           key={contract.id}
-                           contract={contract}
-                           onAccept={handleAcceptContract}
-                           onReject={handleRejectContract}
-                           isLoading={acceptContractMutation.isPending || rejectContractMutation.isPending}
-                         />
-                       ))
-                   )}
+                    ) : (
+                      contracts
+                        .filter(c => c.status === ContractStatus.PENDING && c.freelancerId === user?.id)
+                        .map((contract) => (
+                          <ContractAcceptanceFlow
+                            key={contract.id}
+                            contract={contract}
+                            onAccept={handleAcceptContract}
+                            onReject={handleRejectContract}
+                            isLoading={acceptContractMutation.isPending || rejectContractMutation.isPending}
+                          />
+                        ))
+                    )}
                  </div>
                )}
              </TabsContent>

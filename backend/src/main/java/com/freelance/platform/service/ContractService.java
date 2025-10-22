@@ -96,20 +96,28 @@ public class ContractService {
         contract.setCreatedAt(LocalDateTime.now());
         contract.setUpdatedAt(LocalDateTime.now());
 
-        Contract savedContract = contractRepository.save(contract);
+         Contract savedContract = contractRepository.save(contract);
 
-        // Send notification to freelancer
-        notificationService.createNotificationForUser(
-                proposal.getFreelancer().getId(),
-                "CONTRACT_CREATED",
-                "New Contract Created",
-                String.format("A new contract has been created for project: %s", proposal.getProject().getTitle()),
-                "high",
-                String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}", 
-                             savedContract.getId(), proposal.getProject().getId(), proposal.getClient().getId())
-        );
+         // Send notification to freelancer
+         notificationService.createNotificationForUser(
+                 proposal.getFreelancer().getId(),
+                 "CONTRACT_CREATED",
+                 "New Contract Created",
+                 String.format("A new contract has been created for project: %s", proposal.getProject().getTitle()),
+                 "high",
+                 String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}", 
+                              savedContract.getId(), proposal.getProject().getId(), proposal.getClient().getId())
+         );
 
-        return mapToContractResponse(savedContract);
+         // Send email to freelancer
+         emailService.sendContractCreatedEmail(
+                 proposal.getFreelancer(),
+                 proposal.getClient().getFirstName() + " " + proposal.getClient().getLastName(),
+                 proposal.getProject().getTitle(),
+                 savedContract.getId().toString()
+         );
+
+         return mapToContractResponse(savedContract);
     }
 
     public ContractResponse acceptContract(UUID contractId, UUID freelancerId) {

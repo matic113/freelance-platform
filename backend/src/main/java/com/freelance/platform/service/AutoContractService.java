@@ -29,6 +29,9 @@ public class AutoContractService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private EmailService emailService;
+
     public Contract createContractFromProposal(Proposal proposal) {
         if (proposal.getStatus() != ProposalStatus.ACCEPTED) {
             throw new IllegalArgumentException("Can only create contracts from accepted proposals");
@@ -63,18 +66,26 @@ public class AutoContractService {
 
         createProjectConversation(savedContract);
 
-        notificationService.createNotificationForUser(
-                proposal.getFreelancer().getId(),
-                "CONTRACT_CREATED",
-                "New Contract Created",
-                String.format("A new contract has been created for project: %s. Please review and accept the contract terms.",
-                        proposal.getProject().getTitle()),
-                "high",
-                String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}",
-                        savedContract.getId(), proposal.getProject().getId(), proposal.getClient().getId())
-        );
+         notificationService.createNotificationForUser(
+                 proposal.getFreelancer().getId(),
+                 "CONTRACT_CREATED",
+                 "New Contract Created",
+                 String.format("A new contract has been created for project: %s. Please review and accept the contract terms.",
+                         proposal.getProject().getTitle()),
+                 "high",
+                 String.format("{\"contractId\":\"%s\",\"projectId\":\"%s\",\"clientId\":\"%s\"}",
+                         savedContract.getId(), proposal.getProject().getId(), proposal.getClient().getId())
+         );
 
-        return savedContract;
+         // Send email to freelancer
+         emailService.sendContractCreatedEmail(
+                 proposal.getFreelancer(),
+                 proposal.getClient().getFirstName() + " " + proposal.getClient().getLastName(),
+                 proposal.getProject().getTitle(),
+                 savedContract.getId().toString()
+         );
+
+         return savedContract;
     }
 
     private void initializeDefaultMilestones(Contract contract) {
