@@ -68,6 +68,15 @@ export const useContract = (id: string, enabled: boolean = true) => {
   });
 };
 
+export const useContractByProposal = (proposalId: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: [...contractKeys.all, 'by-proposal', proposalId],
+    queryFn: () => contractService.getContractByProposal(proposalId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: enabled && !!proposalId,
+  });
+};
+
 export const useContractMilestones = (contractId: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: contractKeys.milestones(contractId),

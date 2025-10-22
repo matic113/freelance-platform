@@ -536,6 +536,7 @@ export interface ProposalResponse {
   status: ProposalStatus;
   submittedAt: string;
   updatedAt: string;
+  contractId?: string;
 }
 
 export interface SubmitProposalRequest {

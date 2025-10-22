@@ -27,6 +27,11 @@ export const contractService = {
     return apiService.get<ContractResponse>(`/contracts/${id}`);
   },
 
+  // Get contract by proposal ID
+  getContractByProposal: async (proposalId: string): Promise<ContractResponse> => {
+    return apiService.get<ContractResponse>(`/contracts/by-proposal/${proposalId}`);
+  },
+
   // Create new contract
   createContract: async (request: CreateContractRequest): Promise<ContractResponse> => {
     return apiService.post<ContractResponse>('/contracts', request);
