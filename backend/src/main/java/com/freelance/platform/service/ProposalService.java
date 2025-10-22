@@ -216,7 +216,7 @@ public class ProposalService {
         Proposal acceptedProposal = proposalRepository.save(proposal);
 
         // Auto-create contract from accepted proposal
-        autoContractService.createContractFromProposal(acceptedProposal);
+        Contract createdContract = autoContractService.createContractFromProposal(acceptedProposal);
 
         // Create project conversation for the accepted proposal
         conversationRepository.findProjectConversation(proposal.getProject(), proposal.getClient(), proposal.getFreelancer())
@@ -249,7 +249,9 @@ public class ProposalService {
                 proposal.getProject().getTitle()
         );
 
-        return mapToProposalResponse(acceptedProposal);
+        ProposalResponse response = mapToProposalResponse(acceptedProposal);
+        response.setContractId(createdContract.getId());
+        return response;
     }
 
     public ProposalResponse rejectProposal(UUID proposalId, UUID clientId) {

@@ -25,6 +25,7 @@ public class ProposalResponse {
     private LocalDateTime submittedAt;
     private LocalDateTime respondedAt;
     private List<String> attachments;
+    private UUID contractId;
 
     // Constructors
     public ProposalResponse() {}
@@ -179,5 +180,13 @@ public class ProposalResponse {
 
     public void setAttachments(List<String> attachments) {
         this.attachments = attachments;
+    }
+
+    public UUID getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(UUID contractId) {
+        this.contractId = contractId;
     }
 }

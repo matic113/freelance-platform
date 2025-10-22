@@ -112,6 +112,9 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
     
     boolean existsByProposal(com.freelance.platform.entity.Proposal proposal);
     
+    @Query("SELECT c FROM Contract c WHERE c.proposal.id = :proposalId")
+    Contract findByProposalId(@Param("proposalId") UUID proposalId);
+    
     // Additional methods for analytics
     @Query("SELECT c FROM Contract c ORDER BY c.createdAt DESC")
     List<Contract> findTop10ByOrderByCreatedAtDesc();

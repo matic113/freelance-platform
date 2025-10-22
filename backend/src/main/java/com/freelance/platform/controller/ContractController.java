@@ -65,6 +65,22 @@ public class ContractController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/by-proposal/{proposalId}")
+    @Operation(summary = "Get contract by proposal ID", description = "Retrieve a contract associated with a specific proposal")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contract retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not authorized to view this contract"),
+            @ApiResponse(responseCode = "404", description = "Contract not found for this proposal")
+    })
+    public ResponseEntity<ContractResponse> getContractByProposal(
+            @Parameter(description = "Proposal ID") @PathVariable UUID proposalId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ContractResponse response = contractService.getContractByProposal(proposalId, currentUser.getId());
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/accept")
     @Operation(summary = "Accept contract", description = "Accept a contract (freelancers only)")
     @ApiResponses(value = {
