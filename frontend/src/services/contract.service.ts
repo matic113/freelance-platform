@@ -7,8 +7,9 @@ import {
   CreateMilestoneRequest, 
   UpdateMilestoneRequest, 
   CreatePaymentRequestRequest,
-  PageResponse 
-} from '@/types/contract';
+  PageResponse,
+  ContractLookupResponse
+} from '@/types/api';
 
 // Contract Management API calls
 export const contractService = {
@@ -75,5 +76,10 @@ export const contractService = {
     // Delete milestone
     deleteMilestone: async (contractId: string, milestoneId: string): Promise<void> => {
       return apiService.delete<void>(`/contracts/${contractId}/milestones/${milestoneId}`);
+    },
+
+    // Check if contract can be opened
+    checkContractForOpening: async (id: string): Promise<ContractLookupResponse> => {
+      return apiService.get<ContractLookupResponse>(`/contracts/${id}/lookup`);
     }
 };

@@ -2,6 +2,7 @@ package com.freelance.platform.service;
 
 import com.freelance.platform.dto.request.CreateReviewRequest;
 import com.freelance.platform.dto.response.ReviewResponse;
+import com.freelance.platform.dto.response.ReviewLookupResponse;
 import com.freelance.platform.entity.Contract;
 import com.freelance.platform.entity.Review;
 import com.freelance.platform.entity.ReviewOpportunity;
@@ -266,4 +267,14 @@ public class ReviewService {
           
           return response;
      }
-}
+
+     public ReviewLookupResponse checkReviewForProject(UUID projectId, UUID userId) {
+         boolean hasUserReviewed = reviewRepository.existsByProjectIdAndReviewerId(projectId, userId);
+         
+         if (hasUserReviewed) {
+             return new ReviewLookupResponse(projectId, false, true, "User has already reviewed this project");
+         }
+
+         return new ReviewLookupResponse(projectId, true, false, "User can review this project");
+     }
+ }

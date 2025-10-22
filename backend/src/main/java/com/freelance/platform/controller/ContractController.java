@@ -5,6 +5,7 @@ import com.freelance.platform.dto.request.CreateMilestoneRequest;
 import com.freelance.platform.dto.request.UpdateMilestoneRequest;
 import com.freelance.platform.dto.request.UpdateMilestoneStatusRequest;
 import com.freelance.platform.dto.response.ContractResponse;
+import com.freelance.platform.dto.response.ContractLookupResponse;
 import com.freelance.platform.dto.response.MilestoneResponse;
 import com.freelance.platform.security.UserPrincipal;
 import com.freelance.platform.service.ContractService;
@@ -220,6 +221,20 @@ public class ContractController {
             @Parameter(description = "Contract ID") @PathVariable UUID id) {
         
         List<MilestoneResponse> response = contractService.getContractMilestones(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/lookup")
+    @Operation(summary = "Check if contract can be opened", description = "Lookup if contract can be opened based on status and permissions")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lookup result retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Contract not found")
+    })
+    public ResponseEntity<ContractLookupResponse> checkContractForOpening(
+            @Parameter(description = "Contract ID") @PathVariable UUID id,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ContractLookupResponse response = contractService.checkContractForOpening(id, currentUser.getId());
         return ResponseEntity.ok(response);
     }
 }

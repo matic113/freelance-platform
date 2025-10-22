@@ -56,6 +56,8 @@ import { PaymentRequestCard } from '@/components/contracts/PaymentRequestCard';
 import { ContractDetailsModal } from '@/components/modals/ContractDetailsModal';
 import { ContractAcceptanceFlow } from '@/components/contracts/ContractAcceptanceFlow';
 import { ReviewPromptsList } from '@/components/reviews/ReviewPrompt';
+import { contractService } from '@/services/contract.service';
+import { reviewService } from '@/services/review.service';
 import { 
   Contract, 
   Milestone, 
@@ -176,33 +178,45 @@ export default function ContractsPage() {
     useEffect(() => {
       const params = new URLSearchParams(location.search);
       const contractId = params.get('contractId');
+      const showReview = params.get('showReview');
       
       if (contractId && contracts.length > 0) {
         const contract = contracts.find(c => c.id === contractId);
         if (contract) {
-          setHighlightedContractId(contractId);
-          setSelectedContract(contract);
-          setShowContractDetails(true);
-          setActiveTab('contracts');
-          
-          // Clear the URL parameter to prevent re-opening
-          navigate(location.pathname, { replace: true });
-          
-          // Scroll to the contract (with a slight delay to ensure DOM is ready)
-          setTimeout(() => {
-            const element = document.getElementById(`contract-${contractId}`);
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          contractService.checkContractForOpening(contractId).then(lookup => {
+            if (lookup.canOpen) {
+              setHighlightedContractId(contractId);
+              setSelectedContract(contract);
+              setShowContractDetails(true);
+              setActiveTab('contracts');
+              
+              navigate(location.pathname, { replace: true });
+              
+              setTimeout(() => {
+                const element = document.getElementById(`contract-${contractId}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 300);
+              
+              setTimeout(() => {
+                setHighlightedContractId(null);
+              }, 3000);
+            } else {
+              toast({
+                title: isRTL ? 'تنبيه' : 'Notice',
+                description: lookup.reason || (isRTL ? 'لا يمكن فتح هذا العقد' : 'Cannot open this contract'),
+                variant: 'default'
+              });
+              navigate(location.pathname, { replace: true });
             }
-          }, 300);
-          
-          // Clear the highlight after a few seconds
-          setTimeout(() => {
-            setHighlightedContractId(null);
-          }, 3000);
+          }).catch(error => {
+            console.error('Error checking contract:', error);
+            navigate(location.pathname, { replace: true });
+          });
         }
       }
-    }, [location.search, contracts, navigate, location.pathname]);
+    }, [location.search, contracts, navigate, location.pathname, isRTL, toast]);
 
    useEffect(() => {
      if (selectedContract) {

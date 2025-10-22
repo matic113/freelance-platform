@@ -2,6 +2,7 @@ package com.freelance.platform.controller;
 
 import com.freelance.platform.dto.request.CreateReviewRequest;
 import com.freelance.platform.dto.response.ReviewResponse;
+import com.freelance.platform.dto.response.ReviewLookupResponse;
 import com.freelance.platform.dto.response.ReviewOpportunityResponse;
 import com.freelance.platform.entity.ReviewOpportunity;
 import com.freelance.platform.security.UserPrincipal;
@@ -251,5 +252,18 @@ public class ReviewController {
         response.setCreatedAt(opportunity.getCreatedAt());
         response.setReviewSubmittedAt(opportunity.getReviewSubmittedAt());
         return response;
+    }
+
+    @GetMapping("/lookup/project/{projectId}")
+    @Operation(summary = "Check if review modal should open", description = "Lookup if user can review a project based on existing reviews")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lookup result retrieved successfully")
+    })
+    public ResponseEntity<ReviewLookupResponse> checkReviewForProject(
+            @Parameter(description = "Project ID") @PathVariable UUID projectId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        ReviewLookupResponse response = reviewService.checkReviewForProject(projectId, currentUser.getId());
+        return ResponseEntity.ok(response);
     }
 }

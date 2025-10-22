@@ -32,6 +32,8 @@ import {
 } from 'lucide-react';
 import { projectService } from '@/services/project.service';
 import { proposalService } from '@/services/proposal.service';
+import { contractService } from '@/services/contract.service';
+import { reviewService } from '@/services/review.service';
 import { ProjectResponse, ProposalResponse } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcceptProposal, useRejectProposal } from '@/hooks/useProposals';
@@ -145,44 +147,64 @@ export default function ClientProjectDetailsPage() {
     setShowRejectDialog(true);
   };
 
-  const confirmAcceptProposal = async () => {
-    if (selectedProposal) {
-      try {
-        const response = await acceptProposalMutation.mutateAsync(selectedProposal.id);
-        
-        setShowAcceptDialog(false);
-        
-        setProposals(prev =>
-          prev.map(p =>
-            p.id === selectedProposal.id ? { ...p, status: 'ACCEPTED' } : p
-          )
-        );
+   const confirmAcceptProposal = async () => {
+     if (selectedProposal) {
+       try {
+         const response = await acceptProposalMutation.mutateAsync(selectedProposal.id);
+         
+         setShowAcceptDialog(false);
+         
+         setProposals(prev =>
+           prev.map(p =>
+             p.id === selectedProposal.id ? { ...p, status: 'ACCEPTED' } : p
+           )
+         );
 
-        toast({
-          title: isRTL ? 'نجح' : 'Success',
-          description: isRTL ? 'تم قبول العرض بنجاح. جارٍ التحويل إلى العقد...' : 'Proposal accepted successfully. Redirecting to contract...',
-          variant: 'default'
-        });
+         toast({
+           title: isRTL ? 'نجح' : 'Success',
+           description: isRTL ? 'تم قبول العرض بنجاح. جارٍ التحويل إلى العقد...' : 'Proposal accepted successfully. Redirecting to contract...',
+           variant: 'default'
+         });
 
-        // Redirect to contracts page with the contract ID
-        if (response?.contractId) {
-          navigate(`/contracts?contractId=${response.contractId}`);
-        } else {
-          // Fallback: redirect to contracts page
-          navigate('/contracts');
-        }
-        
-        setSelectedProposal(null);
-      } catch (error: unknown) {
-        console.error('Error accepting proposal:', error);
-        toast({
-          title: isRTL ? 'خطأ' : 'Error',
-          description: isRTL ? 'فشل قبول العرض' : 'Failed to accept proposal',
-          variant: 'destructive'
-        });
-      }
-    }
-  };
+         if (response?.contractId) {
+           try {
+             const contractLookup = await contractService.checkContractForOpening(response.contractId);
+             
+             if (contractLookup.canOpen) {
+               const reviewLookup = await reviewService.checkReviewForProject(project!.id);
+               
+               if (reviewLookup.shouldOpenReviewModal) {
+                 navigate(`/contracts?contractId=${response.contractId}&showReview=true`);
+               } else {
+                 navigate(`/contracts?contractId=${response.contractId}`);
+               }
+             } else {
+               toast({
+                 title: isRTL ? 'تنبيه' : 'Notice',
+                 description: contractLookup.reason || (isRTL ? 'لا يمكن فتح هذا العقد' : 'Cannot open this contract'),
+                 variant: 'default'
+               });
+               navigate('/contracts');
+             }
+           } catch (lookupError) {
+             console.error('Error checking contract/review:', lookupError);
+             navigate(`/contracts?contractId=${response.contractId}`);
+           }
+         } else {
+           navigate('/contracts');
+         }
+         
+         setSelectedProposal(null);
+       } catch (error: unknown) {
+         console.error('Error accepting proposal:', error);
+         toast({
+           title: isRTL ? 'خطأ' : 'Error',
+           description: isRTL ? 'فشل قبول العرض' : 'Failed to accept proposal',
+           variant: 'destructive'
+         });
+       }
+     }
+   };
 
   const confirmRejectProposal = async () => {
     if (selectedProposal) {
@@ -307,20 +329,23 @@ export default function ClientProjectDetailsPage() {
                   </div>
                 </CardHeader>
                 {project.attachments && project.attachments.length > 0 && (
-                  <CardContent className="space-y-4">
-                    {project.attachments.map((attachment, index) => (
-                      <div key={index} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                        <FileText className="h-5 w-5 text-gray-400" />
-                        <a
-                          href={attachment.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline truncate max-w-[200px]"
-                        >
-                          {attachment.name}
-                        </a>
-                      </div>
-                    ))}
+                  <CardContent>
+                    <div className="flex flex-wrap gap-4">
+                      {project.attachments.map((attachment) => (
+                        <div key={attachment.id} className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-blue-500" />
+                          <a
+                            href={attachment.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline truncate max-w-[150px]"
+                            title={attachment.fileName}
+                          >
+                            {attachment.fileName}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 )}
               </Card>

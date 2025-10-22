@@ -925,9 +925,24 @@ export interface CreateFAQRequest {
 }
 
 export interface UpdateFAQRequest {
-  question?: string;
-  answer?: string;
-  category?: FAQCategory;
-  displayOrder?: number;
-  isActive?: boolean;
+   question?: string;
+   answer?: string;
+   category?: FAQCategory;
+   displayOrder?: number;
+   isActive?: boolean;
+}
+
+// Lookup Response Types
+export interface ContractLookupResponse {
+   contractId: string;
+   status: string;
+   canOpen: boolean;
+   reason: string;
+}
+
+export interface ReviewLookupResponse {
+   projectId: string;
+   shouldOpenReviewModal: boolean;
+   hasUserReviewed: boolean;
+   reason: string;
 }

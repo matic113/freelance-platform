@@ -4,6 +4,7 @@ import com.freelance.platform.dto.request.CreateContractRequest;
 import com.freelance.platform.dto.request.CreateMilestoneRequest;
 import com.freelance.platform.dto.request.UpdateMilestoneRequest;
 import com.freelance.platform.dto.response.ContractResponse;
+import com.freelance.platform.dto.response.ContractLookupResponse;
 import com.freelance.platform.dto.response.MilestoneResponse;
 import com.freelance.platform.entity.*;
 import com.freelance.platform.exception.ResourceNotFoundException;
@@ -705,20 +706,37 @@ public class ContractService {
         return response;
     }
 
-    private MilestoneResponse mapToMilestoneResponse(Milestone milestone) {
-        MilestoneResponse response = new MilestoneResponse();
-        response.setId(milestone.getId());
-        response.setContractId(milestone.getContract().getId());
-        response.setTitle(milestone.getTitle());
-        response.setDescription(milestone.getDescription());
-        response.setAmount(milestone.getAmount());
-        response.setStatus(milestone.getStatus());
-        response.setDueDate(milestone.getDueDate());
-        response.setCompletedDate(milestone.getCompletedDate());
-        response.setPaidDate(milestone.getPaidDate());
-        response.setOrderIndex(milestone.getOrderIndex());
-        response.setCreatedAt(milestone.getCreatedAt());
-        
-        return response;
-    }
-}
+     private MilestoneResponse mapToMilestoneResponse(Milestone milestone) {
+         MilestoneResponse response = new MilestoneResponse();
+         response.setId(milestone.getId());
+         response.setContractId(milestone.getContract().getId());
+         response.setTitle(milestone.getTitle());
+         response.setDescription(milestone.getDescription());
+         response.setAmount(milestone.getAmount());
+         response.setStatus(milestone.getStatus());
+         response.setDueDate(milestone.getDueDate());
+         response.setCompletedDate(milestone.getCompletedDate());
+         response.setPaidDate(milestone.getPaidDate());
+         response.setOrderIndex(milestone.getOrderIndex());
+         response.setCreatedAt(milestone.getCreatedAt());
+         
+         return response;
+     }
+
+     public ContractLookupResponse checkContractForOpening(UUID contractId, UUID userId) {
+         Contract contract = contractRepository.findById(contractId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found"));
+
+         String status = contract.getStatus().name();
+
+         if (!contract.getClient().getId().equals(userId) && !contract.getFreelancer().getId().equals(userId)) {
+             return new ContractLookupResponse(contractId, status, false, "Not authorized to view this contract");
+         }
+
+         if (contract.getStatus().name().equals("COMPLETED")) {
+             return new ContractLookupResponse(contractId, status, false, "Contract is completed");
+         }
+
+         return new ContractLookupResponse(contractId, status, true, "Can open contract");
+     }
+ }

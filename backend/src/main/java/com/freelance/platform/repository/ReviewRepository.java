@@ -138,13 +138,16 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     @Query("SELECT r FROM Review r WHERE r.reviewer.id = :userId OR r.reviewee.id = :userId ORDER BY r.createdAt DESC")
     Page<Review> findReviewsForUser(@Param("userId") UUID userId, Pageable pageable);
 
-    // Analytics trend method
-    @Query(value = "SELECT DATE_FORMAT(CONVERT_TZ(r.created_at, @@session.time_zone, '+00:00'), '%Y-%m') AS ym, " +
-                   "AVG(r.rating) AS avg_rating " +
-                   "FROM reviews r " +
-                   "WHERE r.reviewee.id = :revieweeId " +
-                   "AND r.created_at >= :startDate " +
-                   "GROUP BY ym " +
-                   "ORDER BY ym", nativeQuery = true)
-    List<Object[]> getRatingTrendByRevieweeId(@Param("revieweeId") UUID revieweeId, @Param("startDate") LocalDateTime startDate);
-}
+     // Analytics trend method
+     @Query(value = "SELECT DATE_FORMAT(CONVERT_TZ(r.created_at, @@session.time_zone, '+00:00'), '%Y-%m') AS ym, " +
+                    "AVG(r.rating) AS avg_rating " +
+                    "FROM reviews r " +
+                    "WHERE r.reviewee.id = :revieweeId " +
+                    "AND r.created_at >= :startDate " +
+                    "GROUP BY ym " +
+                    "ORDER BY ym", nativeQuery = true)
+     List<Object[]> getRatingTrendByRevieweeId(@Param("revieweeId") UUID revieweeId, @Param("startDate") LocalDateTime startDate);
+
+     @Query("SELECT COUNT(r) > 0 FROM Review r WHERE r.contract.project.id = :projectId AND r.reviewer.id = :reviewerId")
+     boolean existsByProjectIdAndReviewerId(@Param("projectId") UUID projectId, @Param("reviewerId") UUID reviewerId);
+ }

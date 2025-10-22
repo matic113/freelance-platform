@@ -2,7 +2,8 @@ import { apiService } from './api';
 import { 
   ReviewResponse, 
   CreateReviewRequest,
-  PageResponse
+  PageResponse,
+  ReviewLookupResponse
 } from '@/types/api';
 
 export const reviewService = {
@@ -82,8 +83,13 @@ export const reviewService = {
     return apiService.delete<void>(`/reviews/${id}`);
   },
 
-  // Report review
-  reportReview: async (id: string, reportData: any): Promise<any> => {
-    return apiService.post(`/reviews/${id}/report`, reportData);
-  },
+   // Report review
+   reportReview: async (id: string, reportData: any): Promise<any> => {
+     return apiService.post(`/reviews/${id}/report`, reportData);
+   },
+
+   // Check if review modal should open for a project
+   checkReviewForProject: async (projectId: string): Promise<ReviewLookupResponse> => {
+     return apiService.get<ReviewLookupResponse>(`/reviews/lookup/project/${projectId}`);
+   },
 };
