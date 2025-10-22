@@ -477,8 +477,12 @@ export function ProjectForm({
               placeholder={isRTL ? "وصف المشروع..." : "Project description..."}
               rows={3}
               required
+              maxLength={500}
               className="text-sm"
             />
+            <span className="text-xs text-gray-500 block mt-1">
+              {formData.description.length} / 500
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
