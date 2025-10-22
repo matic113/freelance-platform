@@ -83,7 +83,8 @@ public class AuthService {
 
         boolean isNewGoogleUser = false;
         if (user.getRoles() == null || (!user.getRoles().contains(Role.CLIENT) && !user.getRoles().contains(Role.FREELANCER))) {
-            user.setRoles(EnumSet.noneOf(Role.class));
+            // Give both CLIENT and FREELANCER roles by default
+            user.setRoles(EnumSet.of(Role.CLIENT, Role.FREELANCER));
             notifyRoleSelectionRequired(user);
             isNewGoogleUser = true;
         }
@@ -115,13 +116,18 @@ public class AuthService {
             throw new IllegalArgumentException("Role must be CLIENT or FREELANCER");
         }
 
+        // Ensure user has both roles if not already set
         Set<Role> roles = user.getRoles();
         if (roles == null || roles.isEmpty()) {
-            roles = EnumSet.of(role);
-        } else {
-            roles.add(role);
+            roles = EnumSet.of(Role.CLIENT, Role.FREELANCER);
+            user.setRoles(roles);
+        } else if (!roles.contains(Role.CLIENT) || !roles.contains(Role.FREELANCER)) {
+            // Add both roles if missing
+            roles = EnumSet.of(Role.CLIENT, Role.FREELANCER);
+            user.setRoles(roles);
         }
-        user.setRoles(roles);
+        
+        // Set the selected role as active
         user.setActiveRole(role);
         user.setIsVerified(true);
         user.setIsActive(true);
@@ -173,7 +179,7 @@ public class AuthService {
 
     private void notifyRoleSelectionRequired(User user) {
         // Placeholder for potential notification logic in future
-        logger.info("User {} requires role selection after Google login", user.getEmail());
+        logger.info("✓ User {} successfully logged in with Google. Both CLIENT and FREELANCER roles assigned. Awaiting role selection.", user.getEmail());
     }
     
     public void register(RegisterRequest registerRequest) {
