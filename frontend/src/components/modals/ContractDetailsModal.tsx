@@ -36,6 +36,7 @@ interface ContractDetailsModalProps {
   onApprovePayment?: (paymentRequestId: string) => void;
   onRejectPayment?: (paymentRequestId: string, reason: string) => void;
   onSendMessage?: (contractId: string) => void;
+  onAddMilestone?: (contractId: string) => void;
 }
 
 export const ContractDetailsModal: React.FC<ContractDetailsModalProps> = ({
@@ -50,7 +51,8 @@ export const ContractDetailsModal: React.FC<ContractDetailsModalProps> = ({
   onRequestPayment,
   onApprovePayment,
   onRejectPayment,
-  onSendMessage
+  onSendMessage,
+  onAddMilestone
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -240,8 +242,12 @@ export const ContractDetailsModal: React.FC<ContractDetailsModalProps> = ({
                 <h3 className="text-lg font-semibold">
                   {isRTL ? 'مراحل المشروع' : 'Project Milestones'}
                 </h3>
-                {userType === 'freelancer' && contract.status === 'active' && (
-                  <Button size="sm" className="bg-[#0A2540] hover:bg-[#142b52]">
+                {userType === 'client' && (contract.status === 'active' || contract.status === 'pending') && onAddMilestone && (
+                  <Button 
+                    size="sm" 
+                    className="bg-[#0A2540] hover:bg-[#142b52]"
+                    onClick={() => onAddMilestone(contract.id)}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     {isRTL ? 'إضافة مرحلة' : 'Add Milestone'}
                   </Button>

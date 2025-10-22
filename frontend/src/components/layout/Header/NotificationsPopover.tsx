@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/popover";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { groupNotificationsByConversationId } from "@/lib/utils";
+import { groupNotificationsByConversationId, isClient } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Notification {
   id: string;
@@ -16,6 +17,8 @@ interface Notification {
   message: string;
   isRead: boolean;
   createdAt: string;
+  type?: string;
+  data?: string;
 }
 
 interface NotificationsPopoverProps {
@@ -43,6 +46,73 @@ export const NotificationsPopover = ({
 }: NotificationsPopoverProps) => {
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.data || !notification.type) {
+      navigate("/notifications");
+      return;
+    }
+
+    try {
+      const data = JSON.parse(notification.data);
+      const userIsClient = isClient(user);
+
+      // Handle PROPOSAL notifications
+      if (notification.type.includes("PROPOSAL")) {
+        if (data.projectId) {
+          if (userIsClient) {
+            navigate(`/client/project/${data.projectId}`);
+          } else {
+            navigate(`/projects`);
+          }
+        }
+      }
+      // Handle CONTRACT notifications
+      else if (notification.type.includes("CONTRACT")) {
+        if (data.contractId) {
+          navigate(`/contracts?contractId=${data.contractId}`);
+        } else {
+          navigate(`/contracts`);
+        }
+      }
+      // Handle MILESTONE notifications
+      else if (notification.type.includes("MILESTONE")) {
+        if (data.contractId) {
+          navigate(`/contracts?contractId=${data.contractId}`);
+        } else {
+          navigate(`/contracts`);
+        }
+      }
+      // Handle PAYMENT notifications
+      else if (notification.type.includes("PAYMENT")) {
+        if (data.contractId) {
+          navigate(`/contracts?contractId=${data.contractId}`);
+        } else {
+          navigate(`/contracts`);
+        }
+      }
+      // Handle MESSAGE notifications
+      else if (notification.type.includes("MESSAGE") || data.conversationId) {
+        navigate(`/messages?conversationId=${data.conversationId}`);
+      }
+      // Handle REVIEW notifications
+      else if (notification.type.includes("REVIEW")) {
+        if (data.projectId) {
+          navigate(`/reviews/project/${data.projectId}`);
+        } else {
+          navigate(`/reviews`);
+        }
+      }
+      // Default: go to notifications page
+      else {
+        navigate("/notifications");
+      }
+    } catch (error) {
+      console.error("Error parsing notification data:", error);
+      navigate("/notifications");
+    }
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={onOpenChange}>
@@ -93,9 +163,7 @@ export const NotificationsPopover = ({
                         hasUnread ? "bg-blue-50" : ""
                       }`}
                       onClick={() => {
-                        navigate(
-                          `/messages?conversationId=${group.conversationId}`
-                        );
+                        handleNotificationClick(group.latestNotification);
                         onOpenChange(false);
                         group.notifications.forEach((n) => {
                           if (!n.isRead) {
