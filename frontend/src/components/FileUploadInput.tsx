@@ -106,73 +106,73 @@ export const FileUploadInput: React.FC<FileUploadInputProps> = ({
     }
   };
 
-  return (
-    <div
-      className={cn(
-        fullArea ? 'relative w-full h-full' : 'relative group',
-        dragActive && 'ring-2 ring-primary rounded-lg',
-        className
-      )}
-      onDragEnter={handleDrag}
-      onDragLeave={handleDrag}
-      onDragOver={handleDrag}
-      onDrop={handleDrop}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        onChange={handleInputChange}
-        disabled={disabled || isUploading}
-        accept={acceptedFileTypes}
-        multiple={allowMultiple}
-        className="hidden"
-        aria-label="File upload"
-      />
-
-       {isUploading ? (
-         <div className="w-full h-full flex items-center justify-center">
-           <div className="flex items-center gap-2">
-             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-             <span className="text-xs text-muted-foreground">
-               Uploading {uploadProgress}%
-             </span>
-           </div>
-         </div>
-       ) : (
-         // If fullArea is true, render a large clickable area instead of a small button
-         fullArea ? (
-           <div
-             role="button"
-             tabIndex={0}
-             onClick={(e) => handleAreaClick(e)}
-             onKeyDown={(e) => {
-               // Prevent Enter from submitting parent forms and stop propagation
-               if (e.key === 'Enter' || e.key === ' ') {
-                 handleAreaClick(e);
-               }
-               e.preventDefault();
-               e.stopPropagation();
-             }}
-             className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer text-muted-foreground rounded-lg"
-             title="Attach file"
-           >
-             <Paperclip className="h-6 w-6 mb-2" />
-             <span className="text-sm">Click or drop files here to attach</span>
-           </div>
-         ) : (
-           <Button
-             type="button"
-             variant="ghost"
-             size="sm"
-             onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
-             disabled={disabled || isUploading}
-             className="h-8 w-8 p-0"
-             title="Attach file"
-           >
-             <Paperclip className="h-4 w-4" />
-           </Button>
-         )
+   return (
+     <div
+       className={cn(
+         fullArea ? 'relative w-full h-full' : 'relative group',
+         dragActive && 'ring-2 ring-primary rounded-lg',
+         className
        )}
-    </div>
-  );
+       onDragEnter={handleDrag}
+       onDragLeave={handleDrag}
+       onDragOver={handleDrag}
+       onDrop={handleDrop}
+     >
+       <input
+         ref={fileInputRef}
+         type="file"
+         onChange={handleInputChange}
+         disabled={disabled || isUploading}
+         accept={acceptedFileTypes}
+         multiple={allowMultiple}
+         className="hidden"
+         aria-label="File upload"
+       />
+
+        {isUploading ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground">
+                {uploadProgress > 0 ? `${uploadProgress}%` : 'Uploading...'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          // If fullArea is true, render a large clickable area instead of a small button
+          fullArea ? (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => handleAreaClick(e)}
+              onKeyDown={(e) => {
+                // Prevent Enter from submitting parent forms and stop propagation
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleAreaClick(e);
+                }
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer text-muted-foreground rounded-lg"
+              title="Attach file"
+            >
+              <Paperclip className="h-6 w-6 mb-2" />
+              <span className="text-sm">Click or drop files here to attach</span>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
+              disabled={disabled || isUploading}
+              className="h-8 w-8 p-0"
+              title="Attach file"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+          )
+        )}
+     </div>
+   );
 };

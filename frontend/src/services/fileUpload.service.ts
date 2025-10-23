@@ -189,19 +189,37 @@ export const presignedUploadService = {
 
   uploadToPresignedUrl: async (
     uploadUrl: string,
-    file: File
+    file: File,
+    onProgress?: (loaded: number, total: number) => void
   ): Promise<void> => {
-    const response = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': file.type || 'application/octet-stream',
-      },
-    });
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', uploadUrl);
+      try {
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      } catch (e) {
+        // Some CORS/presigned endpoints may not allow setting this header; ignore if it fails
+      }
 
-    if (!response.ok) {
-      throw new Error(`Upload failed with status ${response.status}`);
-    }
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          onProgress?.(event.loaded, event.total);
+        } else {
+          onProgress?.(event.loaded, file.size);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(file);
+    });
   },
 
   completeUpload: async (

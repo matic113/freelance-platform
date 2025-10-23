@@ -19,6 +19,7 @@ interface AttachmentListProps {
   isRTL?: boolean;
   isRemoving?: boolean;
   canRemove?: boolean;
+  deletedIds?: Set<string>;
 }
 
 const getFileIcon = (contentType?: string) => {
@@ -44,6 +45,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   isRTL = false,
   isRemoving = false,
   canRemove = false,
+  deletedIds = new Set(),
 }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -62,6 +64,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
           key={index}
           className={cn(
             "flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors",
+            attachment.id && deletedIds.has(attachment.id) && "opacity-50 bg-red-50 border-red-200",
             isRTL && "flex-row-reverse"
           )}
         >
@@ -112,15 +115,16 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
               {loadingId === attachment.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             </button>
 
-            {canRemove && onRemove && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemove(attachment.filename)}
-                disabled={isRemoving}
-                className="h-8 w-8 p-0 hover:bg-destructive/10"
-                title={isRTL ? 'حذف' : 'Remove'}
-              >
+             {canRemove && onRemove && (
+               <Button
+                 type="button"
+                 variant="ghost"
+                 size="sm"
+                 onClick={() => onRemove(attachment.filename)}
+                 disabled={isRemoving}
+                 className="h-8 w-8 p-0 hover:bg-destructive/10"
+                 title={isRTL ? 'حذف' : 'Remove'}
+               >
                 {isRemoving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
