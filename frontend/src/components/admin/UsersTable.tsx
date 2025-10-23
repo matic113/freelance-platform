@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAdminUsers } from '@/hooks/useAdmin';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserResponse } from '@/types/api';
 import {
   Table,
@@ -34,6 +35,7 @@ interface UsersTableProps {
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({ onStartChat }) => {
+  const { user: currentUser } = useAuth();
   const [page, setPage] = useState(0);
   const [pageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
@@ -180,6 +182,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({ onStartChat }) => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() => onStartChat?.(user.id)}
+                            disabled={currentUser?.id === user.id}
                             className="cursor-pointer"
                           >
                             <MessageSquare className="h-4 w-4 mr-2" />

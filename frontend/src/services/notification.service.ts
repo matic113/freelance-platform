@@ -29,6 +29,19 @@ export const notificationService = {
     return apiService.get('/notifications/unread');
   },
 
+  // Get grouped notifications
+  getGroupedNotifications: async (
+    page: number = 0,
+    size: number = 20
+  ): Promise<NotificationResponse[]> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+    });
+
+    return apiService.get(`/notifications/grouped?${params.toString()}`);
+  },
+
   // Get notification statistics
   getNotificationStats: async (): Promise<NotificationStats> => {
     return apiService.get('/notifications/stats');

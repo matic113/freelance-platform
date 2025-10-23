@@ -1,4 +1,4 @@
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -24,6 +24,10 @@ import { DashboardShell } from '@/components/layout/dashboard-shell';
 import { UserAnalyticsWidget } from '@/components/admin/widgets/UserAnalyticsWidget';
 import { ProjectAnalyticsWidget } from '@/components/admin/widgets/ProjectAnalyticsWidget';
 import { UsersTable } from '@/components/admin/UsersTable';
+import { AnnouncementsTable } from '@/components/admin/AnnouncementsTable';
+import { ContractsTable } from '@/components/admin/ContractsTable';
+import { ReviewsTable } from '@/components/admin/ReviewsTable';
+import { CreateAnnouncementModal } from '@/components/modals/CreateAnnouncementModal';
 
 const formatNumber = (value: number | null | undefined): string => {
   if (value === null || value === undefined) {
@@ -96,6 +100,7 @@ const SectionHeader = ({ title, description }: { title: string; description: str
 
 const AdminDashboardContent = () => {
   const navigate = useNavigate();
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
    const { data: dashboardData, isLoading: isDashboardLoading } = useAdminDashboard();
    const { data: usersSeries, isLoading: isUsersLoading } = useAdminAnalyticsUsers();
    const { data: projectsSeries, isLoading: isProjectsLoading } = useAdminAnalyticsProjects();
@@ -204,7 +209,9 @@ const AdminDashboardContent = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" className="text-xs h-8">Create Announcement</Button>
+          <Button size="sm" className="text-xs h-8" onClick={() => setIsAnnouncementModalOpen(true)}>
+            Create Announcement
+          </Button>
           <Button size="sm" variant="outline" className="text-xs h-8">
             Manage Users
           </Button>
@@ -218,9 +225,52 @@ const AdminDashboardContent = () => {
 
       {renderAnalyticsSummary()}
 
-      <div>
-        <UsersTable onStartChat={handleStartChat} />
+      <div className="space-y-6">
+        <div>
+          <SectionHeader 
+            title="Announcements" 
+            description="Platform-wide announcements and notifications" 
+          />
+          <div className="mt-4">
+            <AnnouncementsTable />
+          </div>
+        </div>
+
+        <div>
+          <SectionHeader 
+            title="Contracts" 
+            description="Monitor active contracts and milestones" 
+          />
+          <div className="mt-4">
+            <ContractsTable />
+          </div>
+        </div>
+
+        <div>
+          <SectionHeader 
+            title="Reviews" 
+            description="Moderate and manage platform reviews" 
+          />
+          <div className="mt-4">
+            <ReviewsTable />
+          </div>
+        </div>
+
+        <div>
+          <SectionHeader 
+            title="User Management" 
+            description="Monitor and manage platform users" 
+          />
+          <div className="mt-4">
+            <UsersTable onStartChat={handleStartChat} />
+          </div>
+        </div>
       </div>
+
+      <CreateAnnouncementModal 
+        open={isAnnouncementModalOpen}
+        onClose={() => setIsAnnouncementModalOpen(false)}
+      />
     </DashboardShell>
   );
 };

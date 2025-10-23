@@ -358,6 +358,9 @@ export interface NotificationResponse {
   data?: string;
   createdAt: string;
   updatedAt: string;
+  groupKey?: string;
+  groupType?: string;
+  groupCount?: number;
 }
 
 export interface NotificationStats {

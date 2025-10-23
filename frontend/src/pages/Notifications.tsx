@@ -467,6 +467,11 @@ export default function NotificationsPage() {
                               {isRTL ? "جديد" : "New"}
                             </Badge>
                           )}
+                          {notification.groupCount && notification.groupCount > 1 && (
+                            <Badge className="bg-indigo-500 text-white text-xs">
+                              {notification.groupCount} {isRTL ? "رسائل" : "messages"}
+                            </Badge>
+                          )}
                           <Badge variant="outline" className="text-xs">
                             {getPriorityText(notification.priority)}
                           </Badge>
@@ -490,7 +495,10 @@ export default function NotificationsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notification.id);
+                          }}
                           disabled={saving}
                         >
                           <CheckCircle className="h-4 w-4" />
@@ -499,7 +507,10 @@ export default function NotificationsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => deleteNotification(notification.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNotification(notification.id);
+                        }}
                         disabled={saving}
                       >
                         <Trash2 className="h-4 w-4" />

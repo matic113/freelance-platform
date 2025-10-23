@@ -12,21 +12,28 @@ export function useNotifications() {
   const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
 
-  // Load notifications
   const loadNotifications = async (
     page: number = 0,
     size: number = 20,
     type?: string,
     priority?: string,
     isRead?: boolean,
-    search?: string
+    search?: string,
+    useGrouping: boolean = true
   ) => {
     try {
       setLoading(true);
-      const response = await notificationService.getNotifications(page, size, type, priority, isRead, search);
-      setNotifications(response.content);
-      setTotalPages(response.totalPages);
-      setCurrentPage(response.number);
+      if (useGrouping && !type && !priority && !isRead && !search) {
+        const response = await notificationService.getGroupedNotifications(page, size);
+        setNotifications(response);
+        setTotalPages(Math.ceil(response.length / size));
+        setCurrentPage(page);
+      } else {
+        const response = await notificationService.getNotifications(page, size, type, priority, isRead, search);
+        setNotifications(response.content);
+        setTotalPages(response.totalPages);
+        setCurrentPage(response.number);
+      }
     } catch (error) {
       console.error('Error loading notifications:', error);
       toast({
