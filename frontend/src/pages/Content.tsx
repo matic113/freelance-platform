@@ -115,6 +115,8 @@ export default function ContentPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [formData, setFormData] = useState({ title: '', description: '' });
+  const [formErrors, setFormErrors] = useState<{ title?: string; description?: string }>({});
 
   // Mock legal documents data
   const [legalDocuments, setLegalDocuments] = useState<LegalDocument[]>([
@@ -353,6 +355,32 @@ export default function ContentPage() {
     return date.toLocaleDateString(isRTL ? 'ar-SA' : 'en-US');
   };
 
+  const validateAnnouncementForm = () => {
+    const errors: { title?: string; description?: string } = {};
+    if (!formData.title.trim()) {
+      errors.title = isRTL ? 'العنوان مطلوب' : 'Title is required';
+    }
+    if (!formData.description.trim()) {
+      errors.description = isRTL ? 'الوصف مطلوب' : 'Description is required';
+    }
+    return errors;
+  };
+
+  const handleAddAnnouncement = () => {
+    const errors = validateAnnouncementForm();
+    setFormErrors(errors);
+    if (Object.keys(errors).length === 0) {
+      setFormData({ title: '', description: '' });
+      setShowCreateDialog(false);
+    }
+  };
+
+  const handleOpenCreateDialog = () => {
+    setFormData({ title: '', description: '' });
+    setFormErrors({});
+    setShowCreateDialog(true);
+  };
+
   return (
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
       <Header isRTL={isRTL} onLanguageToggle={toggleLanguage} />
@@ -410,44 +438,66 @@ export default function ContentPage() {
                   <SelectItem value="cookies">{isRTL ? "ملفات تعريف الارتباط" : "Cookies"}</SelectItem>
                 </SelectContent>
               </Select>
-              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                <DialogTrigger asChild>
-                  <Button className="bg-[#0A2540] hover:bg-[#142b52]">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {isRTL ? "إضافة محتوى" : "Add Content"}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>{isRTL ? "إضافة محتوى جديد" : "Add New Content"}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">{isRTL ? "العنوان" : "Title"}</Label>
-                      <Input
-                        id="title"
-                        placeholder={isRTL ? "أدخل العنوان" : "Enter title"}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description">{isRTL ? "الوصف" : "Description"}</Label>
-                      <Textarea
-                        id="description"
-                        placeholder={isRTL ? "أدخل الوصف" : "Enter description"}
-                        rows={3}
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                        {isRTL ? "إلغاء" : "Cancel"}
-                      </Button>
-                      <Button className="bg-[#0A2540] hover:bg-[#142b52]">
-                        {isRTL ? "إضافة" : "Add"}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                 <DialogTrigger asChild>
+                   <Button className="bg-[#0A2540] hover:bg-[#142b52]" onClick={handleOpenCreateDialog}>
+                     <Plus className="h-4 w-4 mr-2" />
+                     {isRTL ? "إضافة محتوى" : "Add Content"}
+                   </Button>
+                 </DialogTrigger>
+                 <DialogContent className="max-w-2xl">
+                   <DialogHeader>
+                     <DialogTitle>{isRTL ? "إضافة محتوى جديد" : "Add New Content"}</DialogTitle>
+                   </DialogHeader>
+                   <div className="space-y-4">
+                     <div>
+                       <Label htmlFor="title" className="text-sm font-medium">
+                         {isRTL ? "العنوان" : "Title"} <span className="text-red-500">*</span>
+                       </Label>
+                       <Input
+                         id="title"
+                         placeholder={isRTL ? "أدخل العنوان" : "Enter title"}
+                         value={formData.title}
+                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                         className={cn(formErrors.title && "border-red-500 focus:border-red-500")}
+                       />
+                       {formErrors.title && (
+                         <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                           <AlertCircle className="h-4 w-4" />
+                           <span>{formErrors.title}</span>
+                         </div>
+                       )}
+                     </div>
+                     <div>
+                       <Label htmlFor="description" className="text-sm font-medium">
+                         {isRTL ? "الوصف" : "Description"} <span className="text-red-500">*</span>
+                       </Label>
+                       <Textarea
+                         id="description"
+                         placeholder={isRTL ? "أدخل الوصف" : "Enter description"}
+                         rows={3}
+                         value={formData.description}
+                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                         className={cn(formErrors.description && "border-red-500 focus:border-red-500")}
+                       />
+                       {formErrors.description && (
+                         <div className="flex items-center gap-1 mt-1 text-red-500 text-sm">
+                           <AlertCircle className="h-4 w-4" />
+                           <span>{formErrors.description}</span>
+                         </div>
+                       )}
+                     </div>
+                     <div className="flex justify-end gap-2">
+                       <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                         {isRTL ? "إلغاء" : "Cancel"}
+                       </Button>
+                       <Button className="bg-[#0A2540] hover:bg-[#142b52]" onClick={handleAddAnnouncement}>
+                         {isRTL ? "إضافة" : "Add"}
+                       </Button>
+                     </div>
+                   </div>
+                 </DialogContent>
+               </Dialog>
             </div>
           </div>
 

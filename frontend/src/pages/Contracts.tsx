@@ -103,14 +103,26 @@ export default function ContractsPage() {
   const [showMilestoneDialog, setShowMilestoneDialog] = useState(false);
   const [showEditMilestoneDialog, setShowEditMilestoneDialog] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<MilestoneResponse | null>(null);
-  const [newMilestone, setNewMilestone] = useState({
-    title: '',
-    description: '',
-    amount: '',
-    dueDate: '',
-    orderIndex: 1
-  });
-  const [highlightedContractId, setHighlightedContractId] = useState<string | null>(null);
+   const [newMilestone, setNewMilestone] = useState({
+     title: '',
+     description: '',
+     amount: '',
+     dueDate: '',
+     orderIndex: 1
+   });
+   const [milestoneErrors, setMilestoneErrors] = useState<{
+     title?: string;
+     description?: string;
+     amount?: string;
+     dueDate?: string;
+   }>({});
+   const [editMilestoneErrors, setEditMilestoneErrors] = useState<{
+     title?: string;
+     description?: string;
+     amount?: string;
+     dueDate?: string;
+   }>({});
+   const [highlightedContractId, setHighlightedContractId] = useState<string | null>(null);
 
    // Determine user type from auth context
    const isFreelancerUser = isFreelancer(user);
@@ -336,81 +348,142 @@ export default function ContractsPage() {
   });
 
   // Enhanced milestone handlers
-  const handleCreateMilestone = async () => {
-    if (selectedContract && newMilestone.title && newMilestone.description && newMilestone.amount && newMilestone.dueDate) {
-      try {
-        const request: CreateMilestoneRequest = {
-          title: newMilestone.title,
-          description: newMilestone.description,
-          amount: parseFloat(newMilestone.amount),
-          dueDate: newMilestone.dueDate,
-          orderIndex: newMilestone.orderIndex
-        };
+   const validateMilestone = (milestone: typeof newMilestone) => {
+     const errors: {
+       title?: string;
+       description?: string;
+       amount?: string;
+       dueDate?: string;
+     } = {};
+     if (!milestone.title.trim()) {
+       errors.title = isRTL ? 'العنوان مطلوب' : 'Title is required';
+     }
+     if (!milestone.description.trim()) {
+       errors.description = isRTL ? 'الوصف مطلوب' : 'Description is required';
+     }
+     if (!milestone.amount || parseFloat(milestone.amount) <= 0) {
+       errors.amount = isRTL ? 'المبلغ مطلوب وأكبر من صفر' : 'Amount is required and must be greater than 0';
+     }
+     if (!milestone.dueDate) {
+       errors.dueDate = isRTL ? 'الموعد مطلوب' : 'Due Date is required';
+     }
+     return errors;
+   };
 
-        await createMilestoneMutation.mutateAsync({
-          contractId: selectedContract.id,
-          request
-        });
+   const validateEditMilestone = (milestone: MilestoneResponse | null) => {
+     const errors: {
+       title?: string;
+       description?: string;
+       amount?: string;
+       dueDate?: string;
+     } = {};
+     if (!milestone) return errors;
+     if (!milestone.title.trim()) {
+       errors.title = isRTL ? 'العنوان مطلوب' : 'Title is required';
+     }
+     if (!milestone.description.trim()) {
+       errors.description = isRTL ? 'الوصف مطلوب' : 'Description is required';
+     }
+     if (!milestone.amount || milestone.amount <= 0) {
+       errors.amount = isRTL ? 'المبلغ مطلوب وأكبر من صفر' : 'Amount is required and must be greater than 0';
+     }
+     if (!milestone.dueDate) {
+       errors.dueDate = isRTL ? 'الموعد مطلوب' : 'Due Date is required';
+     }
+     return errors;
+   };
 
-        setNewMilestone({
-          title: '',
-          description: '',
-          amount: '',
-          dueDate: '',
-          orderIndex: 1
-        });
-        setShowMilestoneDialog(false);
-        
-        toast({
-          title: isRTL ? "تم إنشاء المرحلة بنجاح" : "Milestone Created",
-          description: isRTL ? "تم إنشاء المرحلة الجديدة بنجاح" : "New milestone has been created successfully",
-        });
-      } catch (error) {
-        toast({
-          title: isRTL ? "خطأ في إنشاء المرحلة" : "Error Creating Milestone",
-          description: isRTL ? "حدث خطأ أثناء إنشاء المرحلة" : "An error occurred while creating the milestone",
-          variant: "destructive",
-        });
-      }
-    }
-  };
+   const handleCreateMilestone = async () => {
+     const errors = validateMilestone(newMilestone);
+     setMilestoneErrors(errors);
+
+     if (Object.keys(errors).length > 0) {
+       return;
+     }
+
+     if (selectedContract && newMilestone.title && newMilestone.description && newMilestone.amount && newMilestone.dueDate) {
+       try {
+         const request: CreateMilestoneRequest = {
+           title: newMilestone.title,
+           description: newMilestone.description,
+           amount: parseFloat(newMilestone.amount),
+           dueDate: newMilestone.dueDate,
+           orderIndex: newMilestone.orderIndex
+         };
+
+         await createMilestoneMutation.mutateAsync({
+           contractId: selectedContract.id,
+           request
+         });
+
+         setNewMilestone({
+           title: '',
+           description: '',
+           amount: '',
+           dueDate: '',
+           orderIndex: 1
+         });
+         setMilestoneErrors({});
+         setShowMilestoneDialog(false);
+         
+         toast({
+           title: isRTL ? "تم إنشاء المرحلة بنجاح" : "Milestone Created",
+           description: isRTL ? "تم إنشاء المرحلة الجديدة بنجاح" : "New milestone has been created successfully",
+         });
+       } catch (error) {
+         toast({
+           title: isRTL ? "خطأ في إنشاء المرحلة" : "Error Creating Milestone",
+           description: isRTL ? "حدث خطأ أثناء إنشاء المرحلة" : "An error occurred while creating the milestone",
+           variant: "destructive",
+         });
+       }
+     }
+   };
 
   const handleEditMilestone = (milestone: MilestoneResponse) => {
     setSelectedMilestone(milestone);
     setShowEditMilestoneDialog(true);
   };
 
-  const handleUpdateMilestone = async (updatedMilestone: MilestoneResponse) => {
-    try {
-      const request: UpdateMilestoneRequest = {
-        title: updatedMilestone.title,
-        description: updatedMilestone.description,
-        amount: updatedMilestone.amount,
-        dueDate: updatedMilestone.dueDate,
-        orderIndex: updatedMilestone.orderIndex
-      };
+   const handleUpdateMilestone = async (updatedMilestone: MilestoneResponse) => {
+     const errors = validateEditMilestone(updatedMilestone);
+     setEditMilestoneErrors(errors);
 
-      await updateMilestoneMutation.mutateAsync({
-        contractId: updatedMilestone.contractId,
-        milestoneId: updatedMilestone.id,
-        request
-      });
+     if (Object.keys(errors).length > 0) {
+       return;
+     }
 
-      setShowEditMilestoneDialog(false);
-      setSelectedMilestone(null);
-      
-      toast({
-        title: isRTL ? "تم تحديث المرحلة بنجاح" : "Milestone Updated",
-        description: isRTL ? "تم تحديث المرحلة بنجاح" : "Milestone has been updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: isRTL ? "خطأ في تحديث المرحلة" : "Error Updating Milestone",
-        description: isRTL ? "حدث خطأ أثناء تحديث المرحلة" : "An error occurred while updating the milestone",
-        variant: "destructive",
-      });
-    }
-  };
+     try {
+       const request: UpdateMilestoneRequest = {
+         title: updatedMilestone.title,
+         description: updatedMilestone.description,
+         amount: updatedMilestone.amount,
+         dueDate: updatedMilestone.dueDate,
+         orderIndex: updatedMilestone.orderIndex
+       };
+
+       await updateMilestoneMutation.mutateAsync({
+         contractId: updatedMilestone.contractId,
+         milestoneId: updatedMilestone.id,
+         request
+       });
+
+       setShowEditMilestoneDialog(false);
+       setSelectedMilestone(null);
+       setEditMilestoneErrors({});
+       
+       toast({
+         title: isRTL ? "تم تحديث المرحلة بنجاح" : "Milestone Updated",
+         description: isRTL ? "تم تحديث المرحلة بنجاح" : "Milestone has been updated successfully",
+       });
+     } catch (error) {
+       toast({
+         title: isRTL ? "خطأ في تحديث المرحلة" : "Error Updating Milestone",
+         description: isRTL ? "حدث خطأ أثناء تحديث المرحلة" : "An error occurred while updating the milestone",
+         variant: "destructive",
+       });
+     }
+   };
 
   const handleDeleteMilestone = async (contractId: string, milestoneId: string) => {
     try {
@@ -1253,58 +1326,86 @@ export default function ContractsPage() {
                 {isRTL ? "إضافة مرحلة جديدة" : "Add New Milestone"}
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="milestoneTitle">
-                  {isRTL ? "عنوان المرحلة" : "Milestone Title"}
-                </Label>
-                <Input
-                  id="milestoneTitle"
-                  value={newMilestone.title}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder={isRTL ? "أدخل عنوان المرحلة..." : "Enter milestone title..."}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="milestoneDescription">
-                  {isRTL ? "وصف المرحلة" : "Milestone Description"}
-                </Label>
-                <Textarea
-                  id="milestoneDescription"
-                  value={newMilestone.description}
-                  onChange={(e) => setNewMilestone(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder={isRTL ? "أدخل وصف المرحلة..." : "Enter milestone description..."}
-                  rows={3}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="milestoneAmount">
-                    {isRTL ? "المبلغ" : "Amount"}
-                  </Label>
-                  <Input
-                    id="milestoneAmount"
-                    type="number"
-                    value={newMilestone.amount}
-                    onChange={(e) => setNewMilestone(prev => ({ ...prev, amount: e.target.value }))}
-                    placeholder={isRTL ? "أدخل المبلغ..." : "Enter amount..."}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="milestoneDueDate">
-                    {isRTL ? "تاريخ الاستحقاق" : "Due Date"}
-                  </Label>
-                  <Input
-                    id="milestoneDueDate"
-                    type="date"
-                    value={newMilestone.dueDate}
-                    onChange={(e) => setNewMilestone(prev => ({ ...prev, dueDate: e.target.value }))}
-                  />
-                </div>
-              </div>
+             <div className="space-y-4">
+               <div className="space-y-2">
+                 <Label htmlFor="milestoneTitle" className="text-sm font-medium">
+                   {isRTL ? "عنوان المرحلة" : "Milestone Title"} <span className="text-red-500">*</span>
+                 </Label>
+                 <Input
+                   id="milestoneTitle"
+                   value={newMilestone.title}
+                   onChange={(e) => setNewMilestone(prev => ({ ...prev, title: e.target.value }))}
+                   placeholder={isRTL ? "أدخل عنوان المرحلة..." : "Enter milestone title..."}
+                   className={cn(milestoneErrors.title && "border-red-500 focus:border-red-500")}
+                 />
+                 {milestoneErrors.title && (
+                   <div className="flex items-center gap-1 text-red-500 text-sm">
+                     <AlertCircle className="h-4 w-4" />
+                     <span>{milestoneErrors.title}</span>
+                   </div>
+                 )}
+               </div>
+               
+               <div className="space-y-2">
+                 <Label htmlFor="milestoneDescription" className="text-sm font-medium">
+                   {isRTL ? "وصف المرحلة" : "Milestone Description"} <span className="text-red-500">*</span>
+                 </Label>
+                 <Textarea
+                   id="milestoneDescription"
+                   value={newMilestone.description}
+                   onChange={(e) => setNewMilestone(prev => ({ ...prev, description: e.target.value }))}
+                   placeholder={isRTL ? "أدخل وصف المرحلة..." : "Enter milestone description..."}
+                   rows={3}
+                   className={cn(milestoneErrors.description && "border-red-500 focus:border-red-500")}
+                 />
+                 {milestoneErrors.description && (
+                   <div className="flex items-center gap-1 text-red-500 text-sm">
+                     <AlertCircle className="h-4 w-4" />
+                     <span>{milestoneErrors.description}</span>
+                   </div>
+                 )}
+               </div>
+               
+               <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                   <Label htmlFor="milestoneAmount" className="text-sm font-medium">
+                     {isRTL ? "المبلغ" : "Amount"} <span className="text-red-500">*</span>
+                   </Label>
+                   <Input
+                     id="milestoneAmount"
+                     type="number"
+                     value={newMilestone.amount}
+                     onChange={(e) => setNewMilestone(prev => ({ ...prev, amount: e.target.value }))}
+                     placeholder={isRTL ? "أدخل المبلغ..." : "Enter amount..."}
+                     className={cn(milestoneErrors.amount && "border-red-500 focus:border-red-500")}
+                   />
+                   {milestoneErrors.amount && (
+                     <div className="flex items-center gap-1 text-red-500 text-sm">
+                       <AlertCircle className="h-4 w-4" />
+                       <span>{milestoneErrors.amount}</span>
+                     </div>
+                   )}
+                 </div>
+                 
+                 <div className="space-y-2">
+                   <Label htmlFor="milestoneDueDate" className="text-sm font-medium">
+                     {isRTL ? "تاريخ الاستحقاق" : "Due Date"} <span className="text-red-500">*</span>
+                   </Label>
+                   <Input
+                     id="milestoneDueDate"
+                     type="date"
+                     value={newMilestone.dueDate}
+                     onChange={(e) => setNewMilestone(prev => ({ ...prev, dueDate: e.target.value }))}
+                     className={cn(milestoneErrors.dueDate && "border-red-500 focus:border-red-500")}
+                   />
+                   {milestoneErrors.dueDate && (
+                     <div className="flex items-center gap-1 text-red-500 text-sm">
+                       <AlertCircle className="h-4 w-4" />
+                       <span>{milestoneErrors.dueDate}</span>
+                     </div>
+                   )}
+                 </div>
+               </div>
               
               <div className="flex gap-2">
                 <Button 
@@ -1336,55 +1437,83 @@ export default function ContractsPage() {
                 {isRTL ? "تعديل المرحلة" : "Edit Milestone"}
               </DialogTitle>
             </DialogHeader>
-            {selectedMilestone && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editMilestoneTitle">
-                    {isRTL ? "عنوان المرحلة" : "Milestone Title"}
-                  </Label>
-                  <Input
-                    id="editMilestoneTitle"
-                    value={selectedMilestone.title}
-                    onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, title: e.target.value } : null)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="editMilestoneDescription">
-                    {isRTL ? "وصف المرحلة" : "Milestone Description"}
-                  </Label>
-                  <Textarea
-                    id="editMilestoneDescription"
-                    value={selectedMilestone.description}
-                    onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, description: e.target.value } : null)}
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="editMilestoneAmount">
-                      {isRTL ? "المبلغ" : "Amount"}
-                    </Label>
-                    <Input
-                      id="editMilestoneAmount"
-                      type="number"
-                      value={selectedMilestone.amount}
-                      onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, amount: parseFloat(e.target.value) || 0 } : null)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="editMilestoneDueDate">
-                      {isRTL ? "تاريخ الاستحقاق" : "Due Date"}
-                    </Label>
-                    <Input
-                      id="editMilestoneDueDate"
-                      type="date"
-                      value={selectedMilestone.dueDate}
-                      onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, dueDate: e.target.value } : null)}
-                    />
-                  </div>
+             {selectedMilestone && (
+               <div className="space-y-4">
+                 <div className="space-y-2">
+                   <Label htmlFor="editMilestoneTitle" className="text-sm font-medium">
+                     {isRTL ? "عنوان المرحلة" : "Milestone Title"} <span className="text-red-500">*</span>
+                   </Label>
+                   <Input
+                     id="editMilestoneTitle"
+                     value={selectedMilestone.title}
+                     onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, title: e.target.value } : null)}
+                     className={cn(editMilestoneErrors.title && "border-red-500 focus:border-red-500")}
+                   />
+                   {editMilestoneErrors.title && (
+                     <div className="flex items-center gap-1 text-red-500 text-sm">
+                       <AlertCircle className="h-4 w-4" />
+                       <span>{editMilestoneErrors.title}</span>
+                     </div>
+                   )}
+                 </div>
+                 
+                 <div className="space-y-2">
+                   <Label htmlFor="editMilestoneDescription" className="text-sm font-medium">
+                     {isRTL ? "وصف المرحلة" : "Milestone Description"} <span className="text-red-500">*</span>
+                   </Label>
+                   <Textarea
+                     id="editMilestoneDescription"
+                     value={selectedMilestone.description}
+                     onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, description: e.target.value } : null)}
+                     rows={3}
+                     className={cn(editMilestoneErrors.description && "border-red-500 focus:border-red-500")}
+                   />
+                   {editMilestoneErrors.description && (
+                     <div className="flex items-center gap-1 text-red-500 text-sm">
+                       <AlertCircle className="h-4 w-4" />
+                       <span>{editMilestoneErrors.description}</span>
+                     </div>
+                   )}
+                 </div>
+                 
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <Label htmlFor="editMilestoneAmount" className="text-sm font-medium">
+                       {isRTL ? "المبلغ" : "Amount"} <span className="text-red-500">*</span>
+                     </Label>
+                     <Input
+                       id="editMilestoneAmount"
+                       type="number"
+                       value={selectedMilestone.amount}
+                       onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, amount: parseFloat(e.target.value) || 0 } : null)}
+                       className={cn(editMilestoneErrors.amount && "border-red-500 focus:border-red-500")}
+                     />
+                     {editMilestoneErrors.amount && (
+                       <div className="flex items-center gap-1 text-red-500 text-sm">
+                         <AlertCircle className="h-4 w-4" />
+                         <span>{editMilestoneErrors.amount}</span>
+                       </div>
+                     )}
+                   </div>
+                   
+                    <div className="space-y-2">
+                     <Label htmlFor="editMilestoneDueDate" className="text-sm font-medium">
+                       {isRTL ? "تاريخ الاستحقاق" : "Due Date"} <span className="text-red-500">*</span>
+                     </Label>
+                     <Input
+                       id="editMilestoneDueDate"
+                       type="date"
+                       value={selectedMilestone.dueDate}
+                       onChange={(e) => setSelectedMilestone(prev => prev ? { ...prev, dueDate: e.target.value } : null)}
+                       className={cn(editMilestoneErrors.dueDate && "border-red-500 focus:border-red-500")}
+                     />
+                     {editMilestoneErrors.dueDate && (
+                       <div className="flex items-center gap-1 text-red-500 text-sm">
+                         <AlertCircle className="h-4 w-4" />
+                         <span>{editMilestoneErrors.dueDate}</span>
+                       </div>
+                     )}
+                   </div>
             </div>
             
                 <div className="flex gap-2">

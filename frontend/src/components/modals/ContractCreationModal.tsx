@@ -45,6 +45,12 @@ export const ContractCreationModal: React.FC<ContractCreationModalProps> = ({
   const [editingMilestone, setEditingMilestone] = useState<MilestoneResponse | null>(null);
   const [milestones, setMilestones] = useState<MilestoneResponse[]>([]);
   const [isAddMilestoneExpanded, setIsAddMilestoneExpanded] = useState(false);
+  const [milestoneErrors, setMilestoneErrors] = useState<{
+    title?: string;
+    description?: string;
+    amount?: string;
+    dueDate?: string;
+  }>({});
 
   const [formData, setFormData] = useState({
     title: '',
@@ -75,10 +81,37 @@ export const ContractCreationModal: React.FC<ContractCreationModalProps> = ({
     }
   }, [contract, isOpen]);
 
+  const validateMilestone = () => {
+    const errors: {
+      title?: string;
+      description?: string;
+      amount?: string;
+      dueDate?: string;
+    } = {};
+    if (!newMilestone.title.trim()) {
+      errors.title = isRTL ? 'العنوان مطلوب' : 'Title is required';
+    }
+    if (!newMilestone.description.trim()) {
+      errors.description = isRTL ? 'الوصف مطلوب' : 'Description is required';
+    }
+    if (!newMilestone.amount || parseFloat(newMilestone.amount) <= 0) {
+      errors.amount = isRTL ? 'المبلغ مطلوب وأكبر من صفر' : 'Amount is required and must be greater than 0';
+    }
+    if (!newMilestone.dueDate) {
+      errors.dueDate = isRTL ? 'الموعد مطلوب' : 'Due Date is required';
+    }
+    return errors;
+  };
+
   const handleAddMilestone = async () => {
-    if (!contract || !newMilestone.title || !newMilestone.description || !newMilestone.amount || !newMilestone.dueDate) {
+    const errors = validateMilestone();
+    setMilestoneErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
       return;
     }
+
+    if (!contract) return;
 
     try {
       const milestone = await contractService.createMilestone(contract.id, {
@@ -96,6 +129,7 @@ export const ContractCreationModal: React.FC<ContractCreationModalProps> = ({
         amount: '',
         dueDate: '',
       });
+      setMilestoneErrors({});
     } catch (error) {
       console.error('Error adding milestone:', error);
     }
@@ -467,78 +501,106 @@ export const ContractCreationModal: React.FC<ContractCreationModalProps> = ({
 
                      {isAddMilestoneExpanded && (
                        <div className={cn("p-4 border rounded-lg bg-gray-50", isRTL && "text-right")}>
-                         <div className="space-y-3">
-                           <div>
-                             <Label htmlFor="milestoneTitle" className="text-sm">
-                               {isRTL ? 'العنوان' : 'Title'}
-                             </Label>
-                             <Input
-                               id="milestoneTitle"
-                               value={newMilestone.title}
-                               onChange={(e) =>
-                                 setNewMilestone({
-                                   ...newMilestone,
-                                   title: e.target.value,
-                                 })
-                               }
-                               placeholder={isRTL ? 'عنوان المرحلة' : 'Milestone title'}
-                             />
-                           </div>
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="milestoneTitle" className="text-sm font-medium">
+                                {isRTL ? 'العنوان' : 'Title'} <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="milestoneTitle"
+                                value={newMilestone.title}
+                                onChange={(e) =>
+                                  setNewMilestone({
+                                    ...newMilestone,
+                                    title: e.target.value,
+                                  })
+                                }
+                                placeholder={isRTL ? 'عنوان المرحلة' : 'Milestone title'}
+                                className={cn(milestoneErrors.title && 'border-red-500 focus:border-red-500')}
+                              />
+                              {milestoneErrors.title && (
+                                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                                  <AlertCircle className="h-3 w-3" />
+                                  <span>{milestoneErrors.title}</span>
+                                </div>
+                              )}
+                            </div>
 
-                           <div>
-                             <Label htmlFor="milestoneDescription" className="text-sm">
-                               {isRTL ? 'الوصف' : 'Description'}
-                             </Label>
-                             <Textarea
-                               id="milestoneDescription"
-                               value={newMilestone.description}
-                               onChange={(e) =>
-                                 setNewMilestone({
-                                   ...newMilestone,
-                                   description: e.target.value,
-                                 })
-                               }
-                               placeholder={isRTL ? 'وصف المرحلة' : 'Milestone description'}
-                               rows={2}
-                             />
-                           </div>
+                            <div>
+                              <Label htmlFor="milestoneDescription" className="text-sm font-medium">
+                                {isRTL ? 'الوصف' : 'Description'} <span className="text-red-500">*</span>
+                              </Label>
+                              <Textarea
+                                id="milestoneDescription"
+                                value={newMilestone.description}
+                                onChange={(e) =>
+                                  setNewMilestone({
+                                    ...newMilestone,
+                                    description: e.target.value,
+                                  })
+                                }
+                                placeholder={isRTL ? 'وصف المرحلة' : 'Milestone description'}
+                                rows={2}
+                                className={cn(milestoneErrors.description && 'border-red-500 focus:border-red-500')}
+                              />
+                              {milestoneErrors.description && (
+                                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                                  <AlertCircle className="h-3 w-3" />
+                                  <span>{milestoneErrors.description}</span>
+                                </div>
+                              )}
+                            </div>
 
-                           <div className="grid grid-cols-2 gap-3">
-                             <div>
-                               <Label htmlFor="milestoneAmount" className="text-sm">
-                                 {isRTL ? 'المبلغ' : 'Amount'}
-                               </Label>
-                               <Input
-                                 id="milestoneAmount"
-                                 type="number"
-                                 value={newMilestone.amount}
-                                 onChange={(e) =>
-                                   setNewMilestone({
-                                     ...newMilestone,
-                                     amount: e.target.value,
-                                   })
-                                 }
-                                 placeholder={isRTL ? 'المبلغ' : 'Amount'}
-                               />
-                             </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor="milestoneAmount" className="text-sm font-medium">
+                                  {isRTL ? 'المبلغ' : 'Amount'} <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id="milestoneAmount"
+                                  type="number"
+                                  value={newMilestone.amount}
+                                  onChange={(e) =>
+                                    setNewMilestone({
+                                      ...newMilestone,
+                                      amount: e.target.value,
+                                    })
+                                  }
+                                  placeholder={isRTL ? 'المبلغ' : 'Amount'}
+                                  className={cn(milestoneErrors.amount && 'border-red-500 focus:border-red-500')}
+                                />
+                                {milestoneErrors.amount && (
+                                  <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <span>{milestoneErrors.amount}</span>
+                                  </div>
+                                )}
+                              </div>
 
-                             <div>
-                               <Label htmlFor="milestoneDueDate" className="text-sm">
-                                 {isRTL ? 'الموعد' : 'Due Date'}
-                               </Label>
-                               <Input
-                                 id="milestoneDueDate"
-                                 type="date"
-                                 value={newMilestone.dueDate}
-                                 onChange={(e) =>
-                                   setNewMilestone({
-                                     ...newMilestone,
-                                     dueDate: e.target.value,
-                                   })
-                                 }
-                               />
-                             </div>
-                           </div>
+                              <div>
+                                <Label htmlFor="milestoneDueDate" className="text-sm font-medium">
+                                  {isRTL ? 'الموعد' : 'Due Date'} <span className="text-red-500">*</span>
+                                </Label>
+                                <Input
+                                  id="milestoneDueDate"
+                                  type="date"
+                                  value={newMilestone.dueDate}
+                                  onChange={(e) =>
+                                    setNewMilestone({
+                                      ...newMilestone,
+                                      dueDate: e.target.value,
+                                    })
+                                  }
+                                  className={cn(milestoneErrors.dueDate && 'border-red-500 focus:border-red-500')}
+                                />
+                                {milestoneErrors.dueDate && (
+                                  <div className="flex items-center gap-1 mt-1 text-red-500 text-xs">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <span>{milestoneErrors.dueDate}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
 
                            <Button
                              onClick={handleAddMilestone}
