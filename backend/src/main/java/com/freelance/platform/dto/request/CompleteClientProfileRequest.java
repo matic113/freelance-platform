@@ -13,7 +13,6 @@ public class CompleteClientProfileRequest {
     @NotBlank(message = "Phone is required")
     private String phone;
     
-    @NotBlank(message = "Profile picture is required")
     private String avatarUrl;
     
     private String city;

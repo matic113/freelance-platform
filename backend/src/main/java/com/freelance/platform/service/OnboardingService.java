@@ -78,7 +78,11 @@ public class OnboardingService {
         
         user.setCountry(request.getCountry());
         user.setTimezone(request.getTimezone());
-        user.setAvatarUrl(request.getAvatarUrl());
+        
+        if (request.getAvatarUrl() != null && !request.getAvatarUrl().isEmpty()) {
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
+        
         if (request.getPhone() != null) {
             user.setPhone(request.getPhone());
         }
@@ -135,7 +139,10 @@ public class OnboardingService {
         user.setCountry(request.getCountry());
         user.setTimezone(request.getTimezone());
         user.setPhone(request.getPhone());
-        user.setAvatarUrl(request.getAvatarUrl());
+        
+        if (request.getAvatarUrl() != null && !request.getAvatarUrl().isEmpty()) {
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
         
         if (request.getCity() != null) {
             user.setCity(request.getCity());
@@ -152,14 +159,21 @@ public class OnboardingService {
     }
     
     private String getDashboardUrl(User user) {
-        if (user.isAdmin()) {
-            return "/admin/dashboard";
-        } else if (user.isFreelancer()) {
-            return "/freelancer/dashboard";
-        } else if (user.isClient()) {
-            return "/client/dashboard";
+        Role activeRole = user.getActiveRole();
+        if (activeRole == null) {
+            return "/";
         }
-        return "/";
+        
+        switch (activeRole) {
+            case ADMIN:
+                return "/admin-dashboard";
+            case FREELANCER:
+                return "/freelancer-dashboard";
+            case CLIENT:
+                return "/client-dashboard";
+            default:
+                return "/";
+        }
     }
     
     private UserResponse mapUserToResponse(User user) {

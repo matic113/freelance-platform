@@ -153,7 +153,30 @@ export interface CompleteUploadRequest {
   folder: string;
 }
 
+export interface PresignedUrlResponse {
+  uploadUrl: string;
+  fileUrl: string;
+  fileName: string;
+  objectName: string;
+}
+
 export const presignedUploadService = {
+  getPresignedUrlForAvatar: async (
+    filename: string,
+    contentType?: string
+  ): Promise<PresignedUrlResponse> => {
+    return apiService.post<PresignedUrlResponse>(
+      '/files/presigned-url',
+      null,
+      {
+        params: {
+          fileName: filename,
+          contentType: contentType || 'image/jpeg',
+        },
+      }
+    );
+  },
+
   getPresignedUploadUrl: async (
     projectId: string,
     filename: string,

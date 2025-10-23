@@ -76,6 +76,7 @@ public class AuthService {
             user.setLastName(profile.getLastName());
             user.setIsActive(true);
             user.setIsVerified(true);
+            user.setIsExternalAuth(true);
             user.setRoles(EnumSet.noneOf(Role.class));
             // Set a placeholder password for OAuth users (they don't have a traditional password)
             user.setPasswordHash("oauth_" + profile.getEmail());
@@ -150,6 +151,7 @@ public class AuthService {
                 null,
                 true,
                 user.getProfileCompleted(),
+                user.getIsExternalAuth(),
                 user.getCreatedAt()
         );
         return new GoogleAuthResponse(placeholderAuth, true);
@@ -175,6 +177,7 @@ public class AuthService {
                 user.getActiveRole(),
                 user.getIsVerified(),
                 user.getProfileCompleted(),
+                user.getIsExternalAuth(),
                 user.getCreatedAt()
         );
     }
@@ -298,6 +301,7 @@ public class AuthService {
                 user.getActiveRole(),
                 user.getIsVerified(),
                 user.getProfileCompleted(),
+                user.getIsExternalAuth(),
                 user.getCreatedAt()
         );
     }

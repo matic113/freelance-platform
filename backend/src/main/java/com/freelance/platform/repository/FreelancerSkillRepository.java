@@ -30,4 +30,8 @@ public interface FreelancerSkillRepository extends JpaRepository<FreelancerSkill
     void deleteByFreelancer(FreelancerProfile freelancer);
     
     boolean existsByFreelancerAndSkill(FreelancerProfile freelancer, Skill skill);
+    
+    long countByFreelancerId(UUID freelancerId);
+    
+    void deleteByFreelancerId(UUID freelancerId);
 }

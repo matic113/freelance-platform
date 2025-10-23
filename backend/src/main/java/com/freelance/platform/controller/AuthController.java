@@ -209,6 +209,7 @@ public class AuthController {
                     user.getActiveRole(),
                     user.getIsVerified(),
                     user.getProfileCompleted(),
+                    user.getIsExternalAuth(),
                     user.getCreatedAt()
             ));
         } catch (Exception e) {
@@ -288,6 +289,7 @@ public class AuthController {
                     verifiedUser.getActiveRole(),
                     verifiedUser.getIsVerified(),
                     verifiedUser.getProfileCompleted(),
+                    verifiedUser.getIsExternalAuth(),
                     verifiedUser.getCreatedAt()
             );
             

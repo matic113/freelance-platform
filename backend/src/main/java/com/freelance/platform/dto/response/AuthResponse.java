@@ -18,6 +18,8 @@ public class AuthResponse {
     private Set<Role> roles;
     private Role activeRole;
     private Boolean isVerified;
+    private Boolean profileCompleted;
+    private Boolean isExternalAuth;
     private LocalDateTime createdAt;
     
     // Constructors
@@ -25,7 +27,7 @@ public class AuthResponse {
     
     public AuthResponse(String accessToken, String refreshToken, Long expiresIn, UUID userId, 
                        String email, String firstName, String lastName, Set<Role> roles, 
-                       Role activeRole, Boolean isVerified, LocalDateTime createdAt) {
+                       Role activeRole, Boolean isVerified, Boolean profileCompleted, Boolean isExternalAuth, LocalDateTime createdAt) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expiresIn = expiresIn;
@@ -36,6 +38,8 @@ public class AuthResponse {
         this.roles = roles;
         this.activeRole = activeRole;
         this.isVerified = isVerified;
+        this.profileCompleted = profileCompleted;
+        this.isExternalAuth = isExternalAuth;
         this.createdAt = createdAt;
     }
     
@@ -134,5 +138,21 @@ public class AuthResponse {
     
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public Boolean getProfileCompleted() {
+        return profileCompleted;
+    }
+    
+    public void setProfileCompleted(Boolean profileCompleted) {
+        this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getIsExternalAuth() {
+        return isExternalAuth;
+    }
+    
+    public void setIsExternalAuth(Boolean isExternalAuth) {
+        this.isExternalAuth = isExternalAuth;
     }
 }

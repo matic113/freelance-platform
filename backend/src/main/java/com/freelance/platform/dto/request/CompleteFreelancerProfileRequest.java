@@ -29,7 +29,6 @@ public class CompleteFreelancerProfileRequest {
     @NotBlank(message = "Timezone is required")
     private String timezone;
     
-    @NotBlank(message = "Profile picture is required")
     private String avatarUrl;
     
     @NotNull(message = "Skills are required")

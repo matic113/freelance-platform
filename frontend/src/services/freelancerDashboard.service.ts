@@ -42,7 +42,7 @@ class FreelancerDashboardService {
   private baseUrl = '/analytics';
 
   getFreelancerDashboard = async (): Promise<FreelancerDashboardResponse> => {
-    return await apiService.get<FreelancerDashboardResponse>(`${this.baseUrl}/freelancer/dashboard`);
+    return await apiService.get<FreelancerDashboardResponse>(`${this.baseUrl}/freelancer-dashboard`);
   }
 }
 

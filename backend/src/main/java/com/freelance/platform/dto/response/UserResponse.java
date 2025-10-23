@@ -23,6 +23,7 @@ public class UserResponse {
     private Boolean isVerified;
     private Boolean isActive;
     private Boolean profileCompleted;
+    private Boolean isExternalAuth;
     private LocalDateTime profileCompletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -195,5 +196,13 @@ public class UserResponse {
     
     public void setProfileCompletedAt(LocalDateTime profileCompletedAt) {
         this.profileCompletedAt = profileCompletedAt;
+    }
+    
+    public Boolean getIsExternalAuth() {
+        return isExternalAuth;
+    }
+    
+    public void setIsExternalAuth(Boolean isExternalAuth) {
+        this.isExternalAuth = isExternalAuth;
     }
 }

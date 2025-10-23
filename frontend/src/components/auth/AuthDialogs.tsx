@@ -180,6 +180,8 @@ export const AuthDialogs: React.FC<AuthDialogsProps> = ({ isRTL = false }) => {
         setIsRoleDialogOpen(false);
         setIsLoginDialogOpen(false);
         setPendingGoogleUserId(null);
+        
+        navigate('/external-onboarding');
       }
     } catch (error: any) {
       console.error('Role selection error:', error);

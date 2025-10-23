@@ -51,6 +51,7 @@ public class User {
     private Boolean isVerified = false;
     private Boolean isActive = true;
     private Boolean profileCompleted = false;
+    private Boolean isExternalAuth = false;
     private LocalDateTime profileCompletedAt;
     private LocalDateTime lastLoginAt;
     
@@ -233,6 +234,14 @@ public class User {
     
     public void setProfileCompleted(Boolean profileCompleted) {
         this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getIsExternalAuth() {
+        return isExternalAuth;
+    }
+    
+    public void setIsExternalAuth(Boolean isExternalAuth) {
+        this.isExternalAuth = isExternalAuth;
     }
     
     public LocalDateTime getProfileCompletedAt() {

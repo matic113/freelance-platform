@@ -161,6 +161,7 @@ export const authService = {
       activeRole,
       isVerified: authResponse.isVerified,
       isActive: true,
+      profileCompleted: authResponse.profileCompleted,
       createdAt: authResponse.createdAt,
       updatedAt: authResponse.createdAt,
       avatarUrl: undefined,
