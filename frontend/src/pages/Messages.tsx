@@ -69,12 +69,14 @@ const getMessagePreview = (
   isRTL: boolean
 ): string => {
   if (preview && preview.trim() !== '') {
+    const maxLength = 45;
+    if (preview.length > maxLength) {
+      return preview.substring(0, maxLength) + ' ...';
+    }
     return preview;
   }
   
-  return isCurrentUserSender
-    ? (isRTL ? "أنت أرسلت مرفق" : "You sent an attachment")
-    : (isRTL ? "أرسل مرفق" : "Sent an attachment");
+  return '';
 };
 
 export default function Messages() {
@@ -525,50 +527,50 @@ export default function Messages() {
                       </div>
                     ) : (
                       filteredConversations.map((conversation) => {
-                        const isCurrentUserSender = conversation.otherParticipantId === currentUserId;
-                        
-                        return (
-                        <div
-                           key={conversation.id}
-                           className={cn(
-                             "p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4",
-                             selectedChat === conversation.id
-                               ? "bg-blue-50 border-blue-500" 
-                               : "border-transparent"
-                           )}
-                           onClick={() => handleChatSelect(conversation.id)}
-                         >
-                           <div className="flex items-center gap-3">
-                             <div className="relative">
-                               <Avatar className="h-12 w-12">
-                                 <AvatarImage src={conversation.otherParticipantAvatar} />
-                                 <AvatarFallback>
-                                   {(conversation.otherParticipantName || 'U').charAt(0)}
-                                 </AvatarFallback>
-                               </Avatar>
-                             </div>
-                             
-                             <div className="flex-1 min-w-0">
-                               <div className="flex items-center justify-between mb-1">
-                                 <h3 className="font-semibold text-sm truncate">
-                                   {conversation.type === 'PROJECT_CHAT' && conversation.projectTitle
-                                     ? conversation.projectTitle
-                                     : conversation.otherParticipantName}
-                                 </h3>
-                                 <span className="text-xs text-gray-500">
-                                   {new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                 </span>
-                               </div>
-                               
-                               {conversation.type === 'PROJECT_CHAT' && (
-                                 <p className="text-xs text-gray-500 truncate mb-1">
-                                   {isRTL ? "مع" : "with"} {conversation.otherParticipantName}
-                                 </p>
-                               )}
-                               
-                               <p className="text-sm text-gray-600 truncate mb-1">
-                                 {getMessagePreview(conversation.lastMessagePreview, isCurrentUserSender, isRTL)}
-                               </p>
+                         const isCurrentUserSender = conversation.otherParticipantId !== currentUserId;
+                         
+                         return (
+                         <div
+                            key={conversation.id}
+                            className={cn(
+                              "p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4",
+                              selectedChat === conversation.id
+                                ? "bg-blue-50 border-blue-500" 
+                                : "border-transparent"
+                            )}
+                            onClick={() => handleChatSelect(conversation.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <Avatar className="h-12 w-12">
+                                  <AvatarImage src={conversation.otherParticipantAvatar} />
+                                  <AvatarFallback>
+                                    {(conversation.otherParticipantName || 'U').charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-semibold text-sm truncate">
+                                    {conversation.type === 'PROJECT_CHAT' && conversation.projectTitle
+                                      ? conversation.projectTitle
+                                      : conversation.otherParticipantName}
+                                  </h3>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                
+                                {conversation.type === 'PROJECT_CHAT' && (
+                                  <p className="text-xs text-gray-500 truncate mb-1">
+                                    {isRTL ? "مع" : "with"} {conversation.otherParticipantName}
+                                  </p>
+                                )}
+                                
+                                <p className="text-sm text-gray-600 truncate mb-1">
+                                  {getMessagePreview(conversation.lastMessagePreview, isCurrentUserSender, isRTL)}
+                                </p>
                                
                                <div className="flex items-center justify-end">
                                   {(conversation.unreadCount ?? 0) > 0 && (
