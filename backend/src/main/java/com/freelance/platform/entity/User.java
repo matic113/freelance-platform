@@ -50,6 +50,8 @@ public class User {
     private String language = "en";
     private Boolean isVerified = false;
     private Boolean isActive = true;
+    private Boolean profileCompleted = false;
+    private LocalDateTime profileCompletedAt;
     private LocalDateTime lastLoginAt;
     
     @CreationTimestamp
@@ -223,6 +225,22 @@ public class User {
     
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+    
+    public Boolean getProfileCompleted() {
+        return profileCompleted;
+    }
+    
+    public void setProfileCompleted(Boolean profileCompleted) {
+        this.profileCompleted = profileCompleted;
+    }
+    
+    public LocalDateTime getProfileCompletedAt() {
+        return profileCompletedAt;
+    }
+    
+    public void setProfileCompletedAt(LocalDateTime profileCompletedAt) {
+        this.profileCompletedAt = profileCompletedAt;
     }
     
     public LocalDateTime getCreatedAt() {

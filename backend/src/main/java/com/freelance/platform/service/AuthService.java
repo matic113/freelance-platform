@@ -149,6 +149,7 @@ public class AuthService {
                 user.getRoles(),
                 null,
                 true,
+                user.getProfileCompleted(),
                 user.getCreatedAt()
         );
         return new GoogleAuthResponse(placeholderAuth, true);
@@ -173,6 +174,7 @@ public class AuthService {
                 user.getRoles(),
                 user.getActiveRole(),
                 user.getIsVerified(),
+                user.getProfileCompleted(),
                 user.getCreatedAt()
         );
     }
@@ -295,6 +297,7 @@ public class AuthService {
                 user.getRoles(),
                 user.getActiveRole(),
                 user.getIsVerified(),
+                user.getProfileCompleted(),
                 user.getCreatedAt()
         );
     }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -17,8 +18,8 @@ interface AuthDialogsProps {
 }
 
 export const AuthDialogs: React.FC<AuthDialogsProps> = ({ isRTL = false }) => {
-  const { login, register, loginWithGoogle, completeGoogleRoleSelection, refreshUser } = useAuth();
-
+  const { login, register, refreshUser, loginWithGoogle, completeGoogleRoleSelection } = useAuth();
+  const navigate = useNavigate();
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isRegisterDialogOpen, setIsRegisterDialogOpen] = useState(false);
   const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
@@ -298,20 +299,47 @@ export const AuthDialogs: React.FC<AuthDialogsProps> = ({ isRTL = false }) => {
         const authResponse = await authService.verifyEmailRegistration({ email: otpEmail, otp: otpValue });
         authService.storeAuthData(authResponse);
         await refreshUser();
-      } else if (otpFlowType === 'login') {
-        const authResponse = await authService.verifyOtp({ email: otpEmail, otp: otpValue });
-        authService.storeAuthData(authResponse);
-        await refreshUser();
+        
+        toast.success(isRTL ? 'تم التحقق بنجاح' : 'Verification successful');
+        setIsOtpDialogOpen(false);
+        setOtpValue('');
+        setOtpError('');
+        setPendingCredentials(null);
+        setOtpFlowType(null);
+        
+        navigate('/onboarding');
+       } else if (otpFlowType === 'login') {
+         const authResponse = await authService.verifyOtp({ email: otpEmail, otp: otpValue });
+         authService.storeAuthData(authResponse);
+         await refreshUser();
+         
+         toast.success(isRTL ? 'تم التحقق بنجاح' : 'Verification successful');
+         setIsOtpDialogOpen(false);
+         setOtpValue('');
+         setOtpError('');
+         setPendingCredentials(null);
+         setOtpFlowType(null);
+         
+         setTimeout(() => {
+           const currentUser = authService.getStoredUser();
+           if (currentUser?.profileCompleted) {
+             const activeRole = currentUser.activeRole;
+             if (activeRole === UserType.FREELANCER) {
+               navigate('/freelancer-dashboard');
+             } else if (activeRole === UserType.CLIENT) {
+               navigate('/client-dashboard');
+             } else if (activeRole === UserType.ADMIN) {
+               navigate('/admin-dashboard');
+             } else {
+               navigate('/');
+             }
+           } else {
+             navigate('/onboarding');
+           }
+         }, 100);
       } else {
         throw new Error('Invalid OTP flow type');
       }
-
-      toast.success(isRTL ? 'تم التحقق بنجاح' : 'Verification successful');
-      setIsOtpDialogOpen(false);
-      setOtpValue('');
-      setOtpError('');
-      setPendingCredentials(null);
-      setOtpFlowType(null);
     } catch (error: any) {
       console.error('OTP verification error:', error);
       setOtpError(error?.response?.data?.message || error?.message || (isRTL ? 'فشل التحقق من الرمز' : 'OTP verification failed'));

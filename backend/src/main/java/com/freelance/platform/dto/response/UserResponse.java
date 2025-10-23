@@ -22,6 +22,8 @@ public class UserResponse {
     private String bio;
     private Boolean isVerified;
     private Boolean isActive;
+    private Boolean profileCompleted;
+    private LocalDateTime profileCompletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -177,5 +179,21 @@ public class UserResponse {
     // Helper methods
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+    
+    public Boolean getProfileCompleted() {
+        return profileCompleted;
+    }
+    
+    public void setProfileCompleted(Boolean profileCompleted) {
+        this.profileCompleted = profileCompleted;
+    }
+    
+    public LocalDateTime getProfileCompletedAt() {
+        return profileCompletedAt;
+    }
+    
+    public void setProfileCompletedAt(LocalDateTime profileCompletedAt) {
+        this.profileCompletedAt = profileCompletedAt;
     }
 }

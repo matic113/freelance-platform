@@ -49,6 +49,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  if (user && !user.profileCompleted && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (requiredRoles) {
     const rolesArray = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
     const hasRole = user?.roles?.some((role) => rolesArray.includes(role));
