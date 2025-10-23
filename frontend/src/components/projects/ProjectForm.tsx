@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
-  Plus, 
-  X,
-  Save,
-  Loader2,
-} from 'lucide-react';
-import { CreateProjectRequest, UpdateProjectRequest, ProjectType, ProjectResponse } from '@/types/api';
+   Plus, 
+   X,
+   Save,
+   Loader2,
+ } from 'lucide-react';
+import { CreateProjectRequest, UpdateProjectRequest, ProjectType, ProjectResponse, ApiError } from '@/types/api';
 import { toast } from 'sonner';
 import { FileUploadInput } from '@/components/FileUploadInput';
 import { AttachmentList, AttachmentItem } from '@/components/AttachmentList';
@@ -22,12 +23,15 @@ import { presignedUploadService, fileUploadService, type CompleteUploadRequest }
 import { projectService } from '@/services/project.service';
 
 interface ProjectFormProps {
-  isRTL: boolean;
-  onSubmit: (data: CreateProjectRequest | UpdateProjectRequest) => Promise<{ id: string }>;
-  onCancel: () => void;
-  initialProject?: ProjectResponse | null;
-  isLoading?: boolean;
-}
+   isRTL: boolean;
+   onSubmit: (data: CreateProjectRequest | UpdateProjectRequest) => Promise<{ id: string }>;
+   onCancel: () => void;
+   initialProject?: ProjectResponse | null;
+   isLoading?: boolean;
+   onUploadStart?: () => void;
+   onUploadComplete?: () => void;
+ }
+
 
 type DraftAttachment = {
   fileName: string;
@@ -37,13 +41,16 @@ type DraftAttachment = {
 };
 
 export function ProjectForm({
-  isRTL,
-  onSubmit,
-  onCancel,
-  initialProject,
-  isLoading = false,
-}: ProjectFormProps) {
-  const [formData, setFormData] = useState({
+   isRTL,
+   onSubmit,
+   onCancel,
+   initialProject,
+   isLoading = false,
+   onUploadStart,
+   onUploadComplete,
+ }: ProjectFormProps) {
+   const queryClient = useQueryClient();
+   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: '',
@@ -56,12 +63,14 @@ export function ProjectForm({
     skillsRequired: [] as string[],
   });
 
-  const [newSkill, setNewSkill] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
-  const [draftAttachments, setDraftAttachments] = useState<DraftAttachment[]>([]);
-  const [uploadingFiles, setUploadingFiles] = useState<Map<string, number>>(new Map());
-  const [pendingFiles, setPendingFiles] = useState<Map<string, File>>(new Map());
+   const [newSkill, setNewSkill] = useState('');
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [isUploading, setIsUploading] = useState(false);
+   const [uploadProgress, setUploadProgress] = useState(0);
+   const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
+   const [draftAttachments, setDraftAttachments] = useState<DraftAttachment[]>([]);
+   const [pendingFiles, setPendingFiles] = useState<Map<string, File>>(new Map());
+   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<Set<string>>(new Set());
 
   const categories = [
     { value: 'web-development', label: isRTL ? 'تطوير الويب' : 'Web Development' },
@@ -135,196 +144,192 @@ export function ProjectForm({
     }));
   };
 
-  const handleFileSelect = async (file: File) => {
-    console.log('[ProjectForm] File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-    
-    if (!fileUploadService.validateFileSize(file, 20)) {
-      toast.error(isRTL ? 'حجم الملف كبير جداً' : 'File size exceeds limit');
-      return;
-    }
+   const handleFileSelect = async (file: File) => {
+     console.log('[ProjectForm] File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+     
+     if (!fileUploadService.validateFileSize(file, 20)) {
+       toast.error(isRTL ? 'حجم الملف كبير جداً' : 'File size exceeds limit');
+       return;
+     }
 
-    setUploadingFiles(prev => new Map(prev).set(file.name, 0));
+     try {
+       console.log('[ProjectForm] Adding file for presigned upload');
+       setPendingFiles(prev => {
+         const newMap = new Map(prev).set(file.name, file);
+         console.log('[ProjectForm] pendingFiles updated. Total files:', newMap.size);
+         return newMap;
+       });
+       setDraftAttachments(prev => {
+         const newList = [...prev, {
+           fileName: file.name,
+           fileUrl: '',
+           fileSize: file.size,
+           fileType: file.type || 'application/octet-stream',
+         }];
+         console.log('[ProjectForm] draftAttachments updated. Total attachments:', newList.length);
+         return newList;
+       });
+       const message = isRTL ? `✓ ${file.name} تم إضافته (سيتم تحميله عند الحفظ)` : `✓ ${file.name} added (will upload on save)`;
+       toast.success(message);
+     } catch (error) {
+       console.error('Error selecting file:', error);
+       toast.error(isRTL ? `خطأ: ${file.name}` : `Error: ${file.name}`);
+     }
+   };
 
-    try {
-      if (initialProject?.id) {
-        console.log('[ProjectForm] Existing project - uploading directly');
-        // Existing project - upload directly
-        const attachment = await projectService.addAttachment(initialProject.id, file);
-        setAttachments(prev => {
-          const filtered = prev.filter(att => att.id !== attachment.id);
-          return [
-            ...filtered,
-            {
-              id: attachment.id,
-              filename: attachment.fileName,
-              url: attachment.fileUrl,
-              size: attachment.fileSize,
-              type: attachment.fileType,
-            },
-          ];
-        });
-        toast.success(isRTL ? `✓ ${file.name}` : `✓ ${file.name}`);
-      } else {
-        console.log('[ProjectForm] New project - storing file in pendingFiles');
-        // New project - store file and metadata for batch upload after project creation
-        setPendingFiles(prev => {
-          const newMap = new Map(prev).set(file.name, file);
-          console.log('[ProjectForm] pendingFiles updated. Total files:', newMap.size);
-          return newMap;
-        });
-        setDraftAttachments(prev => {
-          const newList = [...prev, {
-            fileName: file.name,
-            fileUrl: '',  // Will be populated after presigned upload
-            fileSize: file.size,
-            fileType: file.type || 'application/octet-stream',
-          }];
-          console.log('[ProjectForm] draftAttachments updated. Total attachments:', newList.length);
-          return newList;
-        });
-        toast.success(isRTL ? `✓ ${file.name}` : `✓ ${file.name}`);
+    const uploadPendingFilesToProject = async (projectId: string): Promise<void> => {
+      console.log('[uploadPendingFilesToProject] Started with projectId:', projectId, 'Pending files:', pendingFiles.size);
+      
+      if (pendingFiles.size === 0) {
+        console.log('[uploadPendingFilesToProject] No pending files, returning early');
+        onUploadComplete?.();
+        return;
       }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast.error(isRTL ? `خطأ: ${file.name}` : `Error: ${file.name}`);
-    } finally {
-      setUploadingFiles(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(file.name);
-        return newMap;
-      });
-    }
-  };
 
-  const uploadSingleFile = async (file: File, projectId: string) => {
-    try {
-      const attachment = await projectService.addAttachment(projectId, file);
+      // Notify parent that uploads are starting
+      console.log('[uploadPendingFilesToProject] Calling onUploadStart');
+      onUploadStart?.();
 
-      setAttachments(prev => {
-        const filtered = prev.filter(att => att.id !== attachment.id);
-        return [
-          ...filtered,
-          {
-            id: attachment.id,
-            filename: attachment.fileName,
-            url: attachment.fileUrl,
-            size: attachment.fileSize,
-            type: attachment.fileType,
-          },
-        ];
-      });
+      setIsUploading(true);
+      setUploadProgress(0);
 
-      setUploadingFiles(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(file.name);
-        return newMap;
-      });
+      try {
+        // Get all filenames from pending files
+        const filenames = Array.from(pendingFiles.keys());
+        console.log('[uploadPendingFilesToProject] Requesting batch presigned URLs for files:', filenames);
 
-      toast.success(isRTL ? `✓ ${file.name}` : `✓ ${file.name}`);
-      return attachment;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      setUploadingFiles(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(file.name);
-        return newMap;
-      });
-      toast.error(isRTL ? `خطأ: ${file.name}` : `Error: ${file.name}`);
-      return null;
-    }
-  };
+        // Request batch presigned URLs from backend
+        const presignedResponses = await presignedUploadService.getPresignedUploadUrlsBatch(
+          projectId,
+          filenames,
+          'files'
+        );
+        console.log('[uploadPendingFilesToProject] Received presigned URLs:', presignedResponses.length);
 
-  const uploadPendingFilesToProject = async (projectId: string): Promise<void> => {
-    console.log('[uploadPendingFilesToProject] Started with projectId:', projectId, 'Pending files:', pendingFiles.size);
-    
-    if (pendingFiles.size === 0) {
-      console.log('[uploadPendingFilesToProject] No pending files, returning early');
-      return;
-    }
-
-    try {
-      // Get all filenames from pending files
-      const filenames = Array.from(pendingFiles.keys());
-      console.log('[uploadPendingFilesToProject] Requesting batch presigned URLs for files:', filenames);
-
-      // Request batch presigned URLs from backend
-      const presignedResponses = await presignedUploadService.getPresignedUploadUrlsBatch(
-        projectId,
-        filenames,
-        'files'
-      );
-      console.log('[uploadPendingFilesToProject] Received presigned URLs:', presignedResponses.length);
-
-      // Upload all files in parallel to their presigned URLs
-      const uploadPromises = presignedResponses.map(async (presignedResponse) => {
-        const file = pendingFiles.get(presignedResponse.filename);
-        if (!file) {
-          console.error(`File not found: ${presignedResponse.filename}`);
-          return null;
+        // Upload all files in parallel to their presigned URLs (track overall progress by bytes)
+        // Build list of files with their presigned data
+        const uploadItems = presignedResponses.map(pr => ({ presigned: pr, file: pendingFiles.get(pr.filename) })).filter(i => i.file);
+        if (uploadItems.length === 0) {
+          console.warn('[uploadPendingFilesToProject] No valid files found to upload after presigned response');
         }
 
-        try {
-          console.log('[uploadPendingFilesToProject] Uploading file to presigned URL:', presignedResponse.filename);
-          await presignedUploadService.uploadToPresignedUrl(presignedResponse.uploadUrl, file);
-          
-          // Get the object name from the presigned response
-          const objectName = presignedResponse.objectName;
-          console.log('[uploadPendingFilesToProject] File uploaded. Object name:', objectName);
-          
-          // Register the uploaded file as a project attachment
-          console.log('[uploadPendingFilesToProject] Registering attachment:', presignedResponse.filename);
-          await projectService.completeFileUpload(
-            projectId,
-            objectName,
-            presignedResponse.filename,
-            file.size,
-            file.type || 'application/octet-stream'
-          );
-          console.log('[uploadPendingFilesToProject] Attachment registered successfully');
-          
-          // Update draft attachments to reflect successful upload
-          setDraftAttachments(prev =>
-            prev.map(att =>
-              att.fileName === presignedResponse.filename
-                ? { ...att, fileUrl: objectName }
-                : att
-            )
-          );
+        const totalBytes = uploadItems.reduce((sum, it) => sum + (it.file?.size || 0), 0);
+        let uploadedBytes = 0;
+        const loadedMap = new Map<string, number>();
 
-          toast.success(isRTL ? `✓ ${presignedResponse.filename}` : `✓ ${presignedResponse.filename}`);
-          return presignedResponse.filename;
-        } catch (error) {
-          console.error(`Error uploading ${presignedResponse.filename}:`, error);
-          toast.error(isRTL ? `خطأ: ${presignedResponse.filename}` : `Error: ${presignedResponse.filename}`);
-          return null;
-        }
-      });
+        const uploadPromises = uploadItems.map(async ({ presigned, file }) => {
+          try {
+            loadedMap.set(presigned.filename, 0);
 
-      await Promise.all(uploadPromises);
-      console.log('[uploadPendingFilesToProject] All files uploaded and registered successfully');
+            console.log('[uploadPendingFilesToProject] Uploading file to presigned URL:', presigned.filename);
 
-      // Clear pending files after successful upload
-      setPendingFiles(new Map());
-    } catch (error) {
-      console.error('Error in batch upload:', error);
-      toast.error(isRTL ? 'خطأ في تحميل الملفات' : 'Error uploading files');
-    }
-  };
+            await presignedUploadService.uploadToPresignedUrl(presigned.uploadUrl, file!, (loaded, total) => {
+              const prev = loadedMap.get(presigned.filename) || 0;
+              const currentLoaded = loaded;
+              const delta = Math.max(0, currentLoaded - prev);
+              loadedMap.set(presigned.filename, currentLoaded);
+              uploadedBytes += delta;
+              const percent = totalBytes > 0 ? Math.round((uploadedBytes / totalBytes) * 100) : 100;
+              setUploadProgress(percent);
+            });
 
-  const handleRemoveAttachment = async (filename: string) => {
-    const draftAttachment = draftAttachments.find(att => att.fileName === filename);
-    if (draftAttachment) {
-      setDraftAttachments(prev => prev.filter(att => att.fileName !== filename));
-      setPendingFiles(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(filename);
-        return newMap;
-      });
-      toast.success(isRTL ? 'تم إزالة الملف' : 'File removed');
-      return;
-    }
+            // If upload completed but browser didn't report full bytes, ensure we account for rest
+            const prevFinal = loadedMap.get(presigned.filename) || 0;
+            const remaining = (file!.size || 0) - prevFinal;
+            if (remaining > 0) {
+              uploadedBytes += remaining;
+              loadedMap.set(presigned.filename, file!.size);
+              setUploadProgress(totalBytes > 0 ? Math.round((uploadedBytes / totalBytes) * 100) : 100);
+            }
 
-    setAttachments(prev => prev.filter(att => att.filename !== filename));
+            // Get the object name from the presigned response
+            const objectName = presigned.objectName;
+            console.log('[uploadPendingFilesToProject] File uploaded. Object name:', objectName);
+
+            // Register the uploaded file as a project attachment
+            console.log('[uploadPendingFilesToProject] Registering attachment:', presigned.filename);
+            await projectService.completeFileUpload(
+              projectId,
+              objectName,
+              presigned.filename,
+              file!.size,
+              file!.type || 'application/octet-stream'
+            );
+            console.log('[uploadPendingFilesToProject] Attachment registered successfully');
+
+            // Update draft attachments to reflect successful upload
+            setDraftAttachments(prev =>
+              prev.map(att =>
+                att.fileName === presigned.filename
+                  ? { ...att, fileUrl: objectName }
+                  : att
+              )
+            );
+
+            toast.success(isRTL ? `✓ ${presigned.filename}` : `✓ ${presigned.filename}`);
+            return presigned.filename;
+          } catch (error) {
+            console.error(`Error uploading ${presigned.filename}:`, error);
+            toast.error(isRTL ? `خطأ: ${presigned.filename}` : `Error: ${presigned.filename}`);
+
+            // If error, mark remaining bytes for this file as completed so overall progress continues
+            const prev = loadedMap.get(presigned.filename) || 0;
+            const remaining = (file!.size || 0) - prev;
+            if (remaining > 0) {
+              uploadedBytes += remaining;
+              loadedMap.set(presigned.filename, file!.size);
+              setUploadProgress(totalBytes > 0 ? Math.round((uploadedBytes / totalBytes) * 100) : 100);
+            }
+
+            return null;
+          }
+        });
+
+        await Promise.all(uploadPromises);
+        console.log('[uploadPendingFilesToProject] All files uploaded and registered successfully');
+
+        // Invalidate project cache after successful uploads
+        await queryClient.invalidateQueries({ queryKey: ['projects', 'attachments', projectId] });
+        await queryClient.invalidateQueries({ queryKey: ['projects', 'detail', projectId] });
+
+        // Clear pending files after successful upload
+        setPendingFiles(new Map());
+        setUploadProgress(100);
+        
+        // Call the completion callback
+        onUploadComplete?.();
+      } catch (error) {
+        console.error('Error in batch upload:', error);
+        toast.error(isRTL ? 'خطأ في تحميل الملفات' : 'Error uploading files');
+        setIsUploading(false);
+        setUploadProgress(0);
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+
+   const handleRemoveAttachment = (filename: string) => {
+     const draftAttachment = draftAttachments.find(att => att.fileName === filename);
+     if (draftAttachment) {
+       setDraftAttachments(prev => prev.filter(att => att.fileName !== filename));
+       setPendingFiles(prev => {
+         const newMap = new Map(prev);
+         newMap.delete(filename);
+         return newMap;
+       });
+       toast.success(isRTL ? 'تم إزالة الملف' : 'File removed');
+       return;
+     }
+
+     const attachment = attachments.find(att => att.filename === filename);
+     if (attachment && attachment.id && attachment.id.trim()) {
+       setDeletedAttachmentIds(prev => new Set(prev).add(attachment.id));
+       toast.success(isRTL ? 'تم وضع علامة للحذف (سيتم الحذف عند الحفظ)' : 'Marked for deletion (will be deleted on save)');
+     } else {
+       console.warn('[ProjectForm] Cannot delete attachment - missing or empty ID:', attachment);
+       toast.error(isRTL ? 'لا يمكن حذف الملف - معرف غير صحيح' : 'Cannot delete file - invalid ID');
+     }
   };
 
   const validateForm = (): string | null => {
@@ -366,9 +371,9 @@ export function ProjectForm({
         projectType: formData.projectType as ProjectType,
         duration: formData.duration,
         deadline: formData.deadline,
-      };
+       };
 
-      let requestData: any = baseData;
+       let requestData: CreateProjectRequest | UpdateProjectRequest = baseData;
       
       // For EXISTING projects only: include attachments with the request
       // (new projects upload files after creation with presigned URLs)
@@ -385,48 +390,100 @@ export function ProjectForm({
         };
       }
 
-      console.log('[ProjectForm] Submitting project data:', requestData);
-      const result = await onSubmit(requestData);
-      console.log('[ProjectForm] Project created/updated. Result:', result);
-      const projectId = result.id;
-      console.log('[ProjectForm] Project ID:', projectId, 'Pending files count:', pendingFiles.size);
+       console.log('[ProjectForm] Submitting project data:', requestData);
+       const result = await onSubmit(requestData);
+       console.log('[ProjectForm] Project created/updated. Result:', result);
+       const projectId = result.id;
+       console.log('[ProjectForm] Project ID:', projectId, 'Pending files count:', pendingFiles.size);
 
-      // For NEW projects OR existing projects with pending files: upload files after creation
-      if (pendingFiles.size > 0) {
-        console.log('[ProjectForm] Uploading pending files');
-        toast.info(isRTL ? `جاري رفع ${pendingFiles.size} ملف...` : `Uploading ${pendingFiles.size} file(s)...`);
-        await uploadPendingFilesToProject(projectId);
-        
-        if (draftAttachments.length > 0) {
-          console.log('[ProjectForm] Updating attachments with', draftAttachments.length, 'uploaded files');
-          setAttachments(prev => {
-            const newAttachments = draftAttachments.map(draft => ({
-              id: '',
-              filename: draft.fileName,
-              url: draft.fileUrl,  // This is now the object name
-              size: draft.fileSize,
-              type: draft.fileType,
-              uploadedAt: new Date().toISOString(),
-            }));
-            return [...prev, ...newAttachments];
-          });
-        }
-        
-        setDraftAttachments([]);
-      } else {
-        console.log('[ProjectForm] No pending files to upload');
-      }
+        // Delete marked attachments for existing projects
+        if (initialProject && deletedAttachmentIds.size > 0) {
+          console.log('[ProjectForm] Deleting', deletedAttachmentIds.size, 'attachments');
+          const validAttachmentIds = Array.from(deletedAttachmentIds).filter(id => id && id.trim());
+          console.log('[ProjectForm] Valid attachment IDs to delete:', validAttachmentIds);
+          
+          if (validAttachmentIds.length > 0) {
+            try {
+              for (const attachmentId of validAttachmentIds) {
+                console.log('[ProjectForm] Deleting attachment:', attachmentId);
+                await projectService.removeAttachment(projectId, attachmentId);
+              }
+              setAttachments(prev => prev.filter(att => !deletedAttachmentIds.has(att.id || '')));
+              setDeletedAttachmentIds(new Set());
+              
+              // Invalidate project cache after deletion
+              await queryClient.invalidateQueries({ queryKey: ['projects', 'attachments', projectId] });
+              await queryClient.invalidateQueries({ queryKey: ['projects', 'detail', projectId] });
+              
+              toast.success(isRTL ? 'تم حذف الملفات' : 'Files deleted successfully');
+            } catch (error) {
+             const apiError = error as ApiError;
+             console.error('Error deleting attachments:', error);
+              const errorMsg = apiError?.message || (isRTL ? 'خطأ في حذف الملفات' : 'Error deleting files');
+              toast.error(errorMsg);
+              setDeletedAttachmentIds(new Set());
+           }
+         } else {
+           console.log('[ProjectForm] No valid attachment IDs to delete');
+           setDeletedAttachmentIds(new Set());
+         }
+       }
 
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || (isRTL ? 'حدث خطأ أثناء إنشاء المشروع' : 'Error creating project');
-      toast.error(errorMessage);
-      console.error('Error submitting project:', error);
+       // For NEW projects OR existing projects with pending files: upload files after creation
+       if (pendingFiles.size > 0) {
+         console.log('[ProjectForm] Uploading pending files');
+         toast.info(isRTL ? `جاري رفع ${pendingFiles.size} ملف...` : `Uploading ${pendingFiles.size} file(s)...`);
+         await uploadPendingFilesToProject(projectId);
+         
+         if (draftAttachments.length > 0) {
+           console.log('[ProjectForm] Updating attachments with', draftAttachments.length, 'uploaded files');
+           setAttachments(prev => {
+             const newAttachments = draftAttachments.map(draft => ({
+               id: '',
+               filename: draft.fileName,
+               url: draft.fileUrl,  // This is now the object name
+               size: draft.fileSize,
+               type: draft.fileType,
+               uploadedAt: new Date().toISOString(),
+             }));
+             return [...prev, ...newAttachments];
+           });
+         }
+         
+         setDraftAttachments([]);
+       } else {
+         console.log('[ProjectForm] No pending files to upload');
+       }
+
+     } catch (error) {
+       const apiError = error as ApiError;
+       const errorMessage = apiError?.message || (isRTL ? 'حدث خطأ أثناء إنشاء المشروع' : 'Error creating project');
+       toast.error(errorMessage);
+       console.error('Error submitting project:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
+    <div className="relative">
+      {/* Full-screen upload overlay to make progress unmistakable */}
+      {isUploading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg p-6 w-[420px] max-w-full">
+            <div className="flex items-center gap-3 mb-3">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              <h3 className="text-lg font-medium text-[#0A2540]">{isRTL ? 'جاري تحميل الملفات...' : 'Uploading files...'}</h3>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-3 mb-2">
+              <div className="bg-blue-600 h-3 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+            </div>
+            <p className="text-sm text-gray-700 mb-2">{uploadProgress}%</p>
+            <p className="text-xs text-gray-500">{isRTL ? 'الرجاء الانتظار حتى تكتمل عملية التحميل' : 'Please wait until uploads complete'}</p>
+          </div>
+        </div>
+      )}
+
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
@@ -604,83 +661,93 @@ export function ProjectForm({
             </div>
           </div>
 
-          {/* Attachments Upload Section - Full Width */}
-          <div className="space-y-2">
-            <Label className="text-xs">{isRTL ? "المرفقات" : "Attachments"}</Label>
-            <div className={cn("border-2 border-dashed rounded-lg p-3 min-h-[100px] flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors", isRTL && "rtl")}>
-              <FileUploadInput
-                onFileSelect={handleFileSelect}
-                isUploading={uploadingFiles.size > 0}
-                disabled={false}
-                maxFileSizeMB={20}
-                acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.zip,.rar"
-                fullArea={true}
-                allowMultiple={true}
-              />
-            </div>
-            {!initialProject && draftAttachments.length > 0 && (
-              <p className="text-xs text-muted-foreground">{draftAttachments.length} {isRTL ? "ملف جاهز" : "file(s) ready"}</p>
-            )}
-          </div>
+           {/* Attachments Upload Section - Full Width */}
+           <div className="space-y-2">
+             <Label className="text-xs">{isRTL ? "المرفقات" : "Attachments"}</Label>
+             <div className={cn("border-2 border-dashed rounded-lg p-3 min-h-[100px] flex items-center justify-center transition-colors hover:bg-gray-50", isRTL && "rtl")}>
+               <FileUploadInput
+                 onFileSelect={handleFileSelect}
+                 isUploading={false}
+                 disabled={false}
+                 maxFileSizeMB={20}
+                 acceptedFileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.zip,.rar"
+                 fullArea={true}
+                 allowMultiple={true}
+               />
+             </div>
+             {!initialProject && draftAttachments.length > 0 && (
+               <p className="text-xs text-muted-foreground">{draftAttachments.length} {isRTL ? "ملف جاهز" : "file(s) ready"}</p>
+             )}
+           </div>
 
-          {/* Uploading Files Progress */}
-          {uploadingFiles.size > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-medium text-blue-900">{isRTL ? "جاري الرفع..." : "Uploading..."}</p>
-              {Array.from(uploadingFiles.entries()).map(([filename]) => (
-                <div key={filename} className="flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
-                  <span className="text-xs text-gray-700 truncate">{filename}</span>
-                </div>
-              ))}
-            </div>
-          )}
 
-          {/* Uploaded/Pending Attachments */}
-          {(attachments.length > 0 || draftAttachments.length > 0) && (
-            <div className={cn("space-y-2", isRTL && "rtl")}>
-              <p className="text-xs font-medium text-muted-foreground">
-                {isRTL ? "المرفقات" : "Attachments"} ({attachments.length + draftAttachments.length})
-              </p>
-              <AttachmentList
-                attachments={[
-                  ...attachments,
-                  ...draftAttachments.map((att, idx) => ({
-                    id: `draft-${idx}`,
-                    filename: att.fileName,
-                    url: att.fileUrl,
-                    size: att.fileSize,
-                    type: att.fileType,
-                  })),
-                ]}
-                onRemove={handleRemoveAttachment}
-                isRTL={isRTL}
-                canRemove={true}
-              />
-            </div>
-          )}
 
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" size="sm" className="bg-[#0A2540] hover:bg-[#142b52]" disabled={isSubmitting || isLoading}>
-              {isSubmitting || isLoading ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  {isRTL ? "جاري..." : "Submitting..."}
-                </>
-              ) : (
-                <>
-                  <Save className="h-3 w-3 mr-1" />
-                  {isRTL ? (initialProject ? "تحديث" : "إنشاء") : (initialProject ? "Update" : "Create")}
-                </>
-              )}
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-              <X className="h-3 w-3 mr-1" />
-              {isRTL ? "إلغاء" : "Cancel"}
-            </Button>
-          </div>
+           {/* Uploaded/Pending Attachments */}
+            {(attachments.length > 0 || draftAttachments.length > 0) && (
+              <div className={cn("space-y-2", isRTL && "rtl")}>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {isRTL ? "المرفقات" : "Attachments"} ({attachments.filter(a => !deletedAttachmentIds.has(a.id || '')).length + draftAttachments.length})
+                </p>
+                <AttachmentList
+                  attachments={[
+                    ...attachments,
+                    ...draftAttachments.map((att, idx) => ({
+                      id: `draft-${idx}`,
+                      filename: att.fileName,
+                      url: att.fileUrl,
+                      size: att.fileSize,
+                      type: att.fileType,
+                    })),
+                  ]}
+                  onRemove={handleRemoveAttachment}
+                  isRTL={isRTL}
+                  canRemove={true}
+                  deletedIds={deletedAttachmentIds}
+                />
+             </div>
+           )}
+
+           {/* Upload Progress */}
+           {isUploading && (
+             <div className={cn("space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200", isRTL && "rtl")}>
+               <div className="flex items-center justify-between">
+                 <p className="text-sm font-medium text-blue-900">
+                   {isRTL ? 'جاري تحميل الملفات...' : 'Uploading files...'}
+                 </p>
+                 <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+               </div>
+               <div className="w-full bg-blue-200 rounded-full h-2">
+                 <div
+                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                   style={{ width: `${uploadProgress}%` }}
+                 />
+               </div>
+               <p className="text-xs text-blue-800">{uploadProgress}%</p>
+             </div>
+           )}
+
+           <div className="flex gap-2 pt-2">
+             <Button type="submit" size="sm" className="bg-[#0A2540] hover:bg-[#142b52]" disabled={isSubmitting || isLoading || isUploading}>
+               {isSubmitting || isLoading || isUploading ? (
+                 <>
+                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                   {isUploading ? (isRTL ? "جاري التحميل..." : "Uploading...") : (isRTL ? "جاري..." : "Submitting...")}
+                 </>
+               ) : (
+                 <>
+                   <Save className="h-3 w-3 mr-1" />
+                   {isRTL ? (initialProject ? "تحديث" : "إنشاء") : (initialProject ? "Update" : "Create")}
+                 </>
+               )}
+             </Button>
+             <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isSubmitting || isLoading || isUploading}>
+               <X className="h-3 w-3 mr-1" />
+               {isRTL ? "إلغاء" : "Cancel"}
+             </Button>
+           </div>
         </form>
       </CardContent>
     </Card>
+  </div>
   );
 }

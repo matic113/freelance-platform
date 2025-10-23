@@ -98,14 +98,21 @@ export const projectService = {
     return apiService.upload<FileUploadResponse>('/files/upload', formData);
   },
 
-  // Complete file upload by registering it as an attachment
-  completeFileUpload: async (projectId: string, objectName: string, filename: string, fileSize: number, contentType: string): Promise<ProjectResponse> => {
-    return apiService.post<ProjectResponse>(`/projects/${projectId}/complete-upload`, {
-      objectName,
-      filename,
-      fileSize,
-      contentType,
-      folder: 'files',
-    });
-  },
+   // Complete file upload by registering it as an attachment
+   completeFileUpload: async (projectId: string, objectName: string, filename: string, fileSize: number, contentType: string): Promise<ProjectResponse> => {
+     return apiService.post<ProjectResponse>(`/projects/${projectId}/complete-upload`, {
+       objectName,
+       filename,
+       fileSize,
+       contentType,
+       folder: 'files',
+     });
+   },
+
+   // Helper to invalidate cache for project attachments
+   invalidateAttachmentCache: async (queryClient: any, projectId: string): Promise<void> => {
+     // Invalidate both attachments list and project detail cache
+     await queryClient.invalidateQueries({ queryKey: ['projects', 'attachments', projectId] });
+     await queryClient.invalidateQueries({ queryKey: ['projects', 'detail', projectId] });
+   },
 };

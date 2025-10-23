@@ -46,7 +46,33 @@ export default function ProjectsManagementPage() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('projects');
+  const [isBlockingUploads, setIsBlockingUploads] = useState(false);
+
+  const handleUploadStart = () => {
+    console.log('[ProjectsManagement] Uploads started - blocking navigation');
+    setIsBlockingUploads(true);
+  };
+
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingTargetTab, setPendingTargetTab] = useState<string | null>(null);
+
+  const confirmLeaveAndNavigate = (tab: string | null) => {
+    setShowLeaveConfirm(false);
+    setPendingTargetTab(null);
+    if (tab) setActiveTab(tab);
+  };
+
+  const safeSetActiveTab = (tab: string) => {
+    if (isBlockingUploads) {
+      // Open modal to confirm leaving
+      setPendingTargetTab(tab);
+      setShowLeaveConfirm(true);
+      console.log('[ProjectsManagement] Showing leave-confirm modal due to active uploads');
+      return;
+    }
+    setActiveTab(tab);
+  };
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<ProjectResponse | null>(null);
@@ -103,13 +129,28 @@ export default function ProjectsManagementPage() {
       const project = projects.find(p => p.id === projectId);
       if (project) {
         setEditingProject(project);
-        setActiveTab('create');
+        safeSetActiveTab('create');
       } else {
         console.error('Project not found in state:', projectId);
         navigate('/projects-management'); // Redirect to projects list if not found
       }
     }
   }, [location.state, projects, navigate]);
+
+  // Block window/tab close while uploads are in progress
+  useEffect(() => {
+    const beforeUnload = (e: BeforeUnloadEvent) => {
+      if (isBlockingUploads) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+      return undefined;
+    };
+
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => window.removeEventListener('beforeunload', beforeUnload);
+  }, [isBlockingUploads]);
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -227,33 +268,39 @@ export default function ProjectsManagementPage() {
     }
   };
 
-  const handleCreateProject = async (data: CreateProjectRequest | UpdateProjectRequest) => {
-    if (editingProject) {
-      const updated = await updateProjectMutation.mutateAsync({
-        id: editingProject.id,
-        data: data as UpdateProjectRequest
-      });
-      toast.success(isRTL ? 'تم تحديث المشروع بنجاح' : 'Project updated successfully');
-      setEditingProject(null);
-      setActiveTab('projects');
-      return { id: updated.id };
-    } else {
-      const created = await createProjectMutation.mutateAsync(data as CreateProjectRequest);
-      toast.success(isRTL ? 'تم إنشاء المشروع بنجاح' : 'Project created successfully');
-      setActiveTab('projects');
-      return { id: created.id };
-    }
-  };
+   const handleCreateProject = async (data: CreateProjectRequest | UpdateProjectRequest) => {
+     if (editingProject) {
+       const updated = await updateProjectMutation.mutateAsync({
+         id: editingProject.id,
+         data: data as UpdateProjectRequest
+       });
+       // Do not navigate away here. Let ProjectForm call onUploadComplete after uploads finish.
+       toast.success(isRTL ? 'تم تحديث المشروع بنجاح' : 'Project updated successfully');
+       return { id: updated.id };
+     } else {
+       const created = await createProjectMutation.mutateAsync(data as CreateProjectRequest);
+       // Do not navigate away here. Let ProjectForm call onUploadComplete after uploads finish.
+       toast.success(isRTL ? 'تم إنشاء المشروع بنجاح' : 'Project created successfully');
+       return { id: created.id };
+     }
+   };
 
-  const handleEditProject = (project: ProjectResponse) => {
-    setEditingProject(project);
-    setActiveTab('create');
-  };
+   const handleUploadComplete = () => {
+     console.log('[ProjectsManagement] Uploads complete - clearing blocking state');
+     setIsBlockingUploads(false);
+     setEditingProject(null);
+     safeSetActiveTab('projects');
+   };
 
-  const handleCancelForm = () => {
-    setEditingProject(null);
-    setActiveTab('projects');
-  };
+const handleEditProject = (project: ProjectResponse) => {
+     setEditingProject(project);
+     safeSetActiveTab('create');
+   };
+
+const handleCancelForm = () => {
+     setEditingProject(null);
+     safeSetActiveTab('projects');
+   };
 
   return (
     <div className={cn("min-h-screen bg-muted/30", isRTL && "rtl")} dir={isRTL ? "rtl" : "ltr"}>
@@ -284,27 +331,30 @@ export default function ProjectsManagementPage() {
          </div>
 
          {activeTab === 'create' ? (
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="projects">
-                  <FileText className="h-4 w-4 mr-2" />
-                  {isRTL ? "المشاريع" : "Projects"}
-                </TabsTrigger>
-                <TabsTrigger value="create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  {isRTL ? (editingProject ? "تحديث" : "إنشاء جديد") : (editingProject ? "Update" : "Create New")}
-                </TabsTrigger>
-              </TabsList>
+<Tabs value={activeTab} onValueChange={safeSetActiveTab}>
+                  <TabsList className="grid w-full grid-cols-2 mb-8">
+                  <TabsTrigger value="projects" onClick={() => safeSetActiveTab('projects')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    {isRTL ? "المشاريع" : "Projects"}
+                  </TabsTrigger>
+                  <TabsTrigger value="create" onClick={() => safeSetActiveTab('create')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {isRTL ? (editingProject ? "تحديث" : "إنشاء جديد") : (editingProject ? "Update" : "Create New")}
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Create/Edit Tab */}
-              <TabsContent value="create" className="space-y-6">
-                <ProjectForm
-                  isRTL={isRTL}
-                  onSubmit={handleCreateProject}
-                  onCancel={handleCancelForm}
-                  initialProject={editingProject}
-                />
-              </TabsContent>
+
+                   {/* Create/Edit Tab */}
+                   <TabsContent value="create" className="space-y-6">
+                      <ProjectForm
+                        isRTL={isRTL}
+                        onSubmit={handleCreateProject}
+                        onUploadStart={handleUploadStart}
+                        onCancel={handleCancelForm}
+                        initialProject={editingProject}
+                        onUploadComplete={handleUploadComplete}
+                      />
+                   </TabsContent>
             </Tabs>
           ) : (
            <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
@@ -462,17 +512,17 @@ export default function ProjectsManagementPage() {
                    <CardTitle>{isRTL ? "إجراءات سريعة" : "Quick Actions"}</CardTitle>
                  </CardHeader>
                  <CardContent className="flex flex-col gap-2">
-                   <Button onClick={() => setActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52] w-full">
-                     <Plus className="h-4 w-4 mr-2" />
-                     {isRTL ? "مشروع جديد" : "New Project"}
-                   </Button>
+<Button onClick={() => safeSetActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52] w-full">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {isRTL ? "مشروع جديد" : "New Project"}
+                    </Button>
                  </CardContent>
                </Card>
              </div>
 
               {/* Right Column - Projects and Create New */}
               <div className="lg:col-span-5 space-y-6">
-                <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="projects">
+                <Tabs value={activeTab} onValueChange={safeSetActiveTab} defaultValue="projects">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="projects">
                       <FileText className="h-4 w-4 mr-2" />
@@ -503,10 +553,10 @@ export default function ProjectsManagementPage() {
                          <p className="text-gray-500 mb-4">
                            {isRTL ? "ابدأ بإنشاء أول مشروع لك" : "Start by creating your first project"}
                          </p>
-                         <Button onClick={() => setActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52]">
-                           <Plus className="h-4 w-4 mr-2" />
-                           {isRTL ? "إنشاء مشروع" : "Create Project"}
-                         </Button>
+<Button onClick={() => safeSetActiveTab('create')} className="bg-[#0A2540] hover:bg-[#142b52]">
+                            <Plus className="h-4 w-4 mr-2" />
+                            {isRTL ? "إنشاء مشروع" : "Create Project"}
+                          </Button>
                        </CardContent>
                      </Card>
                    ) : (
@@ -686,15 +736,17 @@ export default function ProjectsManagementPage() {
                     )}
                   </TabsContent>
 
-                  {/* Create/Edit Tab */}
-                  <TabsContent value="create" className="space-y-6">
-                    <ProjectForm
-                      isRTL={isRTL}
-                      onSubmit={handleCreateProject}
-                      onCancel={handleCancelForm}
-                      initialProject={editingProject}
-                    />
-                  </TabsContent>
+                   {/* Create/Edit Tab */}
+                   <TabsContent value="create" className="space-y-6">
+                      <ProjectForm
+                        isRTL={isRTL}
+                        onSubmit={handleCreateProject}
+                        onUploadStart={handleUploadStart}
+                        onCancel={handleCancelForm}
+                        initialProject={editingProject}
+                        onUploadComplete={handleUploadComplete}
+                      />
+                   </TabsContent>
                 </Tabs>
               </div>
             </div>
@@ -728,6 +780,30 @@ export default function ProjectsManagementPage() {
                 </Button>
                 <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
                   {isRTL ? "إلغاء" : "Cancel"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Leave Confirm Dialog (shown when uploads are in progress and user attempts navigation) */}
+        <Dialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {isRTL ? 'عمليات تحميل جارية' : 'Uploads in progress'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                {isRTL ? 'هناك عمليات تحميل جارية. هل تريد المتابعة والمغادرة؟' : 'There are uploads in progress. Do you want to leave anyway?'}
+              </p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => { setShowLeaveConfirm(false); setPendingTargetTab(null); }}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </Button>
+                <Button onClick={() => confirmLeaveAndNavigate(pendingTargetTab)} className="bg-[#0A2540] hover:bg-[#142b52]">
+                  {isRTL ? 'مغادرة' : 'Leave'}
                 </Button>
               </div>
             </div>
