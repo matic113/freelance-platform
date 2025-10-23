@@ -49,6 +49,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  if (user && !user.profileCompleted && location.pathname === '/onboarding') {
+    return <>{children}</>;
+  }
+
   if (user && !user.profileCompleted && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
