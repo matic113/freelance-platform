@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { onboardingService } from '@/services/onboarding.service';
@@ -11,14 +11,20 @@ const Onboarding = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    if (hasCheckedRef.current) return;
+    
     const checkStatus = async () => {
+      if (!user) return;
+      
       try {
         const status = await onboardingService.getOnboardingStatus();
         
         if (status.profileCompleted) {
-          navigate(status.redirectUrl);
+          hasCheckedRef.current = true;
+          navigate(status.redirectUrl, { replace: true });
         } else {
           setLoading(false);
         }
@@ -28,9 +34,7 @@ const Onboarding = () => {
       }
     };
 
-    if (user) {
-      checkStatus();
-    }
+    checkStatus();
   }, [user, navigate]);
 
   if (loading) {
