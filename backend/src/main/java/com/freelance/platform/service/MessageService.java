@@ -119,13 +119,15 @@ public class MessageService {
                 conversationId, sender.getId());
         }
         
-        notificationService.createNotificationForUser(
+        notificationService.createNotificationForUserWithGrouping(
                 recipient.getId(),
                 "NEW_MESSAGE",
                 notificationTitle,
                 notificationMessage,
                 "medium",
-                notificationData
+                notificationData,
+                "conversation:" + conversationId.toString(),
+                "CONVERSATION"
         );
 
         // Send email notification to recipient if enabled

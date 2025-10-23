@@ -37,6 +37,12 @@ public class Notification {
     @Column(name = "data", columnDefinition = "TEXT")
     private String data; // JSON string for additional data
     
+    @Column(name = "group_key")
+    private String groupKey; // For grouping related notifications (e.g., conversation:uuid)
+    
+    @Column(name = "group_type")
+    private String groupType = "NONE"; // NONE, CONVERSATION, PROJECT, etc.
+    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -142,5 +148,21 @@ public class Notification {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getGroupKey() {
+        return groupKey;
+    }
+    
+    public void setGroupKey(String groupKey) {
+        this.groupKey = groupKey;
+    }
+    
+    public String getGroupType() {
+        return groupType;
+    }
+    
+    public void setGroupType(String groupType) {
+        this.groupType = groupType;
     }
 }

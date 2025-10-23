@@ -57,6 +57,18 @@ public class NotificationController {
         return ResponseEntity.ok(notifications);
     }
     
+    // Get grouped notifications
+    @GetMapping("/grouped")
+    @Operation(summary = "Get grouped notifications", description = "Get grouped notifications for the currently authenticated user")
+    @PreAuthorize("hasRole('CLIENT') or hasRole('FREELANCER')")
+    public ResponseEntity<List<NotificationResponse>> getGroupedNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        User currentUser = authService.getCurrentUser();
+        List<NotificationResponse> notifications = notificationService.getGroupedNotifications(currentUser.getId(), page, size);
+        return ResponseEntity.ok(notifications);
+    }
+    
     // Get notification statistics
     @GetMapping("/stats")
     @Operation(summary = "Get notification statistics", description = "Get notification statistics for the currently authenticated user")

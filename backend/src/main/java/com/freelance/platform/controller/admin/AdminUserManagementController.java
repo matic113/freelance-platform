@@ -42,6 +42,9 @@ public class AdminUserManagementController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private com.freelance.platform.service.admin.AdminActionService adminActionService;
 
     @PostMapping("/users")
     @Operation(summary = "Create user with any roles", description = "Create a new user with any roles (including admin roles). Only super admins can use this.")
@@ -191,5 +194,88 @@ public class AdminUserManagementController {
         List<User> users = userService.findByRole(role);
         return ResponseEntity.ok(users);
     }
+    
+    @PutMapping("/users/{userId}/activate")
+    @Operation(summary = "Activate user", description = "Activate a deactivated user account")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User activated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<?> activateUser(
+            @Parameter(description = "User ID") @PathVariable UUID userId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        User user = userService.findByIdOptional(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        user.setIsActive(true);
+        User updatedUser = userService.save(user);
+        
+        adminActionService.logAction(
+            currentUser.getId(),
+            "ACTIVATE_USER",
+            "User",
+            userId.toString(),
+            "Activated user: " + user.getEmail()
+        );
+        
+        return ResponseEntity.ok(updatedUser);
+    }
+    
+    @PutMapping("/users/{userId}/deactivate")
+    @Operation(summary = "Deactivate user", description = "Deactivate a user account (prevents login)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User deactivated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<?> deactivateUser(
+            @Parameter(description = "User ID") @PathVariable UUID userId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        User user = userService.findByIdOptional(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        user.setIsActive(false);
+        User updatedUser = userService.save(user);
+        
+        adminActionService.logAction(
+            currentUser.getId(),
+            "DEACTIVATE_USER",
+            "User",
+            userId.toString(),
+            "Deactivated user: " + user.getEmail()
+        );
+        
+        return ResponseEntity.ok(updatedUser);
+    }
+    
+    @DeleteMapping("/users/{userId}")
+    @Operation(summary = "Soft delete user", description = "Soft delete a user (sets deletedAt timestamp)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<?> deleteUser(
+            @Parameter(description = "User ID") @PathVariable UUID userId,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        User user = userService.findByIdOptional(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        user.setDeletedAt(java.time.LocalDateTime.now());
+        user.setIsActive(false);
+        User updatedUser = userService.save(user);
+        
+        adminActionService.logAction(
+            currentUser.getId(),
+            "DELETE_USER",
+            "User",
+            userId.toString(),
+            "Soft deleted user: " + user.getEmail()
+        );
+        
+        return ResponseEntity.ok().body("User deleted successfully");
+    }
 }
+
 

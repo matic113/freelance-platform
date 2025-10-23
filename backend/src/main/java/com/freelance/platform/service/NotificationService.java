@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -151,6 +150,10 @@ public class NotificationService {
     }
     
     public NotificationResponse createNotificationForUser(UUID userId, String type, String title, String message, String priority, String data) {
+        return createNotificationForUserWithGrouping(userId, type, title, message, priority, data, null, "NONE");
+    }
+    
+    public NotificationResponse createNotificationForUserWithGrouping(UUID userId, String type, String title, String message, String priority, String data, String groupKey, String groupType) {
         User user = userService.findById(userId);
         
         Notification notification = new Notification();
@@ -160,10 +163,47 @@ public class NotificationService {
         notification.setMessage(message);
         notification.setPriority(priority);
         notification.setData(data);
+        notification.setGroupKey(groupKey);
+        notification.setGroupType(groupType);
         notification.setIsRead(false);
         
         Notification savedNotification = notificationRepository.save(notification);
         return new NotificationResponse(savedNotification);
+    }
+    
+    public List<NotificationResponse> getGroupedNotifications(UUID userId, int page, int size) {
+        User user = userService.findById(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        List<Notification> allNotifications = notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable).getContent();
+        
+        Map<String, List<Notification>> groupedMap = new LinkedHashMap<>();
+        List<NotificationResponse> result = new ArrayList<>();
+        
+        for (Notification notification : allNotifications) {
+            String groupKey = notification.getGroupKey();
+            String groupType = notification.getGroupType();
+            
+            if (groupKey != null && !groupKey.isEmpty() && "CONVERSATION".equals(groupType)) {
+                groupedMap.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(notification);
+            } else {
+                NotificationResponse response = new NotificationResponse(notification);
+                response.setGroupCount(1);
+                result.add(response);
+            }
+        }
+        
+        for (Map.Entry<String, List<Notification>> entry : groupedMap.entrySet()) {
+            List<Notification> groupNotifications = entry.getValue();
+            Notification latestNotification = groupNotifications.get(0);
+            
+            NotificationResponse response = new NotificationResponse(latestNotification);
+            response.setGroupCount(groupNotifications.size());
+            result.add(response);
+        }
+        
+        result.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        
+        return result;
     }
     
     // Clean up old notifications (older than 30 days)

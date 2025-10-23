@@ -122,6 +122,10 @@ public class EmailService {
                 metadata.put("file", "review-reminder.html");
                 metadata.put("subject", "Review Reminder");
                 break;
+            case "ANNOUNCEMENT":
+                metadata.put("file", "announcement.html");
+                metadata.put("subject", "Announcement");
+                break;
             default:
                 return null;
         }

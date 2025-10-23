@@ -16,6 +16,9 @@ public class NotificationResponse {
     private String data;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String groupKey;
+    private String groupType;
+    private Integer groupCount;
     
     // Constructors
     public NotificationResponse() {}
@@ -31,6 +34,8 @@ public class NotificationResponse {
         this.data = notification.getData();
         this.createdAt = notification.getCreatedAt();
         this.updatedAt = notification.getUpdatedAt();
+        this.groupKey = notification.getGroupKey();
+        this.groupType = notification.getGroupType();
     }
     
     // Getters and Setters
@@ -112,5 +117,29 @@ public class NotificationResponse {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getGroupKey() {
+        return groupKey;
+    }
+    
+    public void setGroupKey(String groupKey) {
+        this.groupKey = groupKey;
+    }
+    
+    public String getGroupType() {
+        return groupType;
+    }
+    
+    public void setGroupType(String groupType) {
+        this.groupType = groupType;
+    }
+    
+    public Integer getGroupCount() {
+        return groupCount;
+    }
+    
+    public void setGroupCount(Integer groupCount) {
+        this.groupCount = groupCount;
     }
 }
