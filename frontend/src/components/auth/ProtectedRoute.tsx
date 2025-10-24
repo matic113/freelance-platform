@@ -49,24 +49,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  const isProfileComplete = user?.activeRole === UserType.FREELANCER 
-    ? user?.freelancerProfileCompleted 
-    : user?.clientProfileCompleted;
-
-  if (user && !isProfileComplete && location.pathname === '/onboarding') {
-    return <>{children}</>;
-  }
-
-  if (user && !isProfileComplete && location.pathname === '/external-onboarding') {
-    return <>{children}</>;
-  }
-
-  if (user && !isProfileComplete && user.isExternalAuth) {
-    return <Navigate to="/external-onboarding" replace />;
-  }
-
-  if (user && !isProfileComplete && !user.isExternalAuth && location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" replace />;
+  // Prevent admins from accessing onboarding pages
+  if (activeRole === UserType.ADMIN && (location.pathname === '/onboarding' || location.pathname === '/external-onboarding')) {
+    return <Navigate to="/admin-dashboard" replace />;
   }
 
   if (requiredRoles) {
@@ -88,6 +73,29 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     if (rolesArray.includes(UserType.ADMIN) && activeRole !== UserType.ADMIN) {
       return <Navigate to={resolveDashboardPath(activeRole ?? UserType.CLIENT)} replace />;
+    }
+
+    // Skip profile completion checks for admin users
+    if (activeRole !== UserType.ADMIN) {
+      const isProfileComplete = user?.activeRole === UserType.FREELANCER 
+        ? user?.freelancerProfileCompleted 
+        : user?.clientProfileCompleted;
+
+      if (user && !isProfileComplete && location.pathname === '/onboarding') {
+        return <>{children}</>;
+      }
+
+      if (user && !isProfileComplete && location.pathname === '/external-onboarding') {
+        return <>{children}</>;
+      }
+
+      if (user && !isProfileComplete && user.isExternalAuth) {
+        return <Navigate to="/external-onboarding" replace />;
+      }
+
+      if (user && !isProfileComplete && !user.isExternalAuth) {
+        return <Navigate to="/onboarding" replace />;
+      }
     }
   }
 

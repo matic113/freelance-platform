@@ -605,80 +605,88 @@ const handleCancelForm = () => {
                                ))}
                              </div>
 
-                             <div className="flex items-center gap-2 flex-wrap">
-                               {project.status === 'DRAFT' && (
-                                 <>
-                                   <Button
-                                     size="sm"
-                                     variant="outline"
-                                     onClick={() => handleEditProject(project)}
-                                   >
-                                     <Edit className="h-4 w-4 mr-1" />
-                                     {isRTL ? "تحرير" : "Edit"}
-                                   </Button>
-                                   <Button
-                                     size="sm"
-                                     variant="default"
-                                     className="bg-green-600 hover:bg-green-700"
-                                     onClick={() => handlePublishProject(project.id)}
-                                     disabled={publishProjectMutation.isPending}
-                                   >
-                                     {publishProjectMutation.isPending ? (
-                                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                     ) : (
-                                       <Eye className="h-4 w-4 mr-1" />
-                                     )}
-                                     {isRTL ? "نشر" : "Publish"}
-                                   </Button>
-                                   <Button
-                                     size="sm"
-                                     variant="destructive"
-                                     onClick={() => {
-                                       setProjectToDelete(project.id);
-                                       setShowDeleteDialog(true);
-                                     }}
-                                   >
-                                     <Trash2 className="h-4 w-4 mr-1" />
-                                     {isRTL ? "حذف" : "Delete"}
-                                   </Button>
-                                 </>
-                               )}
-                               {project.status === 'PUBLISHED' && (
-                                 <>
-                                   <Button
-                                     size="sm"
-                                     variant="outline"
-                                     onClick={() => handleUnpublishProject(project.id)}
-                                     disabled={unpublishProjectMutation.isPending}
-                                   >
-                                     {unpublishProjectMutation.isPending ? (
-                                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                     ) : (
-                                       <EyeOff className="h-4 w-4 mr-1" />
-                                     )}
-                                     {isRTL ? "إرجاع" : "Unpublish"}
-                                   </Button>
-                                   <Badge variant="secondary">
-                                     {isRTL ? "يمكن للعاملين تقديم عروضهم" : "Awaiting proposals"}
-                                   </Badge>
-                                 </>
-                               )}
-                               {project.status === 'IN_PROGRESS' && (
-                                 <Badge variant="secondary">
-                                   {isRTL ? "قيد التنفيذ من قبل متخصص" : "Assigned to freelancer"}
-                                 </Badge>
-                               )}
-                               
-                               <Button
-                                 size="sm"
-                                 variant="ghost"
-                                 onClick={() => handleToggleExpand(project.id)}
-                                 className="ml-auto"
-                               >
-                                 <ChevronDown className={cn("h-4 w-4 transition-transform", expandedProjects.has(project.id) && "rotate-180")} />
-                                 {isRTL ? "المراحل" : "Milestones"}
-                               </Button>
-                             </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => navigate(`/client/project/${project.id}`)}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  {isRTL ? "عرض التفاصيل" : "View Details"}
+                                </Button>
+                                {project.status === 'DRAFT' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleEditProject(project)}
+                                    >
+                                      <Edit className="h-4 w-4 mr-1" />
+                                      {isRTL ? "تحرير" : "Edit"}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() => handlePublishProject(project.id)}
+                                      disabled={publishProjectMutation.isPending}
+                                    >
+                                      {publishProjectMutation.isPending ? (
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                      ) : (
+                                        <Eye className="h-4 w-4 mr-1" />
+                                      )}
+                                      {isRTL ? "نشر" : "Publish"}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => {
+                                        setProjectToDelete(project.id);
+                                        setShowDeleteDialog(true);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-1" />
+                                      {isRTL ? "حذف" : "Delete"}
+                                    </Button>
+                                  </>
+                                )}
+                                {project.status === 'PUBLISHED' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleUnpublishProject(project.id)}
+                                      disabled={unpublishProjectMutation.isPending}
+                                    >
+                                      {unpublishProjectMutation.isPending ? (
+                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                      ) : (
+                                        <EyeOff className="h-4 w-4 mr-1" />
+                                      )}
+                                      {isRTL ? "إرجاع" : "Unpublish"}
+                                    </Button>
+                                    <Badge variant="secondary">
+                                      {isRTL ? "يمكن للعاملين تقديم عروضهم" : "Awaiting proposals"}
+                                    </Badge>
+                                  </>
+                                )}
+                                {project.status === 'IN_PROGRESS' && (
+                                  <Badge variant="secondary">
+                                    {isRTL ? "قيد التنفيذ من قبل متخصص" : "Assigned to freelancer"}
+                                  </Badge>
+                                )}
+                                
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleToggleExpand(project.id)}
+                                  className="ml-auto"
+                                >
+                                  <ChevronDown className={cn("h-4 w-4 transition-transform", expandedProjects.has(project.id) && "rotate-180")} />
+                                  {isRTL ? "المراحل" : "Milestones"}
+                                </Button>
+                              </div>
 
                              {expandedProjects.has(project.id) && (
                                <div className="mt-6 pt-6 border-t">

@@ -251,6 +251,10 @@ public class ProposalService {
 
         ProposalResponse response = mapToProposalResponse(acceptedProposal);
         response.setContractId(createdContract.getId());
+        
+        System.out.println("DEBUG: Contract created with ID: " + createdContract.getId());
+        System.out.println("DEBUG: Setting contractId in response: " + response.getContractId());
+        
         return response;
     }
 
@@ -375,8 +379,10 @@ public class ProposalService {
         response.setProjectTitle(proposal.getProject().getTitle());
         response.setFreelancerId(proposal.getFreelancer().getId());
         response.setFreelancerName(proposal.getFreelancer().getFirstName() + " " + proposal.getFreelancer().getLastName());
+        response.setFreelancerAvatarUrl(proposal.getFreelancer().getAvatarUrl());
         response.setClientId(proposal.getClient().getId());
         response.setClientName(proposal.getClient().getFirstName() + " " + proposal.getClient().getLastName());
+        response.setClientAvatarUrl(proposal.getClient().getAvatarUrl());
         response.setTitle(proposal.getTitle());
         response.setDescription(proposal.getDescription());
         response.setProposedAmount(proposal.getProposedAmount());

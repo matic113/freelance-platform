@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { ApiError } from '@/types/api';
 
 interface CreateAnnouncementModalProps {
   open: boolean;
@@ -37,11 +38,13 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = (
     targetAudience: TargetAudience.ALL,
     sendImmediately: true,
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const createMutation = useCreateAnnouncement();
 
   const handleSubmit = async (e: React.FormEvent, sendImmediately: boolean = true) => {
     e.preventDefault();
+    setFieldErrors({});
     
     if (!formData.title.trim() || !formData.message.trim()) {
       toast.error('Title and message are required');
@@ -53,7 +56,12 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = (
       toast.success(sendImmediately ? 'Announcement sent successfully' : 'Announcement saved as draft');
       handleClose();
     } catch (error) {
-      toast.error(sendImmediately ? 'Failed to send announcement' : 'Failed to save announcement');
+      const apiError = error as ApiError;
+      if (apiError.details?.validationErrors) {
+        setFieldErrors(apiError.details.validationErrors);
+      } else {
+        toast.error(sendImmediately ? 'Failed to send announcement' : 'Failed to save announcement');
+      }
     }
   };
 
@@ -66,6 +74,7 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = (
       targetAudience: TargetAudience.ALL,
       sendImmediately: true,
     });
+    setFieldErrors({});
     onClose();
   };
 
@@ -87,9 +96,19 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = (
                 id="title"
                 placeholder="Announcement title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, title: e.target.value });
+                  if (fieldErrors.title) setFieldErrors({ ...fieldErrors, title: '' });
+                }}
+                className={fieldErrors.title ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 required
               />
+              <div className="flex justify-between items-start">
+                {fieldErrors.title && (
+                  <span className="text-xs text-red-500">{fieldErrors.title}</span>
+                )}
+                <span className="text-xs text-gray-500 ml-auto">{formData.title.length}/200</span>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -99,9 +118,19 @@ export const CreateAnnouncementModal: React.FC<CreateAnnouncementModalProps> = (
                 placeholder="Enter your announcement message..."
                 rows={5}
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, message: e.target.value });
+                  if (fieldErrors.message) setFieldErrors({ ...fieldErrors, message: '' });
+                }}
+                className={fieldErrors.message ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 required
               />
+              <div className="flex justify-between items-start">
+                {fieldErrors.message && (
+                  <span className="text-xs text-red-500">{fieldErrors.message}</span>
+                )}
+                <span className="text-xs text-gray-500 ml-auto">{formData.message.length}/5000</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

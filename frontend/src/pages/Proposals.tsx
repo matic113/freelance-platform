@@ -68,18 +68,6 @@ export default function ProposalsPage() {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
    const [rejectionReason, setRejectionReason] = useState('');
    
-   // Helper function to get full avatar URL
-   const getAvatarUrl = (avatarUrl: string | undefined): string => {
-     if (!avatarUrl) return '';
-     
-     if (avatarUrl.startsWith('http')) {
-       return avatarUrl;
-     }
-     
-     const baseUrl = config.apiBaseUrl.replace('/api', '');
-     return `${baseUrl}${avatarUrl}`;
-   };
-   
     // Determine user type from auth context
    const userType = getUserTypeString(user) || 'client';
 
@@ -501,7 +489,7 @@ export default function ProposalsPage() {
                        <div className="flex items-start justify-between mb-4">
                          <div className="flex items-start gap-4 flex-1">
                            <Avatar className="h-12 w-12">
-                             <AvatarImage src={getAvatarUrl(proposal.freelancerAvatar)} />
+                             <AvatarImage src={proposal.freelancerAvatarUrl || ''} />
                              <AvatarFallback>
                                {proposal.freelancerName?.charAt(0) || 'U'}
                              </AvatarFallback>
@@ -683,47 +671,61 @@ export default function ProposalsPage() {
               </Card>
             ) : (
               <>
-                <div className="space-y-6">
-                  {filteredSentProposals.map((proposal) => (
-                  <Card key={proposal.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-[#0A2540]">
-                            {proposal.projectTitle}
-                          </h3>
-                          <Badge className={getStatusColor(proposal.status.toLowerCase())}>
-                            <div className="flex items-center gap-1">
-                              {getStatusIcon(proposal.status.toLowerCase())}
-                              {getStatusText(proposal.status.toLowerCase())}
-                            </div>
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-gray-600 mb-3 line-clamp-2">
-                          {proposal.description}
-                        </p>
-                        
-                        <div className="flex items-center gap-6 text-sm text-gray-500">
-                           <div className="flex items-center gap-1">
-                             <DollarSign className="h-4 w-4" />
-                             <span className="font-semibold">
-                               ${proposal.proposedAmount}
-                             </span>
+                 <div className="space-y-6">
+                   {filteredSentProposals.map((proposal) => (
+                   <Card key={proposal.id} className="hover:shadow-md transition-shadow">
+                   <CardContent className="p-6">
+                     <div className="flex items-start justify-between mb-4">
+                       <div className="flex items-start gap-4 flex-1">
+                         <Avatar className="h-12 w-12">
+                           <AvatarImage src={proposal.clientAvatarUrl || ''} />
+                           <AvatarFallback>
+                             {proposal.clientName?.charAt(0) || 'C'}
+                           </AvatarFallback>
+                         </Avatar>
+                         
+                         <div className="flex-1">
+                           <div className="flex items-center gap-3 mb-2">
+                             <h3 className="text-lg font-semibold text-[#0A2540]">
+                               {proposal.projectTitle}
+                             </h3>
+                             <Badge className={getStatusColor(proposal.status.toLowerCase())}>
+                               <div className="flex items-center gap-1">
+                                 {getStatusIcon(proposal.status.toLowerCase())}
+                                 {getStatusText(proposal.status.toLowerCase())}
+                               </div>
+                             </Badge>
                            </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>{proposal.estimatedDuration} {isRTL ? "يوم" : "days"}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>
-                              {new Date(proposal.submittedAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                           
+                           <div className="flex items-center gap-2 mb-2">
+                             <User className="h-4 w-4 text-gray-500" />
+                             <span className="text-sm text-gray-600">{proposal.clientName}</span>
+                           </div>
+                           
+                           <p className="text-gray-600 mb-3 line-clamp-2">
+                             {proposal.description}
+                           </p>
+                        
+                           <div className="flex items-center gap-6 text-sm text-gray-500">
+                             <div className="flex items-center gap-1">
+                               <DollarSign className="h-4 w-4" />
+                               <span className="font-semibold">
+                                 ${proposal.proposedAmount}
+                               </span>
+                             </div>
+                             <div className="flex items-center gap-1">
+                               <Calendar className="h-4 w-4" />
+                               <span>{proposal.estimatedDuration}</span>
+                             </div>
+                             <div className="flex items-center gap-1">
+                               <Clock className="h-4 w-4" />
+                               <span>
+                                 {new Date(proposal.submittedAt).toLocaleDateString()}
+                               </span>
+                             </div>
+                           </div>
+                         </div>
+                       </div>
                       
                       <div className="flex items-center gap-2">
                         <Button

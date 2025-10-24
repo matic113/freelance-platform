@@ -14,6 +14,7 @@ public class ProjectResponse {
     private UUID id;
     private UUID clientId;
     private String clientName;
+    private String clientAvatarUrl;
     private String title;
     private String description;
     private String category;
@@ -105,7 +106,7 @@ public class ProjectResponse {
     // Constructors
     public ProjectResponse() {}
 
-    public ProjectResponse(UUID id, UUID clientId, String clientName, String title, 
+    public ProjectResponse(UUID id, UUID clientId, String clientName, String clientAvatarUrl, String title, 
                           String description, String category, List<String> skillsRequired,
                           BigDecimal budgetMin, BigDecimal budgetMax, String currency,
                           ProjectType projectType, String duration, ProjectStatus status,
@@ -114,6 +115,7 @@ public class ProjectResponse {
         this.id = id;
         this.clientId = clientId;
         this.clientName = clientName;
+        this.clientAvatarUrl = clientAvatarUrl;
         this.title = title;
         this.description = description;
         this.category = category;
@@ -154,6 +156,14 @@ public class ProjectResponse {
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
+    }
+
+    public String getClientAvatarUrl() {
+        return clientAvatarUrl;
+    }
+
+    public void setClientAvatarUrl(String clientAvatarUrl) {
+        this.clientAvatarUrl = clientAvatarUrl;
     }
 
     public String getTitle() {

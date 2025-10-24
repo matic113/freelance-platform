@@ -180,6 +180,8 @@ public class UserService implements UserDetailsService {
         response.setIsVerified(user.getIsVerified());
         response.setIsActive(user.getIsActive());
         response.setProfileCompleted(user.getProfileCompleted());
+        response.setFreelancerProfileCompleted(user.getFreelancerProfileCompleted());
+        response.setClientProfileCompleted(user.getClientProfileCompleted());
         response.setIsExternalAuth(user.getIsExternalAuth());
         response.setProfileCompletedAt(user.getProfileCompletedAt());
         response.setCreatedAt(user.getCreatedAt());

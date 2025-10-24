@@ -336,6 +336,7 @@ public class ProjectService {
         response.setId(project.getId());
         response.setClientId(project.getClient().getId());
         response.setClientName(project.getClient().getFirstName() + " " + project.getClient().getLastName());
+        response.setClientAvatarUrl(project.getClient().getAvatarUrl());
         response.setTitle(project.getTitle());
         response.setDescription(project.getDescription());
         response.setCategory(project.getCategory());
