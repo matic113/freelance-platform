@@ -62,6 +62,9 @@ public class AdminDataInitializer implements CommandLineRunner {
             u.setRoles(roles);
             u.setIsActive(true);
             u.setIsVerified(true); // Admin accounts are pre-verified
+            u.setProfileCompleted(true); // Admin accounts don't need onboarding
+            u.setFreelancerProfileCompleted(true); // Mark all profiles as complete
+            u.setClientProfileCompleted(true);
             userRepository.save(u);
 
             logger.warn("Super admin created: {}. Please change the password immediately.", adminEmail);
