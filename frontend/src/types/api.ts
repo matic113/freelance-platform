@@ -470,6 +470,7 @@ export interface ProjectResponse {
   deadline: string;
   clientId: string;
   clientName: string;
+  clientAvatarUrl?: string;
   createdAt: string;
   updatedAt: string;
   attachments: ProjectAttachment[];
@@ -541,15 +542,27 @@ export interface Proposal {
 export interface ProposalResponse {
   id: number;
   projectId: number;
-  project: ProjectResponse;
+  projectTitle?: string;
+  project?: ProjectResponse;
   freelancerId: number;
-  freelancer: UserResponse;
-  coverLetter: string;
-  proposedBudget: number;
-  estimatedDuration: number;
+  freelancerName?: string;
+  freelancerAvatarUrl?: string;
+  freelancer?: UserResponse;
+  clientId?: number;
+  clientName?: string;
+  clientAvatarUrl?: string;
+  title?: string;
+  description?: string;
+  coverLetter?: string;
+  proposedAmount?: number;
+  proposedBudget?: number;
+  currency?: string;
+  estimatedDuration: number | string;
   status: ProposalStatus;
   submittedAt: string;
-  updatedAt: string;
+  respondedAt?: string;
+  updatedAt?: string;
+  attachments?: string[];
   contractId?: string;
 }
 

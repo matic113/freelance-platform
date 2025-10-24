@@ -156,6 +156,9 @@ export default function ClientProjectDetailsPage() {
         try {
           const response = await acceptProposalMutation.mutateAsync(selectedProposal.id);
           
+          console.log('Proposal acceptance response:', response);
+          console.log('Contract ID:', response?.contractId);
+          
           setShowAcceptDialog(false);
           
           setProposals(prev =>
@@ -172,7 +175,9 @@ export default function ClientProjectDetailsPage() {
 
           if (response?.contractId) {
             try {
+              console.log('Fetching contract with ID:', response.contractId);
               const contract = await contractService.getContract(response.contractId);
+              console.log('Contract fetched successfully:', contract);
               setContractFromAcceptance(contract);
               setShowContractCreationModal(true);
             } catch (contractError) {
@@ -185,6 +190,7 @@ export default function ClientProjectDetailsPage() {
               navigate('/contracts');
             }
           } else {
+            console.warn('No contractId in response, navigating to contracts page');
             navigate('/contracts');
           }
           
@@ -445,7 +451,7 @@ export default function ClientProjectDetailsPage() {
                           <div className={cn("flex items-start justify-between gap-4 mb-3", isRTL && "flex-row-reverse")}>
                             <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                               <Avatar className="h-10 w-10">
-                                <AvatarImage src={''} alt={proposal.freelancerName} />
+                                <AvatarImage src={proposal.freelancerAvatarUrl || ''} alt={proposal.freelancerName} />
                                 <AvatarFallback>
                                   {proposal.freelancerName?.charAt(0).toUpperCase()}
                                 </AvatarFallback>

@@ -388,7 +388,7 @@ export default function ProjectDetailsPage() {
                            <div className={cn("flex items-start justify-between gap-4 mb-3", isRTL && "flex-row-reverse")}>
                              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                                <Avatar className="h-10 w-10">
-                                 <AvatarImage src={''} alt={proposal.freelancerName} />
+                                 <AvatarImage src={proposal.freelancerAvatarUrl || ''} alt={proposal.freelancerName} />
                                  <AvatarFallback>
                                    {proposal.freelancerName?.charAt(0).toUpperCase()}
                                  </AvatarFallback>
@@ -468,7 +468,7 @@ export default function ProjectDetailsPage() {
                 <CardContent className={cn("space-y-4", isRTL && "text-right")}>
                   <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={''} alt={project.clientName} />
+                      <AvatarImage src={project.clientAvatarUrl || ''} alt={project.clientName} />
                       <AvatarFallback>{project.clientName?.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>

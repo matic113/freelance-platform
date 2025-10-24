@@ -14,8 +14,10 @@ public class ProposalResponse {
     private String projectTitle;
     private UUID freelancerId;
     private String freelancerName;
+    private String freelancerAvatarUrl;
     private UUID clientId;
     private String clientName;
+    private String clientAvatarUrl;
     private String title;
     private String description;
     private BigDecimal proposedAmount;
@@ -31,7 +33,7 @@ public class ProposalResponse {
     public ProposalResponse() {}
 
     public ProposalResponse(UUID id, UUID projectId, String projectTitle, UUID freelancerId, 
-                          String freelancerName, UUID clientId, String clientName, String title,
+                          String freelancerName, String freelancerAvatarUrl, UUID clientId, String clientName, String clientAvatarUrl, String title,
                           String description, BigDecimal proposedAmount, String currency,
                           String estimatedDuration, ProposalStatus status, LocalDateTime submittedAt,
                           LocalDateTime respondedAt, List<String> attachments) {
@@ -40,8 +42,10 @@ public class ProposalResponse {
         this.projectTitle = projectTitle;
         this.freelancerId = freelancerId;
         this.freelancerName = freelancerName;
+        this.freelancerAvatarUrl = freelancerAvatarUrl;
         this.clientId = clientId;
         this.clientName = clientName;
+        this.clientAvatarUrl = clientAvatarUrl;
         this.title = title;
         this.description = description;
         this.proposedAmount = proposedAmount;
@@ -94,6 +98,14 @@ public class ProposalResponse {
         this.freelancerName = freelancerName;
     }
 
+    public String getFreelancerAvatarUrl() {
+        return freelancerAvatarUrl;
+    }
+
+    public void setFreelancerAvatarUrl(String freelancerAvatarUrl) {
+        this.freelancerAvatarUrl = freelancerAvatarUrl;
+    }
+
     public UUID getClientId() {
         return clientId;
     }
@@ -108,6 +120,14 @@ public class ProposalResponse {
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
+    }
+
+    public String getClientAvatarUrl() {
+        return clientAvatarUrl;
+    }
+
+    public void setClientAvatarUrl(String clientAvatarUrl) {
+        this.clientAvatarUrl = clientAvatarUrl;
     }
 
     public String getTitle() {
