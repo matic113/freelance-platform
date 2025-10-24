@@ -13,7 +13,7 @@ interface AuthContextType {
   completeGoogleRoleSelection: (userId: string, role: UserType) => Promise<GoogleAuthResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  setActiveRole: (newRole: UserType) => void;
+  setActiveRole: (newRole: UserType) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -240,11 +240,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
    const setActiveRole = (newRole: UserType) => {
      if (!availableRoles.includes(newRole)) {
-       return;
+       return Promise.reject(new Error('Role not available'));
      }
 
      setIsLoading(true);
-     authService.switchRole(newRole)
+     return authService.switchRole(newRole)
        .then((updatedUser) => {
          setUser(updatedUser);
          setActiveRoleState(newRole);
@@ -252,6 +252,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
        })
        .catch((error) => {
          console.error('Failed to switch role:', error);
+         throw error;
        })
        .finally(() => {
          setIsLoading(false);

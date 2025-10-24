@@ -62,6 +62,8 @@ public class OnboardingService {
         
         return new OnboardingStatusResponse(
             user.getProfileCompleted(),
+            user.getFreelancerProfileCompleted(),
+            user.getClientProfileCompleted(),
             user.getActiveRole(),
             redirectUrl,
             checklist
@@ -119,6 +121,7 @@ public class OnboardingService {
         }
         
         user.setProfileCompleted(true);
+        user.setFreelancerProfileCompleted(true);
         user.setProfileCompletedAt(LocalDateTime.now());
         user.setActiveRole(Role.FREELANCER);
         userRepository.save(user);
@@ -149,6 +152,7 @@ public class OnboardingService {
         }
         
         user.setProfileCompleted(true);
+        user.setClientProfileCompleted(true);
         user.setProfileCompletedAt(LocalDateTime.now());
         user.setActiveRole(Role.CLIENT);
         userRepository.save(user);
@@ -193,6 +197,9 @@ public class OnboardingService {
         response.setIsVerified(user.getIsVerified());
         response.setIsActive(user.getIsActive());
         response.setProfileCompleted(user.getProfileCompleted());
+        response.setFreelancerProfileCompleted(user.getFreelancerProfileCompleted());
+        response.setClientProfileCompleted(user.getClientProfileCompleted());
+        response.setIsExternalAuth(user.getIsExternalAuth());
         response.setProfileCompletedAt(user.getProfileCompletedAt());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());

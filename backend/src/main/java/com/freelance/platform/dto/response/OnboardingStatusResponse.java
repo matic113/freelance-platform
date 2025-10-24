@@ -7,14 +7,18 @@ import java.util.Map;
 public class OnboardingStatusResponse {
     
     private Boolean profileCompleted;
+    private Boolean freelancerProfileCompleted;
+    private Boolean clientProfileCompleted;
     private Role activeRole;
     private String redirectUrl;
     private Map<String, Object> completionChecklist;
     
     public OnboardingStatusResponse() {}
     
-    public OnboardingStatusResponse(Boolean profileCompleted, Role activeRole, String redirectUrl, Map<String, Object> completionChecklist) {
+    public OnboardingStatusResponse(Boolean profileCompleted, Boolean freelancerProfileCompleted, Boolean clientProfileCompleted, Role activeRole, String redirectUrl, Map<String, Object> completionChecklist) {
         this.profileCompleted = profileCompleted;
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+        this.clientProfileCompleted = clientProfileCompleted;
         this.activeRole = activeRole;
         this.redirectUrl = redirectUrl;
         this.completionChecklist = completionChecklist;
@@ -26,6 +30,22 @@ public class OnboardingStatusResponse {
     
     public void setProfileCompleted(Boolean profileCompleted) {
         this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getFreelancerProfileCompleted() {
+        return freelancerProfileCompleted;
+    }
+    
+    public void setFreelancerProfileCompleted(Boolean freelancerProfileCompleted) {
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+    }
+    
+    public Boolean getClientProfileCompleted() {
+        return clientProfileCompleted;
+    }
+    
+    public void setClientProfileCompleted(Boolean clientProfileCompleted) {
+        this.clientProfileCompleted = clientProfileCompleted;
     }
     
     public Role getActiveRole() {

@@ -19,6 +19,8 @@ public class AuthResponse {
     private Role activeRole;
     private Boolean isVerified;
     private Boolean profileCompleted;
+    private Boolean freelancerProfileCompleted;
+    private Boolean clientProfileCompleted;
     private Boolean isExternalAuth;
     private LocalDateTime createdAt;
     
@@ -27,7 +29,7 @@ public class AuthResponse {
     
     public AuthResponse(String accessToken, String refreshToken, Long expiresIn, UUID userId, 
                        String email, String firstName, String lastName, Set<Role> roles, 
-                       Role activeRole, Boolean isVerified, Boolean profileCompleted, Boolean isExternalAuth, LocalDateTime createdAt) {
+                       Role activeRole, Boolean isVerified, Boolean profileCompleted, Boolean freelancerProfileCompleted, Boolean clientProfileCompleted, Boolean isExternalAuth, LocalDateTime createdAt) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expiresIn = expiresIn;
@@ -39,6 +41,8 @@ public class AuthResponse {
         this.activeRole = activeRole;
         this.isVerified = isVerified;
         this.profileCompleted = profileCompleted;
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+        this.clientProfileCompleted = clientProfileCompleted;
         this.isExternalAuth = isExternalAuth;
         this.createdAt = createdAt;
     }
@@ -146,6 +150,22 @@ public class AuthResponse {
     
     public void setProfileCompleted(Boolean profileCompleted) {
         this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getFreelancerProfileCompleted() {
+        return freelancerProfileCompleted;
+    }
+    
+    public void setFreelancerProfileCompleted(Boolean freelancerProfileCompleted) {
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+    }
+    
+    public Boolean getClientProfileCompleted() {
+        return clientProfileCompleted;
+    }
+    
+    public void setClientProfileCompleted(Boolean clientProfileCompleted) {
+        this.clientProfileCompleted = clientProfileCompleted;
     }
     
     public Boolean getIsExternalAuth() {

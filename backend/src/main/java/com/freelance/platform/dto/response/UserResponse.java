@@ -23,6 +23,8 @@ public class UserResponse {
     private Boolean isVerified;
     private Boolean isActive;
     private Boolean profileCompleted;
+    private Boolean freelancerProfileCompleted;
+    private Boolean clientProfileCompleted;
     private Boolean isExternalAuth;
     private LocalDateTime profileCompletedAt;
     private LocalDateTime createdAt;
@@ -188,6 +190,22 @@ public class UserResponse {
     
     public void setProfileCompleted(Boolean profileCompleted) {
         this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getFreelancerProfileCompleted() {
+        return freelancerProfileCompleted;
+    }
+    
+    public void setFreelancerProfileCompleted(Boolean freelancerProfileCompleted) {
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+    }
+    
+    public Boolean getClientProfileCompleted() {
+        return clientProfileCompleted;
+    }
+    
+    public void setClientProfileCompleted(Boolean clientProfileCompleted) {
+        this.clientProfileCompleted = clientProfileCompleted;
     }
     
     public LocalDateTime getProfileCompletedAt() {

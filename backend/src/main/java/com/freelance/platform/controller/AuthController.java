@@ -209,6 +209,8 @@ public class AuthController {
                     user.getActiveRole(),
                     user.getIsVerified(),
                     user.getProfileCompleted(),
+                    user.getFreelancerProfileCompleted(),
+                    user.getClientProfileCompleted(),
                     user.getIsExternalAuth(),
                     user.getCreatedAt()
             ));
@@ -289,6 +291,8 @@ public class AuthController {
                     verifiedUser.getActiveRole(),
                     verifiedUser.getIsVerified(),
                     verifiedUser.getProfileCompleted(),
+                    verifiedUser.getFreelancerProfileCompleted(),
+                    verifiedUser.getClientProfileCompleted(),
                     verifiedUser.getIsExternalAuth(),
                     verifiedUser.getCreatedAt()
             );

@@ -101,6 +101,9 @@ export interface User {
   hourlyRate?: number;
   isVerified: boolean;
   isExternalAuth?: boolean;
+  profileCompleted?: boolean;
+  freelancerProfileCompleted?: boolean;
+  clientProfileCompleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,6 +126,8 @@ export interface UserResponse {
   isActive: boolean;
   isExternalAuth?: boolean;
   profileCompleted?: boolean;
+  freelancerProfileCompleted?: boolean;
+  clientProfileCompleted?: boolean;
   profileCompletedAt?: string;
   createdAt: string;
   updatedAt: string;

@@ -22,13 +22,19 @@ interface ClientFormData {
 
 const ClientOnboarding = () => {
   const navigate = useNavigate();
-  const { refreshUser, setActiveRole } = useAuth();
+  const { refreshUser, setActiveRole, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ClientFormData>();
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ClientFormData>({
+    defaultValues: {
+      country: user?.country || '',
+      city: user?.city || '',
+      timezone: user?.timezone || ''
+    }
+  });
 
   const totalSteps = 3;
 

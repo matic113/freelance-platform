@@ -22,7 +22,11 @@ const Onboarding = () => {
       try {
         const status = await onboardingService.getOnboardingStatus();
         
-        if (status.profileCompleted) {
+        const isProfileComplete = user.activeRole === UserType.FREELANCER 
+          ? status.freelancerProfileCompleted 
+          : status.clientProfileCompleted;
+        
+        if (isProfileComplete) {
           hasCheckedRef.current = true;
           navigate(status.redirectUrl, { replace: true });
         } else {

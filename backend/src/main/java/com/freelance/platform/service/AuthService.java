@@ -151,6 +151,8 @@ public class AuthService {
                 null,
                 true,
                 user.getProfileCompleted(),
+                user.getFreelancerProfileCompleted(),
+                user.getClientProfileCompleted(),
                 user.getIsExternalAuth(),
                 user.getCreatedAt()
         );
@@ -177,6 +179,8 @@ public class AuthService {
                 user.getActiveRole(),
                 user.getIsVerified(),
                 user.getProfileCompleted(),
+                user.getFreelancerProfileCompleted(),
+                user.getClientProfileCompleted(),
                 user.getIsExternalAuth(),
                 user.getCreatedAt()
         );
@@ -301,6 +305,8 @@ public class AuthService {
                 user.getActiveRole(),
                 user.getIsVerified(),
                 user.getProfileCompleted(),
+                user.getFreelancerProfileCompleted(),
+                user.getClientProfileCompleted(),
                 user.getIsExternalAuth(),
                 user.getCreatedAt()
         );

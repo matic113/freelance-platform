@@ -33,17 +33,20 @@ interface FreelancerFormData {
 
 const FreelancerOnboarding = () => {
   const navigate = useNavigate();
-  const { refreshUser, setActiveRole } = useAuth();
+  const { refreshUser, setActiveRole, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   const [skills, setSkills] = useState<SkillRequest[]>([]);
   const [newSkill, setNewSkill] = useState({ skillName: '', proficiencyLevel: 3, description: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FreelancerFormData>({
     defaultValues: {
-      experienceLevel: ExperienceLevel.ENTRY
+      experienceLevel: ExperienceLevel.ENTRY,
+      country: user?.country || '',
+      city: user?.city || '',
+      timezone: user?.timezone || ''
     }
   });
 
@@ -109,6 +112,10 @@ const FreelancerOnboarding = () => {
     }
     if (newSkill.proficiencyLevel < 1 || newSkill.proficiencyLevel > 5) {
       toast.error('Proficiency level must be between 1 and 5');
+      return;
+    }
+    if (skills.some(s => s.skillName.toLowerCase() === newSkill.skillName.trim().toLowerCase())) {
+      toast.error('This skill has already been added');
       return;
     }
     setSkills([...skills, { ...newSkill }]);

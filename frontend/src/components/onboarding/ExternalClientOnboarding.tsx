@@ -20,11 +20,17 @@ interface ClientFormData {
 
 const ExternalClientOnboarding = () => {
   const navigate = useNavigate();
-  const { refreshUser, setActiveRole } = useAuth();
+  const { refreshUser, setActiveRole, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ClientFormData>();
+  const { register, handleSubmit, formState: { errors } } = useForm<ClientFormData>({
+    defaultValues: {
+      country: user?.country || '',
+      city: user?.city || '',
+      timezone: user?.timezone || ''
+    }
+  });
 
   const totalSteps = 2;
 
@@ -42,7 +48,7 @@ const ExternalClientOnboarding = () => {
       setLoading(true);
       await onboardingService.completeClientProfile({
         ...data,
-        avatarUrl: ''
+        avatarUrl: user?.avatarUrl || ''
       });
       
        await refreshUser();

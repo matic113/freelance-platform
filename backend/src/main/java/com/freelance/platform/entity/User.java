@@ -51,6 +51,8 @@ public class User {
     private Boolean isVerified = false;
     private Boolean isActive = true;
     private Boolean profileCompleted = false;
+    private Boolean freelancerProfileCompleted = false;
+    private Boolean clientProfileCompleted = false;
     private Boolean isExternalAuth = false;
     private LocalDateTime profileCompletedAt;
     private LocalDateTime lastLoginAt;
@@ -229,11 +231,32 @@ public class User {
     }
     
     public Boolean getProfileCompleted() {
-        return profileCompleted;
+        if (activeRole == Role.FREELANCER) {
+            return freelancerProfileCompleted != null ? freelancerProfileCompleted : false;
+        } else if (activeRole == Role.CLIENT) {
+            return clientProfileCompleted != null ? clientProfileCompleted : false;
+        }
+        return profileCompleted != null ? profileCompleted : false;
     }
     
     public void setProfileCompleted(Boolean profileCompleted) {
         this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getFreelancerProfileCompleted() {
+        return freelancerProfileCompleted;
+    }
+    
+    public void setFreelancerProfileCompleted(Boolean freelancerProfileCompleted) {
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+    }
+    
+    public Boolean getClientProfileCompleted() {
+        return clientProfileCompleted;
+    }
+    
+    public void setClientProfileCompleted(Boolean clientProfileCompleted) {
+        this.clientProfileCompleted = clientProfileCompleted;
     }
     
     public Boolean getIsExternalAuth() {

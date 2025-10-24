@@ -49,19 +49,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (user && !user.profileCompleted && location.pathname === '/onboarding') {
+  const isProfileComplete = user?.activeRole === UserType.FREELANCER 
+    ? user?.freelancerProfileCompleted 
+    : user?.clientProfileCompleted;
+
+  if (user && !isProfileComplete && location.pathname === '/onboarding') {
     return <>{children}</>;
   }
 
-  if (user && !user.profileCompleted && location.pathname === '/external-onboarding') {
+  if (user && !isProfileComplete && location.pathname === '/external-onboarding') {
     return <>{children}</>;
   }
 
-  if (user && !user.profileCompleted && user.isExternalAuth) {
+  if (user && !isProfileComplete && user.isExternalAuth) {
     return <Navigate to="/external-onboarding" replace />;
   }
 
-  if (user && !user.profileCompleted && !user.isExternalAuth && location.pathname !== '/onboarding') {
+  if (user && !isProfileComplete && !user.isExternalAuth && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 

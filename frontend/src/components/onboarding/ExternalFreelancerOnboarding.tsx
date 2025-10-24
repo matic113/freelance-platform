@@ -31,7 +31,7 @@ interface FreelancerFormData {
 
 const ExternalFreelancerOnboarding = () => {
   const navigate = useNavigate();
-  const { refreshUser, setActiveRole } = useAuth();
+  const { refreshUser, setActiveRole, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [skills, setSkills] = useState<SkillRequest[]>([]);
@@ -39,7 +39,10 @@ const ExternalFreelancerOnboarding = () => {
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FreelancerFormData>({
     defaultValues: {
-      experienceLevel: ExperienceLevel.ENTRY
+      experienceLevel: ExperienceLevel.ENTRY,
+      country: user?.country || '',
+      city: user?.city || '',
+      timezone: user?.timezone || ''
     }
   });
 
@@ -52,6 +55,10 @@ const ExternalFreelancerOnboarding = () => {
     }
     if (newSkill.proficiencyLevel < 1 || newSkill.proficiencyLevel > 5) {
       toast.error('Proficiency level must be between 1 and 5');
+      return;
+    }
+    if (skills.some(s => s.skillName.toLowerCase() === newSkill.skillName.trim().toLowerCase())) {
+      toast.error('This skill has already been added');
       return;
     }
     setSkills([...skills, { ...newSkill }]);
@@ -89,7 +96,7 @@ const ExternalFreelancerOnboarding = () => {
       setLoading(true);
       await onboardingService.completeFreelancerProfile({
         ...data,
-        avatarUrl: '',
+        avatarUrl: user?.avatarUrl || '',
         skills
       });
       
