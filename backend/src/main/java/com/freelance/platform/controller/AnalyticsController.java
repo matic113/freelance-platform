@@ -31,7 +31,7 @@ public class AnalyticsController {
     @Autowired
     private FreelancerDashboardService freelancerDashboardService;
 
-    @GetMapping("/freelancer/dashboard")
+    @GetMapping("/freelancer-dashboard")
     @Operation(summary = "Get freelancer dashboard", description = "Get comprehensive dashboard data for freelancers")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Dashboard data retrieved successfully"),

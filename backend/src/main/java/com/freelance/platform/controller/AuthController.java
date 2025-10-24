@@ -208,6 +208,10 @@ public class AuthController {
                     user.getRoles(),
                     user.getActiveRole(),
                     user.getIsVerified(),
+                    user.getProfileCompleted(),
+                    user.getFreelancerProfileCompleted(),
+                    user.getClientProfileCompleted(),
+                    user.getIsExternalAuth(),
                     user.getCreatedAt()
             ));
         } catch (Exception e) {
@@ -285,7 +289,11 @@ public class AuthController {
                     verifiedUser.getLastName(),
                     verifiedUser.getRoles(),
                     verifiedUser.getActiveRole(),
-                    verifiedUser.getIsVerified(),  // ✅ Must be true
+                    verifiedUser.getIsVerified(),
+                    verifiedUser.getProfileCompleted(),
+                    verifiedUser.getFreelancerProfileCompleted(),
+                    verifiedUser.getClientProfileCompleted(),
+                    verifiedUser.getIsExternalAuth(),
                     verifiedUser.getCreatedAt()
             );
             

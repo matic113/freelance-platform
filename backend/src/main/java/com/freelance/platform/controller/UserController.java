@@ -311,6 +311,10 @@ public class UserController {
         response.setLanguage(user.getLanguage());
         response.setIsVerified(user.getIsVerified());
         response.setIsActive(user.getIsActive());
+        response.setProfileCompleted(user.getProfileCompleted());
+        response.setFreelancerProfileCompleted(user.getFreelancerProfileCompleted());
+        response.setClientProfileCompleted(user.getClientProfileCompleted());
+        response.setIsExternalAuth(user.getIsExternalAuth());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
 

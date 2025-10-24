@@ -42,6 +42,8 @@ import MyProposals from "./pages/MyProposals";
 import ProjectDetails from "./pages/ProjectDetails";
 import ClientProjectDetails from "./pages/ClientProjectDetails";
 import MyProjects from "./pages/MyProjects";
+import Onboarding from "./pages/Onboarding";
+import ExternalOnboarding from "./pages/ExternalOnboarding";
 
 // Configure QueryClient with proper defaults
 const queryClient = new QueryClient({
@@ -112,6 +114,20 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-use" element={<TermsOfUse />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
+            
+            {/* Onboarding route */}
+            <Route path="/onboarding" element={
+              <AuthenticatedRoute>
+                <Onboarding />
+              </AuthenticatedRoute>
+            } />
+            
+            {/* External onboarding route for OAuth users */}
+            <Route path="/external-onboarding" element={
+              <AuthenticatedRoute>
+                <ExternalOnboarding />
+              </AuthenticatedRoute>
+            } />
             
             {/* Protected routes */}
             <Route path="/client-dashboard" element={

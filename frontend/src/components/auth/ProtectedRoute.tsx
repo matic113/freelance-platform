@@ -49,6 +49,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  const isProfileComplete = user?.activeRole === UserType.FREELANCER 
+    ? user?.freelancerProfileCompleted 
+    : user?.clientProfileCompleted;
+
+  if (user && !isProfileComplete && location.pathname === '/onboarding') {
+    return <>{children}</>;
+  }
+
+  if (user && !isProfileComplete && location.pathname === '/external-onboarding') {
+    return <>{children}</>;
+  }
+
+  if (user && !isProfileComplete && user.isExternalAuth) {
+    return <Navigate to="/external-onboarding" replace />;
+  }
+
+  if (user && !isProfileComplete && !user.isExternalAuth && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (requiredRoles) {
     const rolesArray = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
     const hasRole = user?.roles?.some((role) => rolesArray.includes(role));

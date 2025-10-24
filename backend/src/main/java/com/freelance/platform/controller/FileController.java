@@ -2,6 +2,7 @@ package com.freelance.platform.controller;
 
 import com.freelance.platform.security.UserPrincipal;
 import com.freelance.platform.service.FileService;
+import com.freelance.platform.service.MinIOService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,6 +27,25 @@ public class FileController {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private MinIOService minIOService;
+
+    @PostMapping("/presigned-url")
+    @Operation(summary = "Generate presigned upload URL", description = "Generate a presigned URL for direct file upload to MinIO")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Presigned URL generated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public ResponseEntity<Map<String, String>> generatePresignedUrl(
+            @Parameter(description = "Original file name") @RequestParam String fileName,
+            @Parameter(description = "Content type") @RequestParam(required = false) String contentType,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        
+        Map<String, String> response = minIOService.generatePresignedUploadUrl(fileName, contentType);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/upload")
     @Operation(summary = "Upload file", description = "Upload a single file")

@@ -22,6 +22,11 @@ public class UserResponse {
     private String bio;
     private Boolean isVerified;
     private Boolean isActive;
+    private Boolean profileCompleted;
+    private Boolean freelancerProfileCompleted;
+    private Boolean clientProfileCompleted;
+    private Boolean isExternalAuth;
+    private LocalDateTime profileCompletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -177,5 +182,45 @@ public class UserResponse {
     // Helper methods
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+    
+    public Boolean getProfileCompleted() {
+        return profileCompleted;
+    }
+    
+    public void setProfileCompleted(Boolean profileCompleted) {
+        this.profileCompleted = profileCompleted;
+    }
+    
+    public Boolean getFreelancerProfileCompleted() {
+        return freelancerProfileCompleted;
+    }
+    
+    public void setFreelancerProfileCompleted(Boolean freelancerProfileCompleted) {
+        this.freelancerProfileCompleted = freelancerProfileCompleted;
+    }
+    
+    public Boolean getClientProfileCompleted() {
+        return clientProfileCompleted;
+    }
+    
+    public void setClientProfileCompleted(Boolean clientProfileCompleted) {
+        this.clientProfileCompleted = clientProfileCompleted;
+    }
+    
+    public LocalDateTime getProfileCompletedAt() {
+        return profileCompletedAt;
+    }
+    
+    public void setProfileCompletedAt(LocalDateTime profileCompletedAt) {
+        this.profileCompletedAt = profileCompletedAt;
+    }
+    
+    public Boolean getIsExternalAuth() {
+        return isExternalAuth;
+    }
+    
+    public void setIsExternalAuth(Boolean isExternalAuth) {
+        this.isExternalAuth = isExternalAuth;
     }
 }

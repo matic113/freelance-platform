@@ -22,8 +22,9 @@ public class MinIOConfig {
 
     @Bean
     public MinioClient minioClient() {
+        String cleanUrl = minioUrl.replaceAll("/$", "");
         return MinioClient.builder()
-                .endpoint(minioUrl)
+                .endpoint(cleanUrl)
                 .credentials(accessKey, secretKey)
                 .build();
     }

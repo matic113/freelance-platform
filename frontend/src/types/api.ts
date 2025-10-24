@@ -100,6 +100,10 @@ export interface User {
   skills: string[];
   hourlyRate?: number;
   isVerified: boolean;
+  isExternalAuth?: boolean;
+  profileCompleted?: boolean;
+  freelancerProfileCompleted?: boolean;
+  clientProfileCompleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -120,6 +124,11 @@ export interface UserResponse {
   bio?: string;
   isVerified: boolean;
   isActive: boolean;
+  isExternalAuth?: boolean;
+  profileCompleted?: boolean;
+  freelancerProfileCompleted?: boolean;
+  clientProfileCompleted?: boolean;
+  profileCompletedAt?: string;
   createdAt: string;
   updatedAt: string;
   skills?: string[];
@@ -413,6 +422,8 @@ export interface AuthResponse {
   roles: UserType[];
   activeRole?: UserType | null;
   isVerified: boolean;
+  isExternalAuth?: boolean;
+  profileCompleted?: boolean;
   createdAt: string;
 }
 
@@ -948,4 +959,48 @@ export interface ReviewLookupResponse {
    shouldOpenReviewModal: boolean;
    hasUserReviewed: boolean;
    reason: string;
+}
+
+export enum ExperienceLevel {
+  ENTRY = 'ENTRY',
+  INTERMEDIATE = 'INTERMEDIATE',
+  EXPERT = 'EXPERT'
+}
+
+export interface SkillRequest {
+  skillName: string;
+  proficiencyLevel: number;
+  description?: string;
+}
+
+export interface CompleteFreelancerProfileRequest {
+  bio: string;
+  hourlyRate: number;
+  experienceLevel: ExperienceLevel;
+  country: string;
+  timezone: string;
+  avatarUrl: string;
+  city?: string;
+  skills: SkillRequest[];
+}
+
+export interface CompleteClientProfileRequest {
+  country: string;
+  timezone: string;
+  phone: string;
+  avatarUrl: string;
+  city?: string;
+}
+
+export interface OnboardingStatusResponse {
+  profileCompleted: boolean;
+  activeRole: UserType;
+  redirectUrl: string;
+  checklist: Record<string, boolean | number>;
+}
+
+export interface ProfileCompletionResponse {
+  success: boolean;
+  message: string;
+  user: UserResponse;
 }

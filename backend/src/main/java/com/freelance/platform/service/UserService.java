@@ -107,6 +107,9 @@ public class UserService implements UserDetailsService {
      * This is a conservative implementation: it replaces the user's roles with the single role
      * found by name. Throws UserNotFoundException if user doesn't exist or IllegalArgumentException
      * if role is not found.
+     * 
+     * Allows switching even if the target role's profile is not complete - frontend will redirect
+     * to onboarding if needed.
      */
     public User switchUserRole(UUID userId, String newRole) throws UserNotFoundException {
         User user = userRepository.findById(userId).orElse(null);
@@ -176,6 +179,9 @@ public class UserService implements UserDetailsService {
         response.setLanguage(user.getLanguage());
         response.setIsVerified(user.getIsVerified());
         response.setIsActive(user.getIsActive());
+        response.setProfileCompleted(user.getProfileCompleted());
+        response.setIsExternalAuth(user.getIsExternalAuth());
+        response.setProfileCompletedAt(user.getProfileCompletedAt());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
         

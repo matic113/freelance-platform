@@ -49,21 +49,39 @@ export function HeaderRoleSwitcher({ className, isRTL = false }: HeaderRoleSwitc
     return null;
   }
 
-  const handleRoleSwitch = (nextRole: UserType) => {
+  const handleRoleSwitch = async (nextRole: UserType) => {
     if (activeRole === nextRole) {
       return;
     }
 
-    setActiveRole(nextRole);
+    try {
+      await setActiveRole(nextRole);
 
-    const labels = roleLabels[nextRole];
-    const displayLabel = isRTL ? labels?.rtlLabel ?? nextRole : labels?.label ?? nextRole;
-    toast.success(isRTL ? `تم التبديل إلى ${displayLabel}` : `Switched to ${displayLabel} view`);
+      const isProfileComplete = nextRole === UserType.FREELANCER 
+        ? user?.freelancerProfileCompleted 
+        : user?.clientProfileCompleted;
 
-    // Navigate to the appropriate dashboard if currently on a dashboard route
-    if (dashboardRoutes.includes(location.pathname)) {
-      const targetDashboard = roleDashboardMap[nextRole];
-      navigate(targetDashboard, { replace: true });
+      if (!isProfileComplete) {
+        const onboardingRoute = user?.isExternalAuth 
+          ? '/external-onboarding' 
+          : '/onboarding';
+        
+        toast.info('Please complete your profile for this role');
+        navigate(onboardingRoute);
+        return;
+      }
+
+      const labels = roleLabels[nextRole];
+      const displayLabel = isRTL ? labels?.rtlLabel ?? nextRole : labels?.label ?? nextRole;
+      toast.success(isRTL ? `تم التبديل إلى ${displayLabel}` : `Switched to ${displayLabel} view`);
+
+      if (dashboardRoutes.includes(location.pathname)) {
+        const targetDashboard = roleDashboardMap[nextRole];
+        navigate(targetDashboard, { replace: true });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to switch role';
+      toast.error(errorMessage);
     }
   };
 
