@@ -665,7 +665,7 @@ export default function CreateProjectPage() {
                     {/* Attachments Column */}
                      <div className="space-y-4 flex flex-col">
                        <Label>{isRTL ? "المرفقات" : "Attachments"}</Label>
-                       <div className={cn("border-2 border-dashed rounded-lg p-6 min-h-[200px] flex items-center justify-center flex-1", isRTL && "rtl")}>
+                       <div className={cn("border-2 border-dashed rounded-lg min-h-[200px] relative", isRTL && "rtl")}>
                          <FileUploadInput
                            onFileSelect={handleFileSelect}
                            isUploading={isUploadingFile}
